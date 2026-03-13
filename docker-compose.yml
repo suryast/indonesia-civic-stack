@@ -1,0 +1,74 @@
+version: "3.9"
+
+# Local development stack for indonesia-civic-stack.
+# Each module runs as its own service so they can be started independently.
+#
+# Usage:
+#   docker compose up bpom          # start a single module
+#   docker compose up                # start all modules
+#   docker compose run --rm test     # run the test suite
+
+x-module-defaults: &module-defaults
+  build:
+    context: .
+  environment:
+    - PROXY_URL=${PROXY_URL:-}
+    - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  restart: unless-stopped
+  networks:
+    - civic
+
+services:
+  # ── Phase 1 modules ──────────────────────────────────────────────
+
+  bpom:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/bpom/Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=bpom
+
+  bpjph:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/bpjph/Dockerfile
+    ports:
+      - "8002:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=bpjph
+
+  ahu:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/ahu/Dockerfile
+    ports:
+      - "8003:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=ahu
+
+  # ── Test runner ──────────────────────────────────────────────────
+
+  test:
+    build:
+      context: .
+    command: python -m pytest tests/ -v --tb=short
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    networks:
+      - civic
+    profiles:
+      - test
+
+networks:
+  civic:
+    driver: bridge

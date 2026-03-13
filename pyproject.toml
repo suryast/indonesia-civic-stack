@@ -1,63 +1,56 @@
-[project]
-name = "indonesia-civic-stack"
-version = "0.1.0"
-description = "Unified Python SDK for Indonesian government data — BPOM, BPJPH, AHU, OJK, KPU and more. REST API + MCP servers."
-readme = "README.md"
-license = { text = "MIT" }
-requires-python = ">=3.11"
-authors = [{ name = "indonesia-civic-stack contributors" }]
-keywords = ["indonesia", "government", "api", "mcp", "civic-tech", "bpom", "bpjph", "halal", "ojk"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Libraries",
-]
-
-dependencies = [
-    "httpx>=0.27",
-    "beautifulsoup4>=4.12",
-    "pydantic>=2.0",
-    "fastapi>=0.115",
-    "fastmcp>=0.4",
-    "uvicorn>=0.34",
-]
-
-[project.optional-dependencies]
-playwright = ["playwright>=1.49", "camoufox>=0.4"]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "vcrpy>=6.0",
-    "ruff>=0.8",
-    "mypy>=1.13",
-]
-
-[project.urls]
-Homepage = "https://github.com/suryast/indonesia-civic-stack"
-Issues = "https://github.com/suryast/indonesia-civic-stack/issues"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project]
+name = "indonesia-civic-stack"
+version = "0.1.0"
+description = "Production-ready scrapers, normalizers, and API wrappers for Indonesian government data sources"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "playwright>=1.44.0",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "fastmcp>=0.1.0",
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-httpx>=0.30.0",
+    "vcrpy>=6.0.1",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "types-beautifulsoup4",
+]
+pdf = [
+    "pdfplumber>=0.11.0",
+    "anthropic>=0.28.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "modules"]
+
 [tool.ruff]
-target-version = "py311"
 line-length = 100
+target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "UP"]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
-warn_return_any = true
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
 asyncio_mode = "auto"
-
-[tool.hatch.build.targets.wheel]
-packages = ["shared", "modules"]
+testpaths = ["tests"]
