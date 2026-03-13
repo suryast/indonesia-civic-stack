@@ -155,14 +155,12 @@ async def cross_ref_bpom(
         if bpom_active and not bpjph_active:
             mismatch = True
             mismatch_detail = (
-                f"BPOM registration is {bpom_resp.status} "
-                f"but halal cert is {bpjph_resp.status}"
+                f"BPOM registration is {bpom_resp.status} but halal cert is {bpjph_resp.status}"
             )
         elif bpjph_active and not bpom_active:
             mismatch = True
             mismatch_detail = (
-                f"Halal cert is {bpjph_resp.status} "
-                f"but BPOM registration is {bpom_resp.status}"
+                f"Halal cert is {bpjph_resp.status} but BPOM registration is {bpom_resp.status}"
             )
 
     return {

@@ -16,7 +16,6 @@ vcr_config = vcr.VCR(
     cassette_library_dir=CASSETTE_DIR,
     record_mode="none",  # CI: never record new cassettes
     match_on=["uri", "method"],
-    decode_content_encoding=True,
 )
 
 

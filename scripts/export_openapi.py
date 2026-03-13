@@ -17,7 +17,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app
 
 spec = app.openapi()
-output_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "openapi.json")
+output_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "openapi.json"
+)
 
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(spec, f, indent=2, ensure_ascii=False)

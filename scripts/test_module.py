@@ -125,7 +125,7 @@ async def test_module(module_name: str, config: dict[str, Any], live: bool) -> M
             result.details.append(f"search() returned {type(results).__name__}, expected list")
         else:
             errs = []
-            for i, r in enumerate(results):
+            for _i, r in enumerate(results):
                 errs.extend(_validate_response(r, module_name))
             if errs:
                 result.details.extend(errs)
@@ -154,7 +154,7 @@ async def run(modules: list[str], live: bool) -> int:
             print(f"    {detail}")
 
     failed = [r for r in results if not r.ok]
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Results: {len(results) - len(failed)}/{len(results)} passed")
     if failed:
         print("DEGRADED modules:", ", ".join(r.module for r in failed))

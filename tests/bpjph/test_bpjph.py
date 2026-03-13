@@ -24,6 +24,7 @@ def _load(filename: str) -> str:
 
 # ── Normalizer unit tests (no Playwright needed) ──────────────────────────────
 
+
 def test_normalize_cert_found():
     html = _load("cert_found.html")
     resp = normalize_cert_page(
@@ -112,6 +113,7 @@ def test_response_json_serializable():
 
 # ── Scraper integration tests (monkeypatched Playwright) ─────────────────────
 
+
 @pytest.mark.asyncio
 async def test_fetch_uses_normalizer(monkeypatch):
     """
@@ -127,10 +129,12 @@ async def test_fetch_uses_normalizer(monkeypatch):
     mock_page = AsyncMock()
     mock_page.goto = AsyncMock()
     mock_page.content = AsyncMock(return_value=html_content)
-    mock_page.query_selector = AsyncMock(return_value=MagicMock(
-        fill=AsyncMock(),
-        press=AsyncMock(),
-    ))
+    mock_page.query_selector = AsyncMock(
+        return_value=MagicMock(
+            fill=AsyncMock(),
+            press=AsyncMock(),
+        )
+    )
 
     @asynccontextmanager
     async def mock_new_page(*args, **kwargs):
@@ -140,6 +144,7 @@ async def test_fetch_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
 
     from modules.bpjph.scraper import fetch
+
     resp = await fetch("ID00110019882120240001")
 
     assert isinstance(resp, CivicStackResponse)
@@ -157,10 +162,12 @@ async def test_search_uses_normalizer(monkeypatch):
     mock_page = AsyncMock()
     mock_page.goto = AsyncMock()
     mock_page.content = AsyncMock(return_value=html_content)
-    mock_page.query_selector = AsyncMock(return_value=MagicMock(
-        fill=AsyncMock(),
-        press=AsyncMock(),
-    ))
+    mock_page.query_selector = AsyncMock(
+        return_value=MagicMock(
+            fill=AsyncMock(),
+            press=AsyncMock(),
+        )
+    )
 
     @asynccontextmanager
     async def mock_new_page(*args, **kwargs):
@@ -170,6 +177,7 @@ async def test_search_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
 
     from modules.bpjph.scraper import search
+
     results = await search("mie instan")
 
     assert isinstance(results, list)

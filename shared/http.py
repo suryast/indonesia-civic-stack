@@ -76,14 +76,12 @@ async def civic_client(
         extra_headers: Module-specific headers merged on top of defaults.
     """
     headers = {**DEFAULT_HEADERS, **(extra_headers or {})}
-    proxies: dict[str, str] | None = (
-        {"http://": proxy_url, "https://": proxy_url} if proxy_url else None
-    )
+    transport = httpx.AsyncHTTPTransport(proxy=proxy_url) if proxy_url else None
     async with httpx.AsyncClient(
         headers=headers,
         timeout=timeout,
         follow_redirects=True,
-        proxies=proxies,  # type: ignore[arg-type]
+        transport=transport,
     ) as client:
         yield client
 

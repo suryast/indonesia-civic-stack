@@ -44,7 +44,13 @@ async def get_company_directors(
             update={
                 "result": {
                     k: resp.result[k]
-                    for k in ("company_name", "registration_no", "directors", "commissioners", "legal_status")
+                    for k in (
+                        "company_name",
+                        "registration_no",
+                        "directors",
+                        "commissioners",
+                        "legal_status",
+                    )
                     if k in resp.result
                 }
             }
@@ -68,7 +74,14 @@ async def verify_company_status(
             update={
                 "result": {
                     k: resp.result[k]
-                    for k in ("company_name", "registration_no", "legal_status", "legal_form", "deed_date", "domicile")
+                    for k in (
+                        "company_name",
+                        "registration_no",
+                        "legal_status",
+                        "legal_form",
+                        "deed_date",
+                        "domicile",
+                    )
                     if k in resp.result
                 }
             }
