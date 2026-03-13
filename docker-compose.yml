@@ -54,6 +54,52 @@ services:
       - PROXY_URL=${PROXY_URL:-}
       - MODULE=ahu
 
+  # ── Phase 2 modules ──────────────────────────────────────────────
+
+  kpu:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/kpu/Dockerfile
+    ports:
+      - "8004:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=kpu
+
+  ojk:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/ojk/Dockerfile
+    ports:
+      - "8005:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=ojk
+
+  oss-nib:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/oss-nib/Dockerfile
+    ports:
+      - "8006:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=oss_nib
+
+  lpse:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/lpse/Dockerfile
+    ports:
+      - "8007:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=lpse
+
   # ── Test runner ──────────────────────────────────────────────────
 
   test:

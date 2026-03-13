@@ -1,5 +1,5 @@
 """
-Unified FastAPI application — mounts all Phase 1 module routers.
+Unified FastAPI application — mounts all module routers.
 
 This is the single-process entry point for local development and Railway
 deployment when running all modules together. In production, each module
@@ -18,14 +18,18 @@ from fastapi.responses import JSONResponse
 from modules.ahu.router import router as ahu_router
 from modules.bpjph.router import router as bpjph_router
 from modules.bpom.router import router as bpom_router
+from modules.kpu.router import router as kpu_router
+from modules.lpse.router import router as lpse_router
+from modules.ojk.router import router as ojk_router
+from modules.oss_nib.router import router as oss_nib_router
 
 app = FastAPI(
     title="indonesia-civic-stack",
     description=(
         "Production-ready scrapers and API wrappers for Indonesian government data sources. "
-        "Phase 1: BPOM product registry, BPJPH halal certificates, AHU company registry."
+        "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE."
     ),
-    version="0.1.0",
+    version="0.2.0",
     contact={
         "name": "indonesia-civic-stack contributors",
         "url": "https://github.com/suryast/indonesia-civic-stack",
@@ -36,10 +40,18 @@ app = FastAPI(
     },
 )
 
-# Mount module routers
+# Phase 1 routers
 app.include_router(bpom_router)
 app.include_router(bpjph_router)
 app.include_router(ahu_router)
+
+# Phase 2 routers
+app.include_router(kpu_router)
+app.include_router(ojk_router)
+app.include_router(oss_nib_router)
+app.include_router(lpse_router)
+
+_ALL_MODULES = ["bpom", "bpjph", "ahu", "kpu", "ojk", "oss_nib", "lpse"]
 
 
 @app.get("/", include_in_schema=False)
@@ -47,9 +59,9 @@ async def root() -> JSONResponse:
     return JSONResponse(
         {
             "name": "indonesia-civic-stack",
-            "version": "0.1.0",
-            "phase": 1,
-            "modules": ["bpom", "bpjph", "ahu"],
+            "version": "0.2.0",
+            "phase": 2,
+            "modules": _ALL_MODULES,
             "docs": "/docs",
             "openapi": "/openapi.json",
         }
@@ -60,5 +72,5 @@ async def root() -> JSONResponse:
 async def health() -> dict:
     return {
         "status": "ok",
-        "modules": ["bpom", "bpjph", "ahu"],
+        "modules": _ALL_MODULES,
     }

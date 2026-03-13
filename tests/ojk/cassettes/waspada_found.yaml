@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Language: ['id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
+    method: GET
+    uri: https://investor.ojk.go.id/InvestorAlert/getList?keyword=Untung+Berlipat&draw=1&start=0&length=10
+  response:
+    body:
+      string: |
+        {
+          "data": [
+            {
+              "nama": "PT UNTUNG BERLIPAT INVESTASI",
+              "jenis": "Investasi Ilegal",
+              "status": "Dibekukan",
+              "kota": "Jakarta",
+              "keterangan": "Entitas tanpa izin OJK menawarkan investasi dengan imbal hasil tidak wajar"
+            }
+          ],
+          "recordsTotal": 1,
+          "recordsFiltered": 1
+        }
+    headers:
+      Content-Type: ['application/json; charset=utf-8']
+    status:
+      code: 200
+      message: OK
+version: 1

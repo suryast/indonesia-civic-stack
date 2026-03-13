@@ -11,7 +11,9 @@ This monorepo uses per-module licensing. The table below is the authoritative re
 | `modules/bpjph/` | Apache-2.0 | BPJPH SiHalal certificate scraper |
 | `modules/ahu/` | Apache-2.0 | AHU company registry scraper |
 | `modules/oss/` | Apache-2.0 | OSS-NIB business identity scraper |
+| `modules/oss-nib/` | Apache-2.0 | OSS-NIB business identity scraper (Playwright) |
 | `modules/ojk/` | Apache-2.0 | OJK investor alerts / licensed institution scraper |
+| `modules/kpu/` | Apache-2.0 | KPU election candidate and results scraper |
 | `modules/lpse/` | Apache-2.0 | LPSE government procurement scraper |
 
 Full license texts are in the `LICENSE` file at each module's root and at the repo root (MIT).

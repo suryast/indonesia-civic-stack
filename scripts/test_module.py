@@ -30,6 +30,7 @@ from shared.schema import CivicStackResponse, RecordStatus
 
 # Registry of available modules and their smoke-test queries.
 MODULE_REGISTRY: dict[str, dict[str, Any]] = {
+    # Phase 1
     "bpom": {
         "fetch_query": "BPOM MD 123456789012",
         "search_keyword": "paracetamol",
@@ -41,6 +42,23 @@ MODULE_REGISTRY: dict[str, dict[str, Any]] = {
     "ahu": {
         "fetch_query": "PT Contoh Indonesia",
         "search_keyword": "Contoh",
+    },
+    # Phase 2
+    "kpu": {
+        "fetch_query": "12345",
+        "search_keyword": "Joko",
+    },
+    "ojk": {
+        "fetch_query": "Akulaku",
+        "search_keyword": "fintech",
+    },
+    "oss_nib": {
+        "fetch_query": "PT Gojek Indonesia",
+        "search_keyword": "Gojek",
+    },
+    "lpse": {
+        "fetch_query": "PT Telkom",
+        "search_keyword": "telkom",
     },
 }
 

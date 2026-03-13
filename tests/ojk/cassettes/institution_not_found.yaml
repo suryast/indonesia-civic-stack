@@ -1,0 +1,36 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Language: ['id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
+    method: GET
+    uri: https://api.ojk.go.id/v1/lembaga/pencarian?keyword=LEMBAGA+TIDAK+ADA&limit=1
+  response:
+    body:
+      string: '{"data": [], "total": 0}'
+    headers:
+      Content-Type: ['application/json; charset=utf-8']
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Language: ['id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
+    method: GET
+    uri: https://www.ojk.go.id/id/kanal/perbankan/data-dan-statistik/Pages/Direktori.aspx?SearchText=LEMBAGA+TIDAK+ADA
+  response:
+    body:
+      string: '<html><body><div class="container"><p>Data tidak ditemukan.</p></div></body></html>'
+    headers:
+      Content-Type: ['text/html; charset=utf-8']
+    status:
+      code: 200
+      message: OK
+version: 1

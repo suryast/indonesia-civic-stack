@@ -23,10 +23,10 @@ This repo is that layer.
 | [`bpom`](modules/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic, traditional medicine registrations | ✅ Phase 1 |
 | [`bpjph`](modules/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 |
 | [`ahu`](modules/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 |
-| `ojk` | ojk.go.id | Licensed financial institutions | 🔜 Phase 2 |
-| `oss-nib` | oss.go.id | Business identity (NIB) | 🔜 Phase 2 |
-| `lpse` | lpse.*.go.id | Government procurement (500+ portals) | 🔜 Phase 2 |
-| `kpu` | kpu.go.id | Election data — candidates, results, finance | 🔜 Phase 2 |
+| [`ojk`](modules/ojk/README.md) | ojk.go.id | Licensed financial institutions + Waspada list | ✅ Phase 2 |
+| [`oss-nib`](modules/oss-nib/README.md) | oss.go.id | Business identity (NIB) | ✅ Phase 2 |
+| [`lpse`](modules/lpse/README.md) | lpse.*.go.id | Government procurement (5 major portals) | ✅ Phase 2 |
+| [`kpu`](modules/kpu/README.md) | kpu.go.id | Election data — candidates, results, finance | ✅ Phase 2 |
 | `lhkpn` | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔜 Phase 3 |
 | `bps` | bps.go.id | Statistical datasets (1,000+) | 🔜 Phase 3 |
 | `bmkg` | bmkg.go.id | Disaster and weather data | 🔜 Phase 3 |
