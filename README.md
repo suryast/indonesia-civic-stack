@@ -46,6 +46,13 @@ graph TB
             LPSE[lpse<br/>Procurement]
             KPU[kpu<br/>Elections]
         end
+
+        subgraph "Phase 3"
+            LHKPN[lhkpn<br/>Wealth Declarations]
+            BPS[bps<br/>Statistics]
+            BMKG[bmkg<br/>Weather & Disasters]
+            SIMBG[simbg<br/>Building Permits]
+        end
     end
 
     subgraph "Government Portals"
@@ -56,12 +63,16 @@ graph TB
         P5[oss.go.id]
         P6[lpse.*.go.id]
         P7[kpu.go.id]
+        P8[elhkpn.kpk.go.id]
+        P9[webapi.bps.go.id]
+        P10[data.bmkg.go.id]
+        P11[simbg.pu.go.id]
     end
 
     A & B & C --> SDK & MCP & API
     SDK & MCP & API --> SC
-    SC --> BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU
-    BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU --> HC
+    SC --> BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU & LHKPN & BPS & BMKG & SIMBG
+    BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU & LHKPN & BPS & BMKG & SIMBG --> HC
     BPOM --> P1
     BPJPH --> P2
     AHU --> P3
@@ -69,6 +80,10 @@ graph TB
     OSS --> P5
     LPSE --> P6
     KPU --> P7
+    LHKPN --> P8
+    BPS --> P9
+    BMKG --> P10
+    SIMBG --> P11
 ```
 
 ## Request Flow
@@ -96,7 +111,7 @@ sequenceDiagram
 pie title Module Coverage by Phase
     "Phase 1 — Live" : 3
     "Phase 2 — Live" : 4
-    "Phase 3 — Planned" : 3
+    "Phase 3 — Live" : 4
 ```
 
 ---
@@ -112,9 +127,10 @@ pie title Module Coverage by Phase
 | [`oss_nib`](modules/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 |
 | [`lpse`](modules/lpse/) | lpse.*.go.id | Government procurement (5 major portals) | ✅ Phase 2 |
 | [`kpu`](modules/kpu/) | kpu.go.id | Election data — candidates, results, finance | ✅ Phase 2 |
-| `lhkpn` | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔜 Phase 3 |
-| `bps` | bps.go.id | Statistical datasets (1,000+) | 🔜 Phase 3 |
-| `bmkg` | bmkg.go.id | Disaster and weather data | 🔜 Phase 3 |
+| [`lhkpn`](modules/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | ✅ Phase 3 |
+| [`bps`](modules/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 |
+| [`bmkg`](modules/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 |
+| [`simbg`](modules/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal aggregator | ✅ Phase 3 |
 
 Every module returns the same `CivicStackResponse` envelope — swap data sources without touching application logic.
 
@@ -193,6 +209,10 @@ GET /bpjph/check/BPJPH-12345
 GET /ahu/search?q=PT+Contoh+Indonesia
 GET /ojk/check?name=Bank+BCA
 GET /kpu/candidate/search?q=Joko
+GET /lhkpn/search?q=Anies
+GET /bps/search?q=inflasi
+GET /bmkg/weather?city=jakarta
+GET /simbg/search?q=Jakarta+Selatan
 ```
 
 ---
@@ -246,13 +266,14 @@ graph LR
 | bpom | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bpjph | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ahu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ojk | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-| oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-| lpse | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-| kpu | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-| lhkpn | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| bps | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| bmkg | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ojk | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| lpse | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| kpu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| bps | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| bmkg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| simbg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -306,13 +327,13 @@ mypy shared/           # Type check
 ## Tests
 
 ```bash
-pytest -v                       # 57 tests, VCR replay (no live calls)
+pytest -v                       # 89 tests, VCR replay (no live calls)
 pytest tests/bpom/ -v           # Single module
 pytest --tb=short -q            # Quick summary
 ```
 
 ```mermaid
-pie title Test Coverage (57 tests)
+pie title Test Coverage (89 tests)
     "BPOM" : 7
     "BPJPH" : 8
     "AHU" : 12
@@ -320,6 +341,10 @@ pie title Test Coverage (57 tests)
     "KPU" : 5
     "LPSE" : 9
     "OSS-NIB" : 6
+    "LHKPN" : 10
+    "BPS" : 7
+    "BMKG" : 8
+    "SIMBG" : 7
     "Schema" : 6
 ```
 
