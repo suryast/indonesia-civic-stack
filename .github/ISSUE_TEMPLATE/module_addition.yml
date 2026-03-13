@@ -1,0 +1,81 @@
+name: New module proposal
+description: Propose adding a new Indonesian government data source as a civic-stack module.
+labels: ["module-proposal"]
+body:
+  - type: input
+    id: module_name
+    attributes:
+      label: Proposed module name
+      placeholder: "e.g. ojk, kpu, lhkpn"
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Source portal URL
+      placeholder: "e.g. https://ojk.go.id"
+    validations:
+      required: true
+
+  - type: input
+    id: operator
+    attributes:
+      label: Portal operator (government agency)
+      placeholder: "e.g. Otoritas Jasa Keuangan (OJK)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scrape_method
+    attributes:
+      label: Scrape method
+      options:
+        - httpx + BeautifulSoup (static HTML)
+        - Playwright (JS-rendered)
+        - REST API wrapper
+        - PDF extraction (pdfplumber / Claude Vision)
+        - Mixed
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth_required
+    attributes:
+      label: Authentication required?
+      options:
+        - "No — public search, no login"
+        - "Partial — public tier available, login for full data"
+        - "Yes — login required"
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_fields
+    attributes:
+      label: Key data fields the module would expose
+      placeholder: |
+        - Institution name
+        - License number
+        - License status (active/revoked)
+        - Regulated products
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_cases
+    attributes:
+      label: What Kah products or use cases does this enable?
+      placeholder: "e.g. legalkah.id financial license verification, AmanKah unlicensed fintech detection"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: commitment
+    attributes:
+      label: Contributor commitment
+      description: Check all that apply.
+      options:
+        - label: I am willing to implement this module (full contract — fetch, search, MCP, VCR fixtures, README)
+        - label: I can verify the portal works and document rate limits / block behaviour
+        - label: I can maintain this module for at least 6 months after merging
