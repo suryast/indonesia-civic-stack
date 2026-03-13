@@ -34,12 +34,12 @@ _FIELD_MAP: dict[str, str] = {
 
 # Indonesian status → RecordStatus
 _STATUS_MAP: dict[str, RecordStatus] = {
-    "aktif": RecordStatus.ACTIVE,
     "tidak aktif": RecordStatus.EXPIRED,
     "kadaluarsa": RecordStatus.EXPIRED,
     "dibatalkan": RecordStatus.REVOKED,
     "dibekukan": RecordStatus.SUSPENDED,
     "dicabut": RecordStatus.REVOKED,
+    "aktif": RecordStatus.ACTIVE,
 }
 
 _DATE_FORMATS = ["%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d"]
