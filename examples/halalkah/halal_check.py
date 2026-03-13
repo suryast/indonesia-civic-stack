@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from modules.bpjph import cross_ref_bpom
@@ -38,14 +38,14 @@ class HalalVerificationResult:
 
     product_name: str
     is_halal: bool
-    halal_status: str          # "CERTIFIED" | "EXPIRED" | "NOT_FOUND" | "ERROR"
-    bpom_status: str           # "ACTIVE" | "EXPIRED" | "NOT_FOUND" | "ERROR"
-    has_mismatch: bool         # True when halal/BPOM statuses diverge
+    halal_status: str  # "CERTIFIED" | "EXPIRED" | "NOT_FOUND" | "ERROR"
+    bpom_status: str  # "ACTIVE" | "EXPIRED" | "NOT_FOUND" | "ERROR"
+    has_mismatch: bool  # True when halal/BPOM statuses diverge
     mismatch_detail: str | None
 
     cert_no: str | None
     cert_expiry: str | None
-    cert_issuer: str | None    # "BPJPH" | "MUI"
+    cert_issuer: str | None  # "BPJPH" | "MUI"
 
     bpom_reg_no: str | None
     bpom_expiry: str | None
@@ -108,6 +108,7 @@ class HalalKahChecker:
         # Enrich with BPOM data if we have a product name
         if product_name:
             from modules.bpom import search as bpom_search
+
             bpom_results = await bpom_search(product_name)
             if bpom_results and bpom_results[0].found:
                 bpom_data = bpom_results[0].model_dump(mode="json")
@@ -140,6 +141,7 @@ class HalalKahChecker:
 
         if product_name:
             from modules.bpjph import search as bpjph_search
+
             bpjph_results = await bpjph_search(product_name, proxy_url=self.proxy_url)
             if bpjph_results and bpjph_results[0].found:
                 bpjph_data = bpjph_results[0].model_dump(mode="json")
@@ -157,7 +159,9 @@ class HalalKahChecker:
 
     # ── Private ───────────────────────────────────────────────────────────────
 
-    def _build_result(self, product_name: str, cross_ref: dict[str, Any]) -> HalalVerificationResult:
+    def _build_result(
+        self, product_name: str, cross_ref: dict[str, Any]
+    ) -> HalalVerificationResult:
         bpjph = cross_ref.get("bpjph") or {}
         bpom = cross_ref.get("bpom") or {}
 
@@ -183,11 +187,13 @@ class HalalKahChecker:
             bpom_reg_no=bpom_result.get("registration_no"),
             bpom_expiry=bpom_result.get("expiry_date"),
             company=bpjph_result.get("company") or bpom_result.get("company"),
-            fetched_at=datetime.utcnow().isoformat(),
+            fetched_at=datetime.now(UTC).isoformat(),
             confidence=min(
                 bpjph.get("confidence", 0.0) or 0.0,
                 bpom.get("confidence", 0.0) or 0.0,
-            ) if (bpjph and bpom) else max(
+            )
+            if (bpjph and bpom)
+            else max(
                 bpjph.get("confidence", 0.0) or 0.0,
                 bpom.get("confidence", 0.0) or 0.0,
             ),

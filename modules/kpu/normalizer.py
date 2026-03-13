@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from shared.schema import CivicStackResponse, RecordStatus
@@ -39,7 +39,7 @@ def normalize_candidate(
         status=status,
         confidence=1.0 if data.get("id") else 0.9,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw=data if debug else None,
     )
@@ -53,7 +53,6 @@ def normalize_election_results(
 ) -> CivicStackResponse:
     # SIREKAP returns aggregate vote tallies per party/candidate
     chart = data.get("chart", {})
-    table = data.get("table", {})
 
     result = {
         "region_code": region_code,
@@ -71,7 +70,7 @@ def normalize_election_results(
         status=RecordStatus.ACTIVE if chart else RecordStatus.NOT_FOUND,
         confidence=1.0,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 
@@ -97,6 +96,6 @@ def normalize_finance(
         status=RecordStatus.ACTIVE,
         confidence=1.0,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )

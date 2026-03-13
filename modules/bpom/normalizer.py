@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -68,7 +68,7 @@ def normalize_detail(
         status=status,
         confidence=_confidence(raw, registration_no),
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         last_updated=expiry,
         module=MODULE,
         raw=raw if debug else None,
@@ -87,7 +87,7 @@ def normalize_search_row(row: dict[str, str], *, source_url: str) -> CivicStackR
         status=status,
         confidence=0.8,  # search results are less certain than direct lookups
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 

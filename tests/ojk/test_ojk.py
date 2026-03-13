@@ -9,8 +9,11 @@ from modules.ojk.scraper import check_waspada, fetch
 from shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/ojk/cassettes"
-vcr_config = vcr.VCR(cassette_library_dir=CASSETTE_DIR, record_mode="none",
-                     match_on=["uri", "method"], decode_content_encoding=True)
+vcr_config = vcr.VCR(
+    cassette_library_dir=CASSETTE_DIR,
+    record_mode="none",
+    match_on=["uri", "method"],
+)
 
 
 @pytest.mark.asyncio

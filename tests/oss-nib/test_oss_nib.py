@@ -17,8 +17,11 @@ def _load(name: str) -> str:
 
 
 def test_normalize_nib_found():
-    resp = normalize_nib_page(_load("nib_found.html"), query="PT Gojek Indonesia",
-                               source_url="https://oss.go.id/informasi/pencarian-nib")
+    resp = normalize_nib_page(
+        _load("nib_found.html"),
+        query="PT Gojek Indonesia",
+        source_url="https://oss.go.id/informasi/pencarian-nib",
+    )
     assert resp.found is True
     assert resp.status == RecordStatus.ACTIVE
     assert resp.module == "oss_nib"
@@ -29,29 +32,39 @@ def test_normalize_nib_found():
 
 
 def test_normalize_nib_not_found():
-    resp = normalize_nib_page(_load("nib_not_found.html"), query="unknown",
-                               source_url="https://oss.go.id/informasi/pencarian-nib")
+    resp = normalize_nib_page(
+        _load("nib_not_found.html"),
+        query="unknown",
+        source_url="https://oss.go.id/informasi/pencarian-nib",
+    )
     assert resp.found is False
     assert resp.status == RecordStatus.NOT_FOUND
 
 
 def test_normalize_search_results():
-    results = normalize_search_results(_load("search_results.html"),
-                                        source_url="https://oss.go.id/informasi/pencarian-nib")
+    results = normalize_search_results(
+        _load("search_results.html"), source_url="https://oss.go.id/informasi/pencarian-nib"
+    )
     assert len(results) == 2
     assert all(r.module == "oss_nib" for r in results)
     assert results[0].result["company_name"] == "PT GOJEK INDONESIA"
 
 
 def test_confidence_exact_nib():
-    resp = normalize_nib_page(_load("nib_found.html"), query="8120001234567",
-                               source_url="https://oss.go.id/informasi/pencarian-nib")
+    resp = normalize_nib_page(
+        _load("nib_found.html"),
+        query="8120001234567",
+        source_url="https://oss.go.id/informasi/pencarian-nib",
+    )
     assert resp.confidence == 1.0
 
 
 def test_response_json_serializable():
-    resp = normalize_nib_page(_load("nib_found.html"), query="PT Gojek Indonesia",
-                               source_url="https://oss.go.id/informasi/pencarian-nib")
+    resp = normalize_nib_page(
+        _load("nib_found.html"),
+        query="PT Gojek Indonesia",
+        source_url="https://oss.go.id/informasi/pencarian-nib",
+    )
     data = resp.model_dump(mode="json")
     assert data["module"] == "oss_nib"
     assert isinstance(data["fetched_at"], str)
@@ -67,8 +80,9 @@ async def test_fetch_monkeypatched(monkeypatch):
         page = AsyncMock()
         page.goto = AsyncMock()
         page.content = AsyncMock(return_value=_load("nib_found.html"))
-        page.query_selector = AsyncMock(return_value=MagicMock(
-            fill=AsyncMock(), press=AsyncMock(), click=AsyncMock()))
+        page.query_selector = AsyncMock(
+            return_value=MagicMock(fill=AsyncMock(), press=AsyncMock(), click=AsyncMock())
+        )
         page.wait_for_load_state = AsyncMock()
         yield page
 
@@ -76,6 +90,7 @@ async def test_fetch_monkeypatched(monkeypatch):
     monkeypatch.setattr("modules.oss_nib.scraper.wait_for_results", AsyncMock(return_value=True))
 
     from modules.oss_nib.scraper import fetch
+
     resp = await fetch("PT Gojek Indonesia")
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is True

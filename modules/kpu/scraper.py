@@ -61,7 +61,9 @@ async def fetch(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -103,7 +105,9 @@ async def search(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -139,7 +143,9 @@ async def get_election_results(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 rate_limiter=_rate_limiter,
             )
         return normalize_election_results(resp.json(), source_url=url, region_code=region_code)
@@ -160,7 +166,9 @@ async def get_campaign_finance(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 rate_limiter=_rate_limiter,
             )
         data = resp.json()

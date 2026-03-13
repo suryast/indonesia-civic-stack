@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.lpse.scraper import fetch, search, search_tenders
-from modules.lpse.normalizer import normalize_vendor, normalize_tender
+from modules.lpse.normalizer import normalize_tender, normalize_vendor
+from modules.lpse.scraper import fetch, search_tenders
 from shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/lpse/cassettes"
@@ -14,13 +14,13 @@ vcr_config = vcr.VCR(
     cassette_library_dir=CASSETTE_DIR,
     record_mode="none",
     match_on=["uri", "method"],
-    decode_content_encoding=True,
 )
 
 
 # ---------------------------------------------------------------------------
 # Normalizer unit tests (no network)
 # ---------------------------------------------------------------------------
+
 
 def test_normalize_vendor_full():
     raw = {
@@ -71,6 +71,7 @@ def test_normalize_tender_missing_name():
 # ---------------------------------------------------------------------------
 # Scraper tests — VCR replays
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_fetch_vendor_found():

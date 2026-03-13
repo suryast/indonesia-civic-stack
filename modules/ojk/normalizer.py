@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from shared.schema import CivicStackResponse, RecordStatus
@@ -33,19 +33,21 @@ def normalize_institution(
         "institution_name": data.get("nama", data.get("name", data.get("nama_lembaga", ""))),
         "license_no": data.get("no_izin", data.get("nomor_izin", data.get("license_no", ""))),
         "institution_type": data.get("jenis", data.get("jenis_lembaga", data.get("type", ""))),
-        "license_status": _parse_status(
-            data.get("status", data.get("status_izin", "aktif"))
-        ).value,
+        "license_status": _parse_status(data.get("status", data.get("status_izin", "aktif"))).value,
         "regulated_products": _parse_products(data.get("produk", data.get("products", ""))),
         "domicile": data.get("kota", data.get("domisili", data.get("city", ""))),
         "website": data.get("website", data.get("url", "")),
         "on_waspada_list": is_waspada,
     }
-    result = {k: v for k, v in result.items() if v not in (None, "", [], False) or k == "on_waspada_list"}
+    result = {
+        k: v for k, v in result.items() if v not in (None, "", [], False) or k == "on_waspada_list"
+    }
 
     # Waspada entries are flagged as SUSPENDED — the entity is unlicensed/problematic
-    status = RecordStatus.SUSPENDED if is_waspada else _parse_status(
-        data.get("status", data.get("status_izin", "aktif"))
+    status = (
+        RecordStatus.SUSPENDED
+        if is_waspada
+        else _parse_status(data.get("status", data.get("status_izin", "aktif")))
     )
 
     return CivicStackResponse(
@@ -54,7 +56,7 @@ def normalize_institution(
         status=status,
         confidence=1.0 if data.get("no_izin") or data.get("nomor_izin") else 0.85,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw=data if debug else None,
     )
@@ -82,7 +84,7 @@ def normalize_search_row(
         status=status,
         confidence=0.8,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw=row if debug else None,
     )

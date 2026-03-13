@@ -1,6 +1,7 @@
 """FastAPI application entry point for the OJK module."""
 
 from fastapi import FastAPI
+
 from modules.ojk.router import router
 
 app = FastAPI(
@@ -9,6 +10,7 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(router)
+
 
 @app.get("/health")
 async def health() -> dict:

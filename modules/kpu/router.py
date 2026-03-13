@@ -10,8 +10,11 @@ from shared.schema import CivicStackResponse
 router = APIRouter(prefix="/kpu", tags=["kpu"])
 
 
-@router.get("/candidate/{candidate_id}", response_model=CivicStackResponse,
-            summary="Get a KPU candidate profile")
+@router.get(
+    "/candidate/{candidate_id}",
+    response_model=CivicStackResponse,
+    summary="Get a KPU candidate profile",
+)
 async def get_candidate(
     candidate_id: str,
     debug: bool = Query(False),
@@ -20,8 +23,9 @@ async def get_candidate(
     return await fetch(candidate_id, debug=debug)
 
 
-@router.get("/search", response_model=list[CivicStackResponse],
-            summary="Search KPU candidates by name")
+@router.get(
+    "/search", response_model=list[CivicStackResponse], summary="Search KPU candidates by name"
+)
 async def search_candidates(
     q: str = Query(..., description="Candidate name"),
     election_type: str | None = Query(None, description="presiden|dpr|dpd|dprd_prov|dprd_kab"),
@@ -39,8 +43,11 @@ async def search_candidates(
     return await search(q, filters=filters or None)
 
 
-@router.get("/results/{region_code}", response_model=CivicStackResponse,
-            summary="Get SIREKAP election results for a region")
+@router.get(
+    "/results/{region_code}",
+    response_model=CivicStackResponse,
+    summary="Get SIREKAP election results for a region",
+)
 async def election_results(
     region_code: str,
     election_type: str = Query("dpr", description="presiden|dpr|dpd|dprd_prov|dprd_kab"),
@@ -49,8 +56,11 @@ async def election_results(
     return await get_election_results(region_code, election_type)
 
 
-@router.get("/finance/{candidate_id}", response_model=CivicStackResponse,
-            summary="Get SILON campaign finance for a candidate")
+@router.get(
+    "/finance/{candidate_id}",
+    response_model=CivicStackResponse,
+    summary="Get SILON campaign finance for a candidate",
+)
 async def campaign_finance(candidate_id: str) -> CivicStackResponse:
     """Fetch SILON campaign finance summary."""
     return await get_campaign_finance(candidate_id)

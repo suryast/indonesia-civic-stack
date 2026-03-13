@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -61,7 +61,7 @@ def normalize_nib_page(
         status=status,
         confidence=_confidence(raw, query),
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw=raw if debug else None,
     )
@@ -84,15 +84,17 @@ def normalize_search_results(html: str, *, source_url: str) -> list[CivicStackRe
             "license_status": status.value,
             "domicile": row.get("domisili", row.get("alamat", "")),
         }
-        results.append(CivicStackResponse(
-            result={k: v for k, v in result.items() if v},
-            found=True,
-            status=status,
-            confidence=0.8,
-            source_url=source_url,
-            fetched_at=datetime.utcnow(),
-            module=MODULE,
-        ))
+        results.append(
+            CivicStackResponse(
+                result={k: v for k, v in result.items() if v},
+                found=True,
+                status=status,
+                confidence=0.8,
+                source_url=source_url,
+                fetched_at=datetime.now(UTC),
+                module=MODULE,
+            )
+        )
     return results
 
 
@@ -107,7 +109,7 @@ def _extract_fields(soup: BeautifulSoup) -> dict[str, str]:
             if mapped and value:
                 data[mapped] = value
     for dl in soup.find_all("dl"):
-        for dt, dd in zip(dl.find_all("dt"), dl.find_all("dd")):
+        for dt, dd in zip(dl.find_all("dt"), dl.find_all("dd"), strict=False):
             label = dt.get_text(strip=True).lower()
             value = dd.get_text(strip=True)
             mapped = _FIELD_MAP.get(label)
@@ -125,8 +127,12 @@ def _extract_table_rows(soup: BeautifulSoup) -> list[dict[str, str]]:
     for tr in table.find_all("tr")[1:]:
         cells = tr.find_all("td")
         if cells:
-            rows.append({headers[i]: cells[i].get_text(strip=True)
-                         for i in range(min(len(headers), len(cells)))})
+            rows.append(
+                {
+                    headers[i]: cells[i].get_text(strip=True)
+                    for i in range(min(len(headers), len(cells)))
+                }
+            )
     return rows
 
 

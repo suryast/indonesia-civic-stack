@@ -84,7 +84,10 @@ async def run_smoke_test(case: dict, checker: HalalKahChecker) -> tuple[bool, st
     if case["expect_halal"] is False and result.is_halal:
         return False, f"Expected is_halal=False, got halal_status={result.halal_status}"
 
-    return True, f"halal_status={result.halal_status}, bpom_status={result.bpom_status}, mismatch={result.has_mismatch}"
+    return (
+        True,
+        f"halal_status={result.halal_status}, bpom_status={result.bpom_status}, mismatch={result.has_mismatch}",
+    )
 
 
 async def main(live: bool) -> int:
@@ -92,9 +95,9 @@ async def main(live: bool) -> int:
     passed = 0
     failed = 0
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"HalalKah integration smoke test {'(LIVE)' if live else '(VCR)'}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     for case in SMOKE_CASES:
         ok, detail = await run_smoke_test(case, checker)
@@ -107,7 +110,7 @@ async def main(live: bool) -> int:
         else:
             failed += 1
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Results: {passed}/{passed + failed} passed")
     if failed:
         print(f"FAILED: {failed} test(s) — halalkah.id is NOT ready for this civic-stack version")

@@ -60,7 +60,9 @@ async def fetch(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -104,7 +106,9 @@ async def search(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -134,7 +138,9 @@ async def check_waspada(entity_name: str, *, proxy_url: str | None = None) -> Ci
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -168,7 +174,9 @@ async def _scrape_portal_search(
     try:
         async with civic_client(proxy_url=proxy_url) as client:
             resp = await fetch_with_retry(
-                client, "GET", url,
+                client,
+                "GET",
+                url,
                 params=params,
                 rate_limiter=_rate_limiter,
             )
@@ -192,6 +200,10 @@ def _extract_table_rows(soup: BeautifulSoup) -> list[dict]:
     for tr in table.find_all("tr")[1:]:
         cells = tr.find_all("td")
         if cells:
-            rows.append({headers[i]: cells[i].get_text(strip=True)
-                         for i in range(min(len(headers), len(cells)))})
+            rows.append(
+                {
+                    headers[i]: cells[i].get_text(strip=True)
+                    for i in range(min(len(headers), len(cells)))
+                }
+            )
     return rows

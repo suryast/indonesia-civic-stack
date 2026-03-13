@@ -71,7 +71,9 @@ class OjkMCPServer(CivicStackMCPBase):
                     "status": resp.status,
                     "found": resp.found,
                     "license_status": resp.result.get("license_status") if resp.result else None,
-                    "institution_type": resp.result.get("institution_type") if resp.result else None,
+                    "institution_type": resp.result.get("institution_type")
+                    if resp.result
+                    else None,
                     "license_no": resp.result.get("license_no") if resp.result else None,
                     "confidence": resp.confidence,
                     "fetched_at": resp.fetched_at.isoformat(),

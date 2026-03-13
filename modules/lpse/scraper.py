@@ -12,12 +12,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 
 from shared.http import RateLimiter, ScraperBlockedError, civic_client
-from shared.schema import CivicStackResponse, RecordStatus, error_response, not_found_response
+from shared.schema import CivicStackResponse, RecordStatus, not_found_response
 
 from .normalizer import normalize_tender, normalize_vendor
 
@@ -25,20 +26,21 @@ logger = logging.getLogger(__name__)
 
 # Five major portals per SHAPES.MD sprint spec
 PORTALS: list[dict[str, str]] = [
-    {"name": "LKPP",        "base": "https://lpse.lkpp.go.id/eproc4"},
-    {"name": "PU",          "base": "https://lpse.pu.go.id/eproc4"},
-    {"name": "Kominfo",     "base": "https://lpse.kominfo.go.id/eproc4"},
-    {"name": "Kemenkeu",    "base": "https://lpse.kemenkeu.go.id/eproc4"},
-    {"name": "Kemenkes",    "base": "https://lpse.kemenkes.go.id/eproc4"},
+    {"name": "LKPP", "base": "https://lpse.lkpp.go.id/eproc4"},
+    {"name": "PU", "base": "https://lpse.pu.go.id/eproc4"},
+    {"name": "Kominfo", "base": "https://lpse.kominfo.go.id/eproc4"},
+    {"name": "Kemenkeu", "base": "https://lpse.kemenkeu.go.id/eproc4"},
+    {"name": "Kemenkes", "base": "https://lpse.kemenkes.go.id/eproc4"},
 ]
 
 # Standard SPSE API endpoints (same path on every portal)
-_TENDER_SEARCH  = "/dt/tender"        # ?term=&draw=&start=0&length=10
-_VENDOR_SEARCH  = "/dt/rekanan"       # ?term=&draw=&start=0&length=10
-_TENDER_DETAIL  = "/tender/{id}/view"
-_VENDOR_DETAIL  = "/rekanan/{id}/view"
+_TENDER_SEARCH = "/dt/tender"  # ?term=&draw=&start=0&length=10
+_VENDOR_SEARCH = "/dt/rekanan"  # ?term=&draw=&start=0&length=10
+_TENDER_DETAIL = "/tender/{id}/view"
+_VENDOR_DETAIL = "/rekanan/{id}/view"
 
-_limiter = RateLimiter(rate=1.0)  # conservative: 1 req/s across all portals
+_limiter = RateLimiter(rate=1.0)
+
 
 MODULE = "lpse"
 SOURCE_BASE = "https://lpse.lkpp.go.id/eproc4"
@@ -47,6 +49,7 @@ SOURCE_BASE = "https://lpse.lkpp.go.id/eproc4"
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 async def _search_portal(
     client: httpx.AsyncClient,
@@ -79,23 +82,21 @@ async def _search_portal(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackResponse:
     """Fetch tender/vendor info by name or NPWP across all major portals."""
     source_url = SOURCE_BASE + _VENDOR_SEARCH
 
     async with civic_client(proxy_url=proxy_url) as client:
-        tasks = [
-            _search_portal(client, portal, query, _VENDOR_SEARCH)
-            for portal in PORTALS
-        ]
+        tasks = [_search_portal(client, portal, query, _VENDOR_SEARCH) for portal in PORTALS]
         raw_results = await asyncio.gather(*tasks)
 
     successes = [r for r in raw_results if r is not None]
-    failures  = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
+    failures = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
 
     all_records: list[dict[str, Any]] = []
     for raw in successes:
-        for item in (raw.get("data") or []):
+        for item in raw.get("data") or []:
             normalized = normalize_vendor(item)
             if normalized:
                 all_records.append(normalized)
@@ -103,9 +104,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
     if not all_records:
         return not_found_response(
             module=MODULE,
-            query=query,
             source_url=source_url,
-            extra={"portal_errors": failures} if failures else {},
         )
 
     # deduplicate by NPWP
@@ -126,7 +125,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=confidence,
         source_url=source_url,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw={"portals_queried": len(PORTALS), "portals_succeeded": len(successes)},
     )
@@ -137,21 +136,18 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
     source_url = SOURCE_BASE + _VENDOR_SEARCH
 
     async with civic_client(proxy_url=proxy_url) as client:
-        tasks = [
-            _search_portal(client, portal, keyword, _VENDOR_SEARCH)
-            for portal in PORTALS
-        ]
+        tasks = [_search_portal(client, portal, keyword, _VENDOR_SEARCH) for portal in PORTALS]
         raw_results = await asyncio.gather(*tasks)
 
     successes = [r for r in raw_results if r is not None]
-    failures  = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
+    failures = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
     confidence = 1.0 if not failures else round(len(successes) / len(PORTALS), 2)
 
     seen: set[str] = set()
     responses: list[CivicStackResponse] = []
 
     for raw in successes:
-        for item in (raw.get("data") or []):
+        for item in raw.get("data") or []:
             rec = normalize_vendor(item)
             if not rec:
                 continue
@@ -159,15 +155,17 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
             if key in seen:
                 continue
             seen.add(key)
-            responses.append(CivicStackResponse(
-                result={**rec, "portal_errors": failures},
-                found=True,
-                status=RecordStatus.ACTIVE,
-                confidence=confidence,
-                source_url=source_url,
-                fetched_at=__import__("datetime").datetime.utcnow(),
-                module=MODULE,
-            ))
+            responses.append(
+                CivicStackResponse(
+                    result={**rec, "portal_errors": failures},
+                    found=True,
+                    status=RecordStatus.ACTIVE,
+                    confidence=confidence,
+                    source_url=source_url,
+                    fetched_at=datetime.now(UTC),
+                    module=MODULE,
+                )
+            )
 
     return responses
 
@@ -177,21 +175,18 @@ async def search_tenders(keyword: str, *, proxy_url: str | None = None) -> list[
     source_url = SOURCE_BASE + _TENDER_SEARCH
 
     async with civic_client(proxy_url=proxy_url) as client:
-        tasks = [
-            _search_portal(client, portal, keyword, _TENDER_SEARCH)
-            for portal in PORTALS
-        ]
+        tasks = [_search_portal(client, portal, keyword, _TENDER_SEARCH) for portal in PORTALS]
         raw_results = await asyncio.gather(*tasks)
 
     successes = [r for r in raw_results if r is not None]
-    failures  = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
+    failures = [PORTALS[i]["name"] for i, r in enumerate(raw_results) if r is None]
     confidence = 1.0 if not failures else round(len(successes) / len(PORTALS), 2)
 
     responses: list[CivicStackResponse] = []
     seen: set[str] = set()
 
     for raw in successes:
-        for item in (raw.get("data") or []):
+        for item in raw.get("data") or []:
             rec = normalize_tender(item)
             if not rec:
                 continue
@@ -199,14 +194,16 @@ async def search_tenders(keyword: str, *, proxy_url: str | None = None) -> list[
             if key in seen:
                 continue
             seen.add(key)
-            responses.append(CivicStackResponse(
-                result={**rec, "portal_errors": failures},
-                found=True,
-                status=RecordStatus.ACTIVE,
-                confidence=confidence,
-                source_url=source_url,
-                fetched_at=__import__("datetime").datetime.utcnow(),
-                module=MODULE,
-            ))
+            responses.append(
+                CivicStackResponse(
+                    result={**rec, "portal_errors": failures},
+                    found=True,
+                    status=RecordStatus.ACTIVE,
+                    confidence=confidence,
+                    source_url=source_url,
+                    fetched_at=datetime.now(UTC),
+                    module=MODULE,
+                )
+            )
 
     return responses

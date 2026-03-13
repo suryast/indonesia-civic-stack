@@ -8,7 +8,7 @@ changing application logic.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -76,7 +76,7 @@ def not_found_response(module: str, source_url: str) -> CivicStackResponse:
         status=RecordStatus.NOT_FOUND,
         confidence=1.0,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=module,
     )
 
@@ -90,6 +90,6 @@ def error_response(module: str, source_url: str, detail: str | None = None) -> C
         status=RecordStatus.ERROR,
         confidence=0.0,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=module,
     )

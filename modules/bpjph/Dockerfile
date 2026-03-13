@@ -20,6 +20,8 @@ RUN pip install --no-cache-dir httpx "beautifulsoup4>=4.12" playwright fastapi u
 # Install Playwright browser (chromium only — smallest footprint)
 RUN playwright install chromium
 
+RUN useradd -m -u 1000 civicapp
+USER civicapp
 EXPOSE 8000
 
 CMD ["uvicorn", "modules.bpjph.app:app", "--host", "0.0.0.0", "--port", "8000"]

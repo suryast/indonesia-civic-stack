@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -94,7 +94,7 @@ def normalize_company_page(
         status=status,
         confidence=_confidence(raw, query),
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         last_updated=_parse_date(raw.get("deed_date")),
         module=MODULE,
         raw={**raw, "directors": directors, "commissioners": commissioners} if debug else None,
@@ -126,7 +126,7 @@ def normalize_search_results(html: str, *, source_url: str) -> list[CivicStackRe
                 status=status,
                 confidence=0.8,
                 source_url=source_url,
-                fetched_at=datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from shared.mcp import CivicStackMCPBase
-from shared.schema import CivicStackResponse
 
 from .scraper import fetch, search, search_tenders
 
@@ -55,6 +54,7 @@ class LpseMCPServer(CivicStackMCPBase):
         )
         async def get_lpse_portals() -> list[dict]:
             from .scraper import PORTALS
+
             return PORTALS
 
 
