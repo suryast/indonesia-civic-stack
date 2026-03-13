@@ -14,6 +14,93 @@ Indonesian public data is nominally open but practically inaccessible. Every dev
 
 ---
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Your App"
+        A[halalkah.id] 
+        B[legalkah.id]
+        C[Your Project]
+    end
+
+    subgraph "civic-stack"
+        SDK[Python SDK]
+        MCP[MCP Servers]
+        API[REST API]
+        
+        subgraph "Shared Layer"
+            SC[shared/schema.py<br/>CivicStackResponse]
+            HC[shared/http.py<br/>Rate limiting · Retries]
+        end
+
+        subgraph "Phase 1"
+            BPOM[bpom<br/>Food & Drug]
+            BPJPH[bpjph<br/>Halal Certs]
+            AHU[ahu<br/>Company Registry]
+        end
+
+        subgraph "Phase 2"
+            OJK[ojk<br/>Financial Licenses]
+            OSS[oss_nib<br/>Business ID]
+            LPSE[lpse<br/>Procurement]
+            KPU[kpu<br/>Elections]
+        end
+    end
+
+    subgraph "Government Portals"
+        P1[cekbpom.pom.go.id]
+        P2[sertifikasi.halal.go.id]
+        P3[ahu.go.id]
+        P4[ojk.go.id]
+        P5[oss.go.id]
+        P6[lpse.*.go.id]
+        P7[kpu.go.id]
+    end
+
+    A & B & C --> SDK & MCP & API
+    SDK & MCP & API --> SC
+    SC --> BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU
+    BPOM & BPJPH & AHU & OJK & OSS & LPSE & KPU --> HC
+    BPOM --> P1
+    BPJPH --> P2
+    AHU --> P3
+    OJK --> P4
+    OSS --> P5
+    LPSE --> P6
+    KPU --> P7
+```
+
+## Request Flow
+
+```mermaid
+sequenceDiagram
+    participant App as Your App
+    participant SDK as civic-stack SDK
+    participant Norm as Normalizer
+    participant Scraper as Scraper
+    participant Portal as Gov Portal
+
+    App->>SDK: fetch("BPOM MD 123456789012")
+    SDK->>Scraper: HTTP request (rate-limited)
+    Scraper->>Portal: GET cekbpom.pom.go.id/...
+    Portal-->>Scraper: Raw HTML / JSON
+    Scraper-->>Norm: Raw response
+    Norm-->>SDK: CivicStackResponse
+    SDK-->>App: {found: true, status: "ACTIVE", result: {...}}
+```
+
+## Module Status
+
+```mermaid
+pie title Module Coverage by Phase
+    "Phase 1 — Live" : 3
+    "Phase 2 — Live" : 4
+    "Phase 3 — Planned" : 3
+```
+
+---
+
 ## Modules
 
 | Module | Source | Data | Status |
@@ -115,6 +202,23 @@ Every module returns `CivicStackResponse`:
 | `confidence` | float | 0.0–1.0 data reliability score |
 | `source_url` | str | Government portal URL queried |
 | `module` | str | Which module produced this |
+
+## Module Internals
+
+Each module follows the same structure:
+
+```mermaid
+graph LR
+    subgraph "Module (e.g. bpom)"
+        S[scraper.py<br/>fetch · search] --> N[normalizer.py<br/>raw → clean]
+        N --> R[router.py<br/>FastAPI routes]
+        N --> M[server.py<br/>MCP tools]
+    end
+
+    S -.->|httpx / Playwright| Portal[Gov Portal]
+    R --> App[REST consumers]
+    M --> AI[AI agents]
+```
 
 ---
 
