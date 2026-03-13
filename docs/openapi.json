@@ -1,0 +1,902 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "indonesia-civic-stack",
+    "description": "Production-ready scrapers and API wrappers for Indonesian government data sources. Phase 1: BPOM product registry, BPJPH halal certificates, AHU company registry.",
+    "contact": {
+      "name": "indonesia-civic-stack contributors",
+      "url": "https://github.com/suryast/indonesia-civic-stack"
+    },
+    "license": {
+      "name": "MIT / Apache-2.0 (per module — see LICENSES.md)",
+      "url": "https://github.com/suryast/indonesia-civic-stack/blob/main/LICENSES.md"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/bpom/check/{registration_no}": {
+      "get": {
+        "tags": [
+          "bpom"
+        ],
+        "summary": "Look up a BPOM product by registration number",
+        "description": "Fetch a single BPOM product registration record.\n\n- **registration_no**: e.g. `BPOM MD 123456789012` or `MD 123456789012`\n- **debug**: Set to `true` to include raw scraped HTML fields",
+        "operationId": "check_bpom_bpom_check__registration_no__get",
+        "parameters": [
+          {
+            "name": "registration_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Registration No"
+            }
+          },
+          {
+            "name": "debug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include raw scraped data in response",
+              "default": false,
+              "title": "Debug"
+            },
+            "description": "Include raw scraped data in response"
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy URL for IP rotation",
+              "title": "Proxy Url"
+            },
+            "description": "Optional proxy URL for IP rotation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpom/search": {
+      "get": {
+        "tags": [
+          "bpom"
+        ],
+        "summary": "Search BPOM products by name or keyword",
+        "description": "Search the BPOM registry by product name. Returns up to 10 results.",
+        "operationId": "search_bpom_bpom_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Product name or partial name to search",
+              "title": "Q"
+            },
+            "description": "Product name or partial name to search"
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional proxy URL for IP rotation",
+              "title": "Proxy Url"
+            },
+            "description": "Optional proxy URL for IP rotation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CivicStackResponse"
+                  },
+                  "title": "Response Search Bpom Bpom Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpom/status/{registration_no}": {
+      "get": {
+        "tags": [
+          "bpom"
+        ],
+        "summary": "Get BPOM registration status (lighter than /check)",
+        "description": "Returns the status and expiry of a BPOM registration without full detail.\nInternally calls the same fetch() but clients can use this endpoint\nwhen they only need the status field.",
+        "operationId": "get_bpom_status_bpom_status__registration_no__get",
+        "parameters": [
+          {
+            "name": "registration_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Registration No"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpjph/check/{cert_no}": {
+      "get": {
+        "tags": [
+          "bpjph"
+        ],
+        "summary": "Look up a halal certificate by certificate number",
+        "description": "Fetch a single BPJPH halal certificate record by certificate number.",
+        "operationId": "check_halal_cert_bpjph_check__cert_no__get",
+        "parameters": [
+          {
+            "name": "cert_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cert No"
+            }
+          },
+          {
+            "name": "debug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Debug"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpjph/search": {
+      "get": {
+        "tags": [
+          "bpjph"
+        ],
+        "summary": "Search halal certificates by product or company name",
+        "description": "Search SiHalal by product name or company name.",
+        "operationId": "lookup_halal_by_product_bpjph_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Product name or company name",
+              "title": "Q"
+            },
+            "description": "Product name or company name"
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CivicStackResponse"
+                  },
+                  "title": "Response Lookup Halal By Product Bpjph Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpjph/status/{cert_no}": {
+      "get": {
+        "tags": [
+          "bpjph"
+        ],
+        "summary": "Get halal certificate status",
+        "description": "Return status and expiry of a halal certificate.",
+        "operationId": "get_halal_status_bpjph_status__cert_no__get",
+        "parameters": [
+          {
+            "name": "cert_no",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cert No"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bpjph/cross-ref": {
+      "get": {
+        "tags": [
+          "bpjph"
+        ],
+        "summary": "Cross-reference product between BPJPH (halal) and BPOM (registration)",
+        "description": "Look up a product in both BPJPH (halal cert) and BPOM (product registration)\nand flag any status mismatch (e.g. BPOM active but halal cert expired).",
+        "operationId": "cross_reference_bpjph_cross_ref_get",
+        "parameters": [
+          {
+            "name": "product_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Product name to cross-reference",
+              "title": "Product Name"
+            },
+            "description": "Product name to cross-reference"
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Cross Reference Bpjph Cross Ref Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ahu/company/{query}": {
+      "get": {
+        "tags": [
+          "ahu"
+        ],
+        "summary": "Look up a company in the AHU registry",
+        "description": "Fetch a company record from ahu.go.id by name or registration number.\n\n**Note:** AHU blocks datacenter IPs. Provide `proxy_url` in production.",
+        "operationId": "lookup_company_ahu_ahu_company__query__get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Query"
+            }
+          },
+          {
+            "name": "debug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Debug"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cloudflare Worker or residential proxy URL",
+              "title": "Proxy Url"
+            },
+            "description": "Cloudflare Worker or residential proxy URL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ahu/company/{company_id}/directors": {
+      "get": {
+        "tags": [
+          "ahu"
+        ],
+        "summary": "Get directors and commissioners for a company",
+        "description": "Fetch company detail and return with directors/commissioners in result.",
+        "operationId": "get_company_directors_ahu_company__company_id__directors_get",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Company Id"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ahu/company/{company_id}/status": {
+      "get": {
+        "tags": [
+          "ahu"
+        ],
+        "summary": "Verify company legal status",
+        "description": "Return legal status, registration number, and deed date for a company.",
+        "operationId": "verify_company_status_ahu_company__company_id__status_get",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Company Id"
+            }
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CivicStackResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ahu/search": {
+      "get": {
+        "tags": [
+          "ahu"
+        ],
+        "summary": "Search AHU company registry by keyword",
+        "description": "Search the AHU registry by company name keyword. Returns up to 10 results.",
+        "operationId": "search_companies_ahu_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Company name keyword",
+              "title": "Q"
+            },
+            "description": "Company name keyword"
+          },
+          {
+            "name": "proxy_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proxy Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CivicStackResponse"
+                  },
+                  "title": "Response Search Companies Ahu Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CivicStackResponse": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Normalized domain object. Schema is module-specific and documented per module."
+          },
+          "found": {
+            "type": "boolean",
+            "title": "Found",
+            "description": "True if a record was located for the query."
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecordStatus",
+            "description": "Canonical status of the located record, or NOT_FOUND / ERROR."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Scraper confidence in result accuracy. 1.0 = verified exact match."
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "description": "The canonical government URL this data was retrieved from."
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At",
+            "description": "Timestamp of this specific fetch (UTC)."
+          },
+          "last_updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Updated",
+            "description": "Last known update date from the source portal, if available."
+          },
+          "module": {
+            "type": "string",
+            "title": "Module",
+            "description": "Module identifier, e.g. 'bpom', 'ahu', 'bpjph'."
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw",
+            "description": "Raw scraped data before normalization. Only included when debug=True."
+          }
+        },
+        "type": "object",
+        "required": [
+          "found",
+          "status",
+          "confidence",
+          "source_url",
+          "fetched_at",
+          "module"
+        ],
+        "title": "CivicStackResponse",
+        "description": "Normalized response envelope returned by every module.\n\nConsumers should key on `found` and `status` before reading `result`.\nThe `raw` field is only populated when the caller passes debug=True."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "RecordStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "EXPIRED",
+          "SUSPENDED",
+          "REVOKED",
+          "NOT_FOUND",
+          "ERROR"
+        ],
+        "title": "RecordStatus"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
