@@ -33,9 +33,18 @@ _LEGAL_FORMS = {"PT", "CV", "Firma", "Koperasi", "Yayasan", "Perkumpulan", "UD"}
 
 _DATE_FORMATS = ["%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d %B %Y"]
 _ID_MONTHS = {
-    "januari": "01", "februari": "02", "maret": "03", "april": "04",
-    "mei": "05", "juni": "06", "juli": "07", "agustus": "08",
-    "september": "09", "oktober": "10", "november": "11", "desember": "12",
+    "januari": "01",
+    "februari": "02",
+    "maret": "03",
+    "april": "04",
+    "mei": "05",
+    "juni": "06",
+    "juli": "07",
+    "agustus": "08",
+    "september": "09",
+    "oktober": "10",
+    "november": "11",
+    "desember": "12",
 }
 
 # Field label → normalized key
@@ -139,7 +148,7 @@ def _extract_company_fields(soup: BeautifulSoup) -> dict[str, str]:
                 data[mapped] = value
     # Also try definition-list layouts (newer React portals)
     for dl in soup.find_all("dl"):
-        for dt, dd in zip(dl.find_all("dt"), dl.find_all("dd")):
+        for dt, dd in zip(dl.find_all("dt"), dl.find_all("dd"), strict=False):
             label = dt.get_text(strip=True).lower()
             value = dd.get_text(strip=True)
             mapped = _FIELD_MAP.get(label)
@@ -182,7 +191,9 @@ def _parse_person_table(table: Any) -> list[dict[str, str]]:
         cells = tr.find_all("td")
         if not cells:
             continue
-        person = {headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))}
+        person = {
+            headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))
+        }
         if person:
             people.append(person)
     return people
@@ -198,7 +209,12 @@ def _extract_table_rows(soup: BeautifulSoup) -> list[dict[str, str]]:
         cells = tr.find_all("td")
         if not cells:
             continue
-        rows.append({headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))})
+        rows.append(
+            {
+                headers[i]: cells[i].get_text(strip=True)
+                for i in range(min(len(headers), len(cells)))
+            }
+        )
     return rows
 
 

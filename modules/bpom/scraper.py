@@ -125,7 +125,9 @@ def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
         cells = tr.find_all("td")
         if not cells:
             continue
-        row = {headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))}
+        row = {
+            headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))
+        }
         rows.append(row)
 
     return rows

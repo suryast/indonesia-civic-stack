@@ -47,11 +47,10 @@ class CivicStackMCPBase(ABC):
         # Import here so FastMCP is only required at runtime, not at import time
         # (keeps shared/ importable in envs where fastmcp is not installed)
         try:
-            from fastmcp import FastMCP  # type: ignore[import]
+            from fastmcp import FastMCP
         except ImportError as exc:
             raise ImportError(
-                "fastmcp is required to use CivicStackMCPBase. "
-                "Install it with: pip install fastmcp"
+                "fastmcp is required to use CivicStackMCPBase. Install it with: pip install fastmcp"
             ) from exc
 
         self.module_name = module_name
@@ -83,7 +82,7 @@ class CivicStackMCPBase(ABC):
         MCP tools should return this dict rather than raising, so the AI agent
         can reason about the failure (e.g. ScraperBlockedError vs. NOT_FOUND).
         """
-        from shared.schema import RecordStatus, error_response
+        from shared.schema import error_response
 
         response = error_response(
             module=self.module_name,
