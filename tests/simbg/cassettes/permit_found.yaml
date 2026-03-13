@@ -1,0 +1,151 @@
+interactions:
+# National API search
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://simbg.pu.go.id/api/v1/pbg/search?keyword=Jl.+Sudirman+No.+1&limit=20
+  response:
+    body:
+      string: >-
+        {"status":"success","data":[
+          {"nomor_pbg":"PBG-JKT-2024-001234",
+           "jenis_izin":"Persetujuan Bangunan Gedung (PBG)",
+           "nama_pemilik":"PT TOWER BERSAMA INFRASTRUCTURE TBK",
+           "alamat_bangunan":"Jl. Sudirman No. 1, Karet Tengsin",
+           "kelurahan":"Karet Tengsin","kecamatan":"Tanah Abang",
+           "kota":"Jakarta Pusat","provinsi":"DKI Jakarta",
+           "luas_bangunan":"45000","jumlah_lantai":"28",
+           "fungsi_bangunan":"Perkantoran",
+           "status_pbg":"Berlaku",
+           "tanggal_terbit":"2024-03-15",
+           "tanggal_berlaku":"2044-03-15",
+           "instansi_penerbit":"Dinas Cipta Karya, Tata Ruang, dan Pertanahan DKI Jakarta",
+           "koordinat":"-6.2088,106.8232"}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+# Pilot portals — all return 503/empty for this query
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://jakevo.jakarta.go.id/api/bangunan/search?q=Jl.+Sudirman+No.+1&page=1&limit=10
+  response:
+    body:
+      string: '{"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://simbg.surabaya.go.id/api/v1/search?q=Jl.+Sudirman+No.+1&page=1&limit=10
+  response:
+    body:
+      string: '{"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://simbg.bandung.go.id/api/v1/search?q=Jl.+Sudirman+No.+1&page=1&limit=10
+  response:
+    body:
+      string: '{"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://simbg.pemkomedan.go.id/api/v1/search?q=Jl.+Sudirman+No.+1&page=1&limit=10
+  response:
+    body:
+      string: '{"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://simbg.makassar.go.id/api/v1/search?q=Jl.+Sudirman+No.+1&page=1&limit=10
+  response:
+    body:
+      string: '{"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

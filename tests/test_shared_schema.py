@@ -5,7 +5,7 @@ These verify the Sprint 0 done condition:
   "CivicStackResponse is importable from shared.schema and pytest passes."
 """
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 import pytest
 
@@ -24,7 +24,7 @@ def test_response_envelope_construction():
         status=RecordStatus.ACTIVE,
         confidence=1.0,
         source_url="https://cekbpom.pom.go.id",
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module="bpom",
     )
     assert resp.found is True
@@ -62,7 +62,7 @@ def test_confidence_bounds():
             status=RecordStatus.NOT_FOUND,
             confidence=1.5,  # out of range
             source_url="https://example.go.id",
-            fetched_at=datetime.now(UTC),
+            fetched_at=datetime.utcnow(),
             module="test",
         )
 

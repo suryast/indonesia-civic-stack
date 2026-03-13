@@ -22,8 +22,6 @@ RUN playwright install chromium
 # AHU will block requests without proxy routing from datacenter IPs.
 ENV PROXY_URL=""
 
-RUN useradd -m -u 1000 civicapp
-USER civicapp
 EXPOSE 8000
 
 CMD ["uvicorn", "modules.ahu.app:app", "--host", "0.0.0.0", "--port", "8000"]

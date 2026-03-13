@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -61,7 +61,7 @@ def normalize_nib_page(
         status=status,
         confidence=_confidence(raw, query),
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module=MODULE,
         raw=raw if debug else None,
     )
@@ -91,7 +91,7 @@ def normalize_search_results(html: str, *, source_url: str) -> list[CivicStackRe
                 status=status,
                 confidence=0.8,
                 source_url=source_url,
-                fetched_at=datetime.now(UTC),
+                fetched_at=datetime.utcnow(),
                 module=MODULE,
             )
         )

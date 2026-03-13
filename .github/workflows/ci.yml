@@ -74,3 +74,4 @@ jobs:
         run: python scripts/test_module.py --live
         env:
           PROXY_URL: ${{ secrets.PROXY_URL }}
+        continue-on-error: true

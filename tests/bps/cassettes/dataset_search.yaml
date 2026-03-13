@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://webapi.bps.go.id/v1/api/list/model/subject/lang/ind/?key=TEST_KEY&keyword=kemiskinan&page=1&row=20
+  response:
+    body:
+      string: >-
+        {"status":"OK","data":[
+          {"subj_id":"23","subj":"Kemiskinan dan Ketimpangan","kat_id":"2","kat":"Sosial",
+           "n_notavail":0},
+          {"subj_id":"24","subj":"Indeks Pembangunan Manusia","kat_id":"2","kat":"Sosial",
+           "n_notavail":0},
+          {"subj_id":"25","subj":"Pengeluaran Penduduk","kat_id":"2","kat":"Sosial",
+           "n_notavail":0}
+        ],"page":1,"total_page":1,"total_data":3}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

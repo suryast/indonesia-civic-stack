@@ -1,9 +1,9 @@
 """
 Unified FastAPI application — mounts all module routers.
 
-Security:
-- API key authentication (set CIVIC_API_KEY env var to enable)
-- Per-IP rate limiting (60 req/min default, configurable via CIVIC_RATE_LIMIT)
+This is the single-process entry point for local development and Railway
+deployment when running all modules together. In production, each module
+can also be deployed independently via its own modules/<name>/app.py.
 
 Usage:
     uvicorn app:app --reload
@@ -12,28 +12,29 @@ Usage:
 
 from __future__ import annotations
 
-import os
-import time
-from collections import defaultdict
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from modules.ahu.router import router as ahu_router
+from modules.bmkg.router import router as bmkg_router
 from modules.bpjph.router import router as bpjph_router
 from modules.bpom.router import router as bpom_router
+from modules.bps.router import router as bps_router
 from modules.kpu.router import router as kpu_router
+from modules.lhkpn.router import router as lhkpn_router
 from modules.lpse.router import router as lpse_router
 from modules.ojk.router import router as ojk_router
 from modules.oss_nib.router import router as oss_nib_router
+from modules.simbg.router import router as simbg_router
 
 app = FastAPI(
     title="indonesia-civic-stack",
     description=(
         "Production-ready scrapers and API wrappers for Indonesian government data sources. "
-        "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE."
+        "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE. "
+        "Phase 3: LHKPN, BPS, BMKG, SIMBG."
     ),
-    version="0.2.0",
+    version="0.3.0",
     contact={
         "name": "indonesia-civic-stack contributors",
         "url": "https://github.com/suryast/indonesia-civic-stack",
@@ -44,79 +45,39 @@ app = FastAPI(
     },
 )
 
-# ---------------------------------------------------------------------------
-# Rate limiting (in-memory, per-IP)
-# ---------------------------------------------------------------------------
-_RATE_LIMIT = int(os.environ.get("CIVIC_RATE_LIMIT", "60"))  # requests per minute
-_rate_store: dict[str, list[float]] = defaultdict(list)
-
-
-def _check_rate_limit(ip: str) -> bool:
-    """Return True if request is within rate limit."""
-    now = time.monotonic()
-    window = 60.0
-    timestamps = _rate_store[ip]
-    # Prune old entries
-    _rate_store[ip] = [t for t in timestamps if now - t < window]
-    if len(_rate_store[ip]) >= _RATE_LIMIT:
-        return False
-    _rate_store[ip].append(now)
-    return True
-
-
-# ---------------------------------------------------------------------------
-# Middleware: API key auth + rate limiting
-# ---------------------------------------------------------------------------
-_API_KEY = os.environ.get("CIVIC_API_KEY", "").strip()
-_PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc"}
-
-
-@app.middleware("http")
-async def auth_and_rate_limit(request: Request, call_next):
-    path = request.url.path
-
-    # API key check (only enforced if CIVIC_API_KEY is set)
-    if path not in _PUBLIC_PATHS and _API_KEY:
-        provided = request.headers.get("X-API-Key") or request.query_params.get("api_key") or ""
-        if provided != _API_KEY:
-            return JSONResponse(
-                {"error": "Invalid or missing API key"},
-                status_code=401,
-                headers={"WWW-Authenticate": "ApiKey"},
-            )
-
-    # Rate limiting (always active)
-    client_ip = request.headers.get(
-        "X-Forwarded-For", request.client.host if request.client else "unknown"
-    )
-    if isinstance(client_ip, str) and "," in client_ip:
-        client_ip = client_ip.split(",")[0].strip()
-
-    if not _check_rate_limit(client_ip):
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "limit": f"{_RATE_LIMIT}/min"},
-            status_code=429,
-            headers={"Retry-After": "60"},
-        )
-
-    return await call_next(request)
-
-
-# ---------------------------------------------------------------------------
-# Routers
-# ---------------------------------------------------------------------------
-# Phase 1
+# Phase 1 routers
 app.include_router(bpom_router)
 app.include_router(bpjph_router)
 app.include_router(ahu_router)
 
-# Phase 2
+# Phase 2 routers
 app.include_router(kpu_router)
 app.include_router(ojk_router)
 app.include_router(oss_nib_router)
 app.include_router(lpse_router)
 
-_ALL_MODULES = ["bpom", "bpjph", "ahu", "kpu", "ojk", "oss_nib", "lpse"]
+# Phase 3 routers
+app.include_router(lhkpn_router)
+app.include_router(bps_router)
+app.include_router(bmkg_router)
+app.include_router(simbg_router)
+
+_ALL_MODULES = [
+    # Phase 1
+    "bpom",
+    "bpjph",
+    "ahu",
+    # Phase 2
+    "kpu",
+    "ojk",
+    "oss_nib",
+    "lpse",
+    # Phase 3
+    "lhkpn",
+    "bps",
+    "bmkg",
+    "simbg",
+]
 
 
 @app.get("/", include_in_schema=False)
@@ -124,8 +85,8 @@ async def root() -> JSONResponse:
     return JSONResponse(
         {
             "name": "indonesia-civic-stack",
-            "version": "0.2.0",
-            "phase": 2,
+            "version": "0.3.0",
+            "phase": 3,
             "modules": _ALL_MODULES,
             "docs": "/docs",
             "openapi": "/openapi.json",

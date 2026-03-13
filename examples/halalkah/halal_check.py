@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from modules.bpjph import cross_ref_bpom
@@ -187,7 +187,7 @@ class HalalKahChecker:
             bpom_reg_no=bpom_result.get("registration_no"),
             bpom_expiry=bpom_result.get("expiry_date"),
             company=bpjph_result.get("company") or bpom_result.get("company"),
-            fetched_at=datetime.now(UTC).isoformat(),
+            fetched_at=datetime.utcnow().isoformat(),
             confidence=min(
                 bpjph.get("confidence", 0.0) or 0.0,
                 bpom.get("confidence", 0.0) or 0.0,

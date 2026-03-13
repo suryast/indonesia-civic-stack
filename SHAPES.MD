@@ -45,7 +45,7 @@ contributor guardrails (CI, lint), and repo scaffolding that future module PRs c
 **Owner:** Core maintainer(s)
 
 ### Problem
-halalkah.id and consumer safety app are currently running bespoke scrapers that will bit-rot. These three
+halalkah.id and AmanKah are currently running bespoke scrapers that will bit-rot. These three
 modules are the minimum to make civic-stack a real dependency, not just scaffolding. All three
 sources are publicly accessible (no login required for the data tier we need).
 
@@ -178,9 +178,9 @@ product. This sprint makes the repo public-ready and delivers the first real con
 **Owner:** Community contributors + core review
 
 ### Problem
-Phase 1 unblocks halalkah.id and consumer safety app. Phase 2 expands civic-stack's coverage to financial
+Phase 1 unblocks halalkah.id and AmanKah. Phase 2 expands civic-stack's coverage to financial
 licensing, business identity, procurement, and election data — enabling legalkah.id deepening,
-license verification app, TerpercayaKah, and BenarKah.
+IzinKah, TerpercayaKah, and BenarKah.
 
 ### Module shapes (parallel tracks — each is a self-contained contributor PR)
 
@@ -189,14 +189,14 @@ license verification app, TerpercayaKah, and BenarKah.
 **Method:** REST + light scrape for gaps
 **Key outputs:** Institution name · license type · license status · regulated products
 **MCP tools:** `check_ojk_license(name_or_id)` · `search_ojk_institutions(type)` · `get_ojk_status(id)`
-**Powers:** legalkah.id (financial license verification), consumer safety app (unlicensed fintech detection)
+**Powers:** legalkah.id (financial license verification), AmanKah (unlicensed fintech detection)
 
 #### `modules/oss-nib/`
 **Source:** oss.go.id OSS RBA — public search tier only (no login)
 **Method:** Playwright form submission
 **Key outputs:** NIB number · company name · business classification · basic status
 **MCP tools:** `lookup_nib(company_name)` · `verify_nib(nib_number)`
-**Powers:** license verification app, business verification app
+**Powers:** IzinKah, SahKah
 **Note:** Confirm with legalkah.id team that public tier (name → NIB → status) is sufficient for v1
 before investing in login-tier access.
 
@@ -266,7 +266,7 @@ This module warrants its own mini-sprint before community handoff.
 **Method:** Multi-portal scraper (similar aggregator pattern to lpse)
 **Key outputs:** Permit number · permit type · address · status · issuing authority
 **MCP tools:** `lookup_building_permit(address_or_id)` · `search_permits_by_area(region)`
-**Powers:** license verification app
+**Powers:** IzinKah
 **Complexity note:** Most fragmented module in scope. Recommend starting with 3–5 pilot regions
 (Jakarta, Surabaya, Bandung, Medan, Makassar) and expanding incrementally.
 
@@ -274,7 +274,7 @@ This module warrants its own mini-sprint before community handoff.
 - `lhkpn` and `bps` modules merged before week 10 (highest priority)
 - `bmkg` and `simbg` follow-on (bmkg is low-risk quick win; simbg is longest tail)
 - All merged modules pass module contract
-- consumer safety app.id live using civic-stack (Sprint 4 success metric per PRD)
+- AmanKah.id live using civic-stack (Sprint 4 success metric per PRD)
 - ≥200 GitHub stars by end of Sprint 4
 
 ---
@@ -287,7 +287,7 @@ These items are captured but deliberately deferred. Do not let them creep into e
 |---|---|---|
 | Caching layer (`cache=` param) | Leave to consumers in v1; add in v2 when consumer patterns are understood | Post Phase 2 |
 | MCP stdio transport (vs HTTP) | HTTP is better for multi-user Railway deploy; stdio is a local-dev convenience | After launch, based on community requests |
-| OSS-NIB login tier | Public search tier likely sufficient for business verification app v1; confirm before building auth flow | After business verification app v1 ships |
+| OSS-NIB login tier | Public search tier likely sufficient for SahKah v1; confirm before building auth flow | After SahKah v1 ships |
 | Data warehouse / persistence | Explicitly out of scope per PRD. Consumers own persistence. | Never (PRD non-goal) |
 | Frontend / UI | Out of scope per PRD. CLI debug tooling in `scripts/` is the limit. | Never (PRD non-goal) |
 | pasal.id legal text modules | pasal.id's domain; cross-link and co-promote, do not duplicate | Never (PRD non-goal) |

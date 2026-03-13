@@ -45,7 +45,7 @@ investment managers, and payment providers.
 
 ### Powers
 
-a downstream product (financial license verification), consumer safety app (unlicensed fintech alert)
+legalkah.id (financial license verification), AmanKah (unlicensed fintech alert)
 
 ### Acceptance criteria
 
@@ -68,7 +68,7 @@ NIB (Nomor Induk Berusaha) business identity lookup. Public search tier
 
 - Portal: https://oss.go.id/informasi/pencarian-nib
 - Method: Playwright (JS-rendered form)
-- Auth: None for public search tier (confirm NIB number + basic status is sufficient for business verification app v1)
+- Auth: None for public search tier (confirm NIB number + basic status is sufficient for SahKah v1)
 
 ### Key outputs
 
@@ -90,12 +90,12 @@ NIB (Nomor Induk Berusaha) business identity lookup. Public search tier
 
 ### Powers
 
-license verification app, business verification app
+IzinKah, SahKah
 
 ### Open question to resolve before implementing
 
-Confirm with downstream team: is the public search tier (name → NIB → status)
-sufficient for business verification app v1, or do we need the authenticated tier for full detail?
+Confirm with legalkah.id team: is the public search tier (name → NIB → status)
+sufficient for SahKah v1, or do we need the authenticated tier for full detail?
 Comment on this issue with the answer before starting implementation.
 
 ---

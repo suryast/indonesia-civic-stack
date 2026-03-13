@@ -8,7 +8,7 @@ changing application logic.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
@@ -68,28 +68,43 @@ class CivicStackResponse(BaseModel):
     model_config = {"use_enum_values": True}
 
 
-def not_found_response(module: str, source_url: str) -> CivicStackResponse:
+def not_found_response(
+    module: str,
+    source_url: str,
+    *,
+    query: str | None = None,
+    extra: dict | None = None,
+) -> CivicStackResponse:
     """Convenience constructor for a clean NOT_FOUND response."""
+    result = extra if extra else None
     return CivicStackResponse(
-        result=None,
+        result=result,
         found=False,
         status=RecordStatus.NOT_FOUND,
         confidence=1.0,
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module=module,
     )
 
 
-def error_response(module: str, source_url: str, detail: str | None = None) -> CivicStackResponse:
+def error_response(
+    module: str,
+    source_url: str,
+    *,
+    query: str | None = None,
+    detail: str | None = None,
+    message: str | None = None,
+) -> CivicStackResponse:
     """Convenience constructor for an ERROR response."""
-    result = {"detail": detail} if detail else None
+    msg = detail or message
+    result = {"detail": msg} if msg else None
     return CivicStackResponse(
         result=result,
         found=False,
         status=RecordStatus.ERROR,
         confidence=0.0,
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module=module,
     )

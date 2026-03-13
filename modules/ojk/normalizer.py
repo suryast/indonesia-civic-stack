@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from shared.schema import CivicStackResponse, RecordStatus
@@ -56,7 +56,7 @@ def normalize_institution(
         status=status,
         confidence=1.0 if data.get("no_izin") or data.get("nomor_izin") else 0.85,
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module=MODULE,
         raw=data if debug else None,
     )
@@ -84,7 +84,7 @@ def normalize_search_row(
         status=status,
         confidence=0.8,
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=datetime.utcnow(),
         module=MODULE,
         raw=row if debug else None,
     )
