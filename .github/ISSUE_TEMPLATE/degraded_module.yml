@@ -1,0 +1,58 @@
+name: Degraded module report
+description: A module has stopped working because the portal changed. Use this to flag it for community fix.
+labels: ["degraded"]
+body:
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      options:
+        - bpom
+        - bpjph
+        - ahu
+        - ojk
+        - oss-nib
+        - lpse
+        - kpu
+        - lhkpn
+        - bps
+        - bmkg
+        - simbg
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Symptom
+      description: What is failing? Which test or query broke?
+      placeholder: |
+        fetch("BPOM MD 123456789012") now returns status=ERROR.
+        CI cassette `found.yaml` replays fine but live portal returns 404.
+    validations:
+      required: true
+
+  - type: textarea
+    id: portal_change
+    attributes:
+      label: What changed on the portal?
+      description: If known — new URL, new HTML structure, added JS rendering, etc.
+      placeholder: "Portal moved from PHP to React SPA. Table selectors are now dynamic class names."
+    validations:
+      required: false
+
+  - type: input
+    id: first_seen
+    attributes:
+      label: When did this break?
+      placeholder: "e.g. 2026-03-10 (noticed in weekly CI run)"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: fix_interest
+    attributes:
+      label: Fix interest
+      options:
+        - label: I am willing to investigate and open a fix PR
+        - label: I can provide updated cassettes / fixtures once the portal change is understood

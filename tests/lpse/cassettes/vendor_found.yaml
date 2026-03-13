@@ -1,0 +1,143 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://lpse.lkpp.go.id/eproc4/dt/rekanan?term=PT+Garuda+Indonesia&draw=1&start=0&length=10
+  response:
+    body:
+      string: >-
+        {"draw":1,"recordsTotal":3,"recordsFiltered":3,"data":[
+          {"kodeRekanan":"R-001-GARUDA","namaRekanan":"PT GARUDA INDONESIA (PERSERO) TBK",
+           "npwp":"01.000.013.0-051.000","alamat":"Jl. Kebon Sirih No.44","kota":"Jakarta Pusat",
+           "provinsi":"DKI Jakarta","telepon":"021-2351 9999","email":"procurement@garuda-indonesia.com",
+           "statusAktif":true,"jenisUsaha":"Badan Usaha Milik Negara","kualifikasi":"Besar",
+           "bidangUsaha":"Transportasi Udara"},
+          {"kodeRekanan":"R-002-GMFAA","namaRekanan":"PT GARUDA MAINTENANCE FACILITY AERO ASIA TBK",
+           "npwp":"01.234.567.8-012.000","alamat":"Soekarno-Hatta International Airport","kota":"Tangerang",
+           "provinsi":"Banten","telepon":"021-5591 5000","email":"procurement@gmf-aeroasia.co.id",
+           "statusAktif":true,"jenisUsaha":"Badan Usaha Milik Negara","kualifikasi":"Besar",
+           "bidangUsaha":"Pemeliharaan Pesawat"},
+          {"kodeRekanan":"R-003-GIA","namaRekanan":"PT GARUDA INDONESIA HOLIDAY RESORT",
+           "npwp":"02.345.678.9-023.000","alamat":"Jl. Nusa Dua Selatan","kota":"Badung",
+           "provinsi":"Bali","telepon":"0361-771020","email":"info@garudaholiday.co.id",
+           "statusAktif":false,"jenisUsaha":"Perseroan Terbatas","kualifikasi":"Menengah",
+           "bidangUsaha":"Perhotelan"}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://lpse.pu.go.id/eproc4/dt/rekanan?term=PT+Garuda+Indonesia&draw=1&start=0&length=10
+  response:
+    body:
+      string: >-
+        {"draw":1,"recordsTotal":1,"recordsFiltered":1,"data":[
+          {"kodeRekanan":"R-001-GARUDA","namaRekanan":"PT GARUDA INDONESIA (PERSERO) TBK",
+           "npwp":"01.000.013.0-051.000","alamat":"Jl. Kebon Sirih No.44","kota":"Jakarta Pusat",
+           "provinsi":"DKI Jakarta","telepon":"021-2351 9999","email":"procurement@garuda-indonesia.com",
+           "statusAktif":true,"jenisUsaha":"Badan Usaha Milik Negara","kualifikasi":"Besar",
+           "bidangUsaha":"Transportasi Udara"}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://lpse.kominfo.go.id/eproc4/dt/rekanan?term=PT+Garuda+Indonesia&draw=1&start=0&length=10
+  response:
+    body:
+      string: '{"draw":1,"recordsTotal":0,"recordsFiltered":0,"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://lpse.kemenkeu.go.id/eproc4/dt/rekanan?term=PT+Garuda+Indonesia&draw=1&start=0&length=10
+  response:
+    body:
+      string: >-
+        {"draw":1,"recordsTotal":1,"recordsFiltered":1,"data":[
+          {"kodeRekanan":"R-001-GARUDA","namaRekanan":"PT GARUDA INDONESIA (PERSERO) TBK",
+           "npwp":"01.000.013.0-051.000","alamat":"Jl. Kebon Sirih No.44","kota":"Jakarta Pusat",
+           "provinsi":"DKI Jakarta","telepon":"021-2351 9999","email":"procurement@garuda-indonesia.com",
+           "statusAktif":true,"jenisUsaha":"Badan Usaha Milik Negara","kualifikasi":"Besar",
+           "bidangUsaha":"Transportasi Udara"}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://lpse.kemenkes.go.id/eproc4/dt/rekanan?term=PT+Garuda+Indonesia&draw=1&start=0&length=10
+  response:
+    body:
+      string: '{"draw":1,"recordsTotal":0,"recordsFiltered":0,"data":[]}'
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,38 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Language: ['id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
+    method: GET
+    uri: https://sirekap-obj-data.kpu.go.id/pemilu/hhcw/pdpr/31.json
+  response:
+    body:
+      string: |
+        {
+          "chart": {
+            "PDIP": 1234567,
+            "Golkar": 987654,
+            "Gerindra": 876543,
+            "PKB": 765432,
+            "Demokrat": 654321,
+            "PKS": 543210,
+            "Nasdem": 432109,
+            "PPP": 321098,
+            "Hanura": 210987,
+            "PAN": 198765
+          },
+          "progres": {
+            "total": 12450,
+            "progres": 12450
+          },
+          "ts": "2024-03-15 20:00:00"
+        }
+    headers:
+      Content-Type: ['application/json; charset=utf-8']
+    status:
+      code: 200
+      message: OK
+version: 1

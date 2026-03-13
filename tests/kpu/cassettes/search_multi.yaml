@@ -1,0 +1,48 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Language: ['id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7']
+      Connection: [keep-alive]
+      User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
+    method: GET
+    uri: https://infopemilu.kpu.go.id/Pemilu/caleg/list?nama=Ahmad&limit=10
+  response:
+    body:
+      string: |
+        {
+          "data": [
+            {
+              "id": "1100012024002",
+              "nama": "AHMAD YUSUF",
+              "partai": "Golkar",
+              "no_partai": 4,
+              "jenis_pemilu": "dpr",
+              "dapil": "JAWA BARAT II",
+              "jabatan": "Anggota DPR RI",
+              "jenis_kelamin": "L",
+              "suara_sah": 38900,
+              "terpilih": false
+            },
+            {
+              "id": "1100012024003",
+              "nama": "AHMAD FAUZI",
+              "partai": "PKS",
+              "no_partai": 8,
+              "jenis_pemilu": "dprd_prov",
+              "dapil": "DKI JAKARTA I",
+              "jabatan": "Anggota DPRD Provinsi",
+              "jenis_kelamin": "L",
+              "suara_sah": 12450,
+              "terpilih": true
+            }
+          ],
+          "total": 2
+        }
+    headers:
+      Content-Type: ['application/json; charset=utf-8']
+    status:
+      code: 200
+      message: OK
+version: 1

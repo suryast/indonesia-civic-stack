@@ -1,0 +1,66 @@
+name: Bug report
+description: A module is returning wrong data, erroring unexpectedly, or behaving incorrectly.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      description: Which module is affected?
+      options:
+        - bpom
+        - bpjph
+        - ahu
+        - ojk
+        - oss-nib
+        - lpse
+        - kpu
+        - lhkpn
+        - bps
+        - bmkg
+        - simbg
+        - shared (schema / http / mcp)
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug. Include the query you ran, the response you got, and what you expected.
+      placeholder: |
+        I called `fetch("BPOM MD 123456789012")` and got status=ERROR.
+        Expected status=ACTIVE. The portal shows the product as active.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `pip install indonesia-civic-stack`
+        2. `await fetch("BPOM MD 123456789012")`
+        3. Response: {...}
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - civic-stack version: 0.1.0
+        - Python: 3.11.9
+        - OS: Ubuntu 22.04
+        - proxy_url: yes/no
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: portal_check
+    attributes:
+      label: Portal verification
+      options:
+        - label: I checked the live portal manually and the data is there / the portal is reachable
