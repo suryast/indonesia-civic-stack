@@ -1,0 +1,102 @@
+"""
+Base class for all indonesia-civic-stack MCP servers.
+
+Every module's MCP server must:
+1. Inherit from CivicStackMCPBase
+2. Implement the abstract tools using @mcp.tool() decorators
+3. Call super().__init__(module_name) in __init__
+
+Usage example (in modules/bpom/server.py):
+
+    from shared.mcp import CivicStackMCPBase
+
+    class BpomMCPServer(CivicStackMCPBase):
+        def __init__(self) -> None:
+            super().__init__("bpom")
+            self._register_tools()
+
+        def _register_tools(self) -> None:
+            @self.mcp.tool()
+            async def check_bpom(registration_no: str) -> dict:
+                ...
+"""
+
+from __future__ import annotations
+
+import logging
+from abc import ABC, abstractmethod
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+class CivicStackMCPBase(ABC):
+    """
+    Abstract base for all civic-stack MCP servers.
+
+    Provides:
+    - A FastMCP instance pre-configured with module identity
+    - Standard error serialization that keeps MCP tool responses consistent
+    - Logging helpers
+
+    Subclasses must call _register_tools() in __init__ to bind their
+    @mcp.tool() decorated functions before the server is started.
+    """
+
+    def __init__(self, module_name: str) -> None:
+        # Import here so FastMCP is only required at runtime, not at import time
+        # (keeps shared/ importable in envs where fastmcp is not installed)
+        try:
+            from fastmcp import FastMCP  # type: ignore[import]
+        except ImportError as exc:
+            raise ImportError(
+                "fastmcp is required to use CivicStackMCPBase. "
+                "Install it with: pip install fastmcp"
+            ) from exc
+
+        self.module_name = module_name
+        self.mcp: Any = FastMCP(
+            name=f"indonesia-civic-stack/{module_name}",
+            instructions=(
+                f"MCP server for the '{module_name}' module of indonesia-civic-stack. "
+                "All tools return a CivicStackResponse envelope: check `found` and `status` "
+                "before reading `result`. Status values: ACTIVE, EXPIRED, SUSPENDED, REVOKED, "
+                "NOT_FOUND, ERROR."
+            ),
+        )
+        self._register_tools()
+        logger.info("CivicStackMCPBase initialized for module '%s'", module_name)
+
+    @abstractmethod
+    def _register_tools(self) -> None:
+        """
+        Register all @mcp.tool() decorated functions on self.mcp.
+
+        Called automatically by __init__. Subclasses must implement this
+        method and use @self.mcp.tool() to expose their lookup functions.
+        """
+
+    def serialize_error(self, exc: Exception) -> dict[str, Any]:
+        """
+        Serialize an exception into a CivicStackResponse-shaped dict for MCP tool error returns.
+
+        MCP tools should return this dict rather than raising, so the AI agent
+        can reason about the failure (e.g. ScraperBlockedError vs. NOT_FOUND).
+        """
+        from shared.schema import RecordStatus, error_response
+
+        response = error_response(
+            module=self.module_name,
+            source_url="",
+            detail=str(exc),
+        )
+        return response.model_dump(mode="json")
+
+    def run(self, transport: str = "stdio") -> None:
+        """
+        Start the MCP server.
+
+        Args:
+            transport: 'stdio' for local/CLI use, 'http' for Railway deployments.
+        """
+        self.mcp.run(transport=transport)
