@@ -16,20 +16,25 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from modules.ahu.router import router as ahu_router
+from modules.bmkg.router import router as bmkg_router
 from modules.bpjph.router import router as bpjph_router
 from modules.bpom.router import router as bpom_router
+from modules.bps.router import router as bps_router
 from modules.kpu.router import router as kpu_router
+from modules.lhkpn.router import router as lhkpn_router
 from modules.lpse.router import router as lpse_router
 from modules.ojk.router import router as ojk_router
 from modules.oss_nib.router import router as oss_nib_router
+from modules.simbg.router import router as simbg_router
 
 app = FastAPI(
     title="indonesia-civic-stack",
     description=(
         "Production-ready scrapers and API wrappers for Indonesian government data sources. "
-        "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE."
+        "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE. "
+        "Phase 3: LHKPN, BPS, BMKG, SIMBG."
     ),
-    version="0.2.0",
+    version="0.3.0",
     contact={
         "name": "indonesia-civic-stack contributors",
         "url": "https://github.com/suryast/indonesia-civic-stack",
@@ -51,7 +56,20 @@ app.include_router(ojk_router)
 app.include_router(oss_nib_router)
 app.include_router(lpse_router)
 
-_ALL_MODULES = ["bpom", "bpjph", "ahu", "kpu", "ojk", "oss_nib", "lpse"]
+# Phase 3 routers
+app.include_router(lhkpn_router)
+app.include_router(bps_router)
+app.include_router(bmkg_router)
+app.include_router(simbg_router)
+
+_ALL_MODULES = [
+    # Phase 1
+    "bpom", "bpjph", "ahu",
+    # Phase 2
+    "kpu", "ojk", "oss_nib", "lpse",
+    # Phase 3
+    "lhkpn", "bps", "bmkg", "simbg",
+]
 
 
 @app.get("/", include_in_schema=False)
@@ -59,8 +77,8 @@ async def root() -> JSONResponse:
     return JSONResponse(
         {
             "name": "indonesia-civic-stack",
-            "version": "0.2.0",
-            "phase": 2,
+            "version": "0.3.0",
+            "phase": 3,
             "modules": _ALL_MODULES,
             "docs": "/docs",
             "openapi": "/openapi.json",

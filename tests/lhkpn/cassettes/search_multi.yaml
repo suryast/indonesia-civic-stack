@@ -1,0 +1,43 @@
+interactions:
+- request:
+    body: '{"nama": "Menteri Keuangan"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-httpx/0.27.0
+    method: POST
+    uri: https://elhkpn.kpk.go.id/portal/user/check_a_lhkpn
+  response:
+    body:
+      string: >-
+        {"status":"success","data":[
+          {"id_laporan":"LHP-2024-MK1","no_laporan":"002/LHKPN/2024",
+           "nama":"SRI MULYANI INDRAWATI","jabatan":"Menteri Keuangan",
+           "instansi":"Kementerian Keuangan","tahun_laporan":"2023",
+           "tgl_selesai":"2024-03-31","jenis_laporan":"Tahunan",
+           "total_harta":58000000000,"total_hutang":0,"harta_bersih":58000000000},
+          {"id_laporan":"LHP-2023-MK1","no_laporan":"002/LHKPN/2023",
+           "nama":"SRI MULYANI INDRAWATI","jabatan":"Menteri Keuangan",
+           "instansi":"Kementerian Keuangan","tahun_laporan":"2022",
+           "tgl_selesai":"2023-03-31","jenis_laporan":"Tahunan",
+           "total_harta":52000000000,"total_hutang":0,"harta_bersih":52000000000},
+          {"id_laporan":"LHP-2024-DJP","no_laporan":"003/LHKPN/2024",
+           "nama":"SURYO UTOMO","jabatan":"Direktur Jenderal Pajak",
+           "instansi":"Kementerian Keuangan","tahun_laporan":"2023",
+           "tgl_selesai":"2024-03-31","jenis_laporan":"Tahunan",
+           "total_harta":14800000000,"total_hutang":2000000000,"harta_bersih":12800000000}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

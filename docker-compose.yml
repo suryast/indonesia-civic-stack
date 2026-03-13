@@ -100,6 +100,54 @@ services:
       - PROXY_URL=${PROXY_URL:-}
       - MODULE=lpse
 
+  # ── Phase 3 modules ──────────────────────────────────────────────
+
+  lhkpn:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/lhkpn/Dockerfile
+    ports:
+      - "8008:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - MODULE=lhkpn
+
+  bps:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/bps/Dockerfile
+    ports:
+      - "8009:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - BPS_API_KEY=${BPS_API_KEY:-}
+      - MODULE=bps
+
+  bmkg:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/bmkg/Dockerfile
+    ports:
+      - "8010:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=bmkg
+
+  simbg:
+    <<: *module-defaults
+    build:
+      context: .
+      dockerfile: modules/simbg/Dockerfile
+    ports:
+      - "8011:8000"
+    environment:
+      - PROXY_URL=${PROXY_URL:-}
+      - MODULE=simbg
+
   # ── Test runner ──────────────────────────────────────────────────
 
   test:

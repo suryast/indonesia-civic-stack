@@ -27,9 +27,10 @@ This repo is that layer.
 | [`oss-nib`](modules/oss-nib/README.md) | oss.go.id | Business identity (NIB) | ✅ Phase 2 |
 | [`lpse`](modules/lpse/README.md) | lpse.*.go.id | Government procurement (5 major portals) | ✅ Phase 2 |
 | [`kpu`](modules/kpu/README.md) | kpu.go.id | Election data — candidates, results, finance | ✅ Phase 2 |
-| `lhkpn` | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔜 Phase 3 |
-| `bps` | bps.go.id | Statistical datasets (1,000+) | 🔜 Phase 3 |
-| `bmkg` | bmkg.go.id | Disaster and weather data | 🔜 Phase 3 |
+| [`lhkpn`](modules/lhkpn/README.md) | elhkpn.kpk.go.id | Wealth declarations (officials) — PDF + Vision | ✅ Phase 3 |
+| [`bps`](modules/bps/README.md) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 |
+| [`bmkg`](modules/bmkg/README.md) | data.bmkg.go.id | Earthquakes, weather forecasts, disaster alerts | ✅ Phase 3 |
+| [`simbg`](modules/simbg/README.md) | simbg.pu.go.id | Building permits (PBG/IMB) — 5 pilot regions | ✅ Phase 3 |
 
 Every module returns the same response envelope regardless of source — swap data sources without touching application logic.
 
