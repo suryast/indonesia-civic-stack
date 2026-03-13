@@ -1,0 +1,77 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, br
+      Accept-Language:
+      - id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0
+        Safari/537.36
+    method: GET
+    uri: https://cekbpom.pom.go.id/index.php/home/produk/1/paracetamol/10/1/1
+  response:
+    body:
+      string: |
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <title>Hasil Pencarian - Cek BPOM</title>
+        </head>
+        <body>
+        <div class="container">
+          <div class="panel panel-default">
+            <div class="panel-heading"><h3>Hasil Pencarian: paracetamol</h3></div>
+            <div class="panel-body">
+              <table class="table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>No. Registrasi</th>
+                    <th>Nama Produk</th>
+                    <th>Nama Dagang</th>
+                    <th>Nama Pendaftar</th>
+                    <th>Status Registrasi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>BPOM GKL 9100501810A1</td>
+                    <td>PARACETAMOL 500 MG TABLET</td>
+                    <td>Paracetamol Generik</td>
+                    <td>PT KIMIA FARMA TBK</td>
+                    <td>AKTIF</td>
+                  </tr>
+                  <tr>
+                    <td>BPOM GKL 9100501811A1</td>
+                    <td>PARACETAMOL SIRUP 120 MG/5ML</td>
+                    <td>Pamol Sirup</td>
+                    <td>PT KIMIA FARMA TBK</td>
+                    <td>AKTIF</td>
+                  </tr>
+                  <tr>
+                    <td>BPOM GKL 0509401310A1</td>
+                    <td>PARACETAMOL 500 MG KAPLET</td>
+                    <td>Panadol</td>
+                    <td>PT GLAXOSMITHKLINE INDONESIA</td>
+                    <td>AKTIF</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        </body>
+        </html>
+    headers:
+      Content-Type:
+      - text/html; charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

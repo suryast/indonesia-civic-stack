@@ -1,0 +1,46 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, br
+      Accept-Language:
+      - id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0
+        Safari/537.36
+    method: GET
+    uri: https://cekbpom.pom.go.id/index.php/home/produk/0/BPOM%20MD%20000000000000/10/1/0
+  response:
+    body:
+      string: |
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <title>Cek BPOM</title>
+        </head>
+        <body>
+        <div class="container">
+          <div class="panel panel-default">
+            <div class="panel-heading"><h3>Hasil Pencarian</h3></div>
+            <div class="panel-body">
+              <div class="alert alert-warning">
+                Data tidak ditemukan. Pastikan nomor registrasi yang Anda masukkan benar.
+              </div>
+            </div>
+          </div>
+        </div>
+        </body>
+        </html>
+    headers:
+      Content-Type:
+      - text/html; charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1

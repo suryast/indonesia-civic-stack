@@ -1,12 +1,18 @@
-"""BPJPH module — Indonesian Halal Product Guarantee Agency certification lookup.
+"""
+modules/bpjph — BPJPH SiHalal certificate scraper.
 
 Source: sertifikasi.halal.go.id
-Method: Playwright + Camoufox (JS-rendered, form submission)
-Rate limit: Conservative — portal is fragile
+Method: Playwright (JS-rendered portal) + Camoufox fingerprint randomization
+License: Apache-2.0
 
-Usage:
-    from modules.bpjph import fetch, search
-
-    result = await fetch("BPJPH-12345")
-    results = await search("PT Indofood")
+Public API:
+    fetch(cert_no, *, debug=False, proxy_url=None) -> CivicStackResponse
+    search(keyword, *, proxy_url=None) -> list[CivicStackResponse]
+    cross_ref_bpom(product_name, *, proxy_url=None) -> dict
 """
+
+from __future__ import annotations
+
+from modules.bpjph.scraper import cross_ref_bpom, fetch, search
+
+__all__ = ["fetch", "search", "cross_ref_bpom"]
