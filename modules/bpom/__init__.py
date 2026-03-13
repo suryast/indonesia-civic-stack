@@ -1,12 +1,17 @@
-"""BPOM module — Indonesian Food & Drug Authority product registration lookup.
+"""
+modules/bpom — BPOM product registry scraper.
 
 Source: cekbpom.pom.go.id
-Method: httpx + BeautifulSoup (static HTML, no JS rendering)
-Rate limit: ~10 req/min with exponential backoff
+Method: httpx + BeautifulSoup (static HTML, no JS rendering needed)
+License: MIT
 
-Usage:
-    from modules.bpom import fetch, search
-
-    result = await fetch("MD123456789")
-    results = await search("mie goreng")
+Public API:
+    fetch(registration_no, *, debug=False, proxy_url=None) -> CivicStackResponse
+    search(keyword, *, proxy_url=None) -> list[CivicStackResponse]
 """
+
+from __future__ import annotations
+
+from modules.bpom.scraper import fetch, search
+
+__all__ = ["fetch", "search"]
