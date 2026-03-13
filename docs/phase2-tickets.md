@@ -45,7 +45,7 @@ investment managers, and payment providers.
 
 ### Powers
 
-legalkah.id (financial license verification), consumer safety app (unlicensed fintech alert)
+a downstream product (financial license verification), consumer safety app (unlicensed fintech alert)
 
 ### Acceptance criteria
 
@@ -94,7 +94,7 @@ license verification app, business verification app
 
 ### Open question to resolve before implementing
 
-Confirm with legalkah.id team: is the public search tier (name → NIB → status)
+Confirm with downstream team: is the public search tier (name → NIB → status)
 sufficient for business verification app v1, or do we need the authenticated tier for full detail?
 Comment on this issue with the answer before starting implementation.
 
