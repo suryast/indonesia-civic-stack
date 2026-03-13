@@ -29,20 +29,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.schema import CivicStackResponse, RecordStatus
 
 # Registry of available modules and their smoke-test queries.
-# Sprint 1 modules will register themselves here.
 MODULE_REGISTRY: dict[str, dict[str, Any]] = {
-    # "bpom": {
-    #     "fetch_query": "MD123456789",
-    #     "search_keyword": "paracetamol",
-    # },
-    # "bpjph": {
-    #     "fetch_query": "BPJPH-12345",
-    #     "search_keyword": "mie instan",
-    # },
-    # "ahu": {
-    #     "fetch_query": "PT Contoh Indonesia",
-    #     "search_keyword": "Contoh",
-    # },
+    "bpom": {
+        "fetch_query": "BPOM MD 123456789012",
+        "search_keyword": "paracetamol",
+    },
+    "bpjph": {
+        "fetch_query": "ID00110019882120240001",
+        "search_keyword": "mie instan",
+    },
+    "ahu": {
+        "fetch_query": "PT Contoh Indonesia",
+        "search_keyword": "Contoh",
+    },
 }
 
 

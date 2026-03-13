@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, br
+      Accept-Language:
+      - id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0
+        Safari/537.36
+    method: GET
+    uri: https://cekbpom.pom.go.id/index.php/home/produk/0/BPOM%20MD%20999900000001/10/1/0
+  response:
+    body:
+      string: |
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+          <meta charset="UTF-8">
+          <title>Detail Produk - Cek BPOM</title>
+        </head>
+        <body>
+        <div class="container">
+          <div class="panel panel-default">
+            <div class="panel-heading"><h3>Detail Produk</h3></div>
+            <div class="panel-body">
+              <table class="table table-striped table-bordered">
+                <tbody>
+                  <tr><th>No. Registrasi</th><td>BPOM MD 999900000001</td></tr>
+                  <tr><th>Nama Produk</th><td>MINUMAN SARI BUAH JERUK</td></tr>
+                  <tr><th>Nama Dagang</th><td>FreshJuice</td></tr>
+                  <tr><th>Jenis Produk</th><td>Pangan Olahan</td></tr>
+                  <tr><th>Nama Pendaftar</th><td>PT SEGAR BUAH NUSANTARA</td></tr>
+                  <tr><th>Alamat Pendaftar</th><td>Jl. Raya Industri No. 5, Tangerang 15800</td></tr>
+                  <tr><th>Status Registrasi</th><td><b class="text-danger">TIDAK AKTIF</b></td></tr>
+                  <tr><th>Tanggal Kadaluarsa</th><td>31-03-2022</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        </body>
+        </html>
+    headers:
+      Content-Type:
+      - text/html; charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1
