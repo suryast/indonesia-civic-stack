@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indonesia Civic Stack — Module Visualiser</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --red: #CE1126;
+            --red-dim: #8b1d2b;
+            --green: #238636;
+            --green-dim: #1a4d2e;
+            --blue: #1f6feb;
+            --blue-dim: #1a3a5c;
+            --gray: #484f58;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 span {
+            color: var(--red);
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--red);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Architecture Diagram */
+        .architecture {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .architecture h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 1rem 0;
+        }
+
+        .flow-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .flow-box.highlight {
+            border-color: var(--red);
+            background: var(--red-dim);
+        }
+
+        .flow-box.sdk {
+            border-color: var(--blue);
+            background: var(--blue-dim);
+        }
+
+        .flow-box.modules {
+            border-color: var(--green);
+            background: var(--green-dim);
+        }
+
+        .flow-arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        .flow-box-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .flow-box-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--red);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--red);
+            border-color: var(--red);
+            color: var(--white);
+        }
+
+        /* Module Grid */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--red);
+            box-shadow: 0 8px 30px rgba(206, 17, 38, 0.15);
+        }
+
+        .module-card.planned {
+            opacity: 0.7;
+        }
+
+        .module-card.planned:hover {
+            opacity: 1;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .module-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .module-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-phase1 {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        .badge-phase2 {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .badge-phase3 {
+            background: var(--gray);
+            color: var(--text-secondary);
+        }
+
+        .module-portal {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .module-data {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .module-status {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .status-active {
+            background: rgba(35, 134, 54, 0.2);
+            color: #3fb950;
+            border: 1px solid rgba(35, 134, 54, 0.4);
+        }
+
+        .status-planned {
+            background: rgba(72, 79, 88, 0.2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .components {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .component {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .component-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .component.has::before {
+            content: "✓";
+            color: #3fb950;
+            font-weight: bold;
+        }
+
+        .component.missing::before {
+            content: "○";
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: var(--red);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🇮🇩</div>
+            <h1>indonesia-<span>civic</span>-stack</h1>
+            <p class="tagline">Production-ready scrapers for Indonesian government data</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value">10</div>
+                <div class="stat-label">Total Modules</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Live Modules</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">57</div>
+                <div class="stat-label">Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">10</div>
+                <div class="stat-label">Gov Portals</div>
+            </div>
+        </div>
+
+        <div class="architecture">
+            <h2>Data Flow Architecture</h2>
+            <div class="flow-diagram">
+                <div class="flow-box highlight">
+                    <div class="flow-box-title">Your App</div>
+                    <div class="flow-box-sub">halalkah.id, legalkah.id</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box sdk">
+                    <div class="flow-box-title">SDK / MCP / API</div>
+                    <div class="flow-box-sub">Python, FastAPI, FastMCP</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="flow-box-title">Shared Layer</div>
+                    <div class="flow-box-sub">Schema, HTTP, Rate Limits</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box modules">
+                    <div class="flow-box-title">Modules</div>
+                    <div class="flow-box-sub">bpom, bpjph, ahu, ...</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="flow-box-title">Gov Portals</div>
+                    <div class="flow-box-sub">*.go.id</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search modules...">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="phase1">Phase 1</button>
+            <button class="filter-btn" data-filter="phase2">Phase 2</button>
+            <button class="filter-btn" data-filter="phase3">Planned</button>
+        </div>
+
+        <div class="modules-grid" id="modulesGrid">
+            <!-- Modules will be rendered by JS -->
+        </div>
+
+        <footer>
+            <p>Part of the <a href="https://github.com/suryast/indonesia-civic-stack">indonesia-civic-stack</a> project</p>
+            <p style="margin-top: 0.5rem;">MIT License · Built for the Indonesian civic tech community</p>
+        </footer>
+    </div>
+
+    <script>
+        const modules = [
+            {
+                name: 'bpom',
+                portal: 'cekbpom.pom.go.id',
+                data: 'Food, drug, cosmetic registrations',
+                phase: 1,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: true, dockerfile: true }
+            },
+            {
+                name: 'bpjph',
+                portal: 'sertifikasi.halal.go.id',
+                data: 'Halal certificates (BPJPH + MUI)',
+                phase: 1,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: true, dockerfile: true }
+            },
+            {
+                name: 'ahu',
+                portal: 'ahu.go.id',
+                data: 'Company registry — PT, CV, Yayasan',
+                phase: 1,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: true, dockerfile: true }
+            },
+            {
+                name: 'ojk',
+                portal: 'ojk.go.id',
+                data: 'Financial licenses + Waspada list',
+                phase: 2,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: false, dockerfile: true }
+            },
+            {
+                name: 'oss_nib',
+                portal: 'oss.go.id',
+                data: 'Business identity (NIB)',
+                phase: 2,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: false, dockerfile: true }
+            },
+            {
+                name: 'lpse',
+                portal: 'lpse.*.go.id',
+                data: 'Government procurement (5 portals)',
+                phase: 2,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: false, dockerfile: true }
+            },
+            {
+                name: 'kpu',
+                portal: 'kpu.go.id',
+                data: 'Election data — candidates, results',
+                phase: 2,
+                status: 'active',
+                components: { scraper: true, normalizer: true, router: true, mcp: true, tests: true, readme: false, dockerfile: true }
+            },
+            {
+                name: 'lhkpn',
+                portal: 'elhkpn.kpk.go.id',
+                data: 'Wealth declarations (officials)',
+                phase: 3,
+                status: 'planned',
+                components: { scraper: false, normalizer: false, router: false, mcp: false, tests: false, readme: false, dockerfile: false }
+            },
+            {
+                name: 'bps',
+                portal: 'bps.go.id',
+                data: 'Statistical datasets (1,000+)',
+                phase: 3,
+                status: 'planned',
+                components: { scraper: false, normalizer: false, router: false, mcp: false, tests: false, readme: false, dockerfile: false }
+            },
+            {
+                name: 'bmkg',
+                portal: 'bmkg.go.id',
+                data: 'Disaster and weather data',
+                phase: 3,
+                status: 'planned',
+                components: { scraper: false, normalizer: false, router: false, mcp: false, tests: false, readme: false, dockerfile: false }
+            }
+        ];
+
+        const componentLabels = {
+            scraper: 'Scraper',
+            normalizer: 'Normalizer',
+            router: 'Router',
+            mcp: 'MCP Server',
+            tests: 'Tests',
+            readme: 'README',
+            dockerfile: 'Dockerfile'
+        };
+
+        function renderModules(filter = 'all', search = '') {
+            const grid = document.getElementById('modulesGrid');
+            grid.innerHTML = '';
+
+            const filtered = modules.filter(mod => {
+                const matchesFilter = filter === 'all' || 
+                    (filter === 'phase1' && mod.phase === 1) ||
+                    (filter === 'phase2' && mod.phase === 2) ||
+                    (filter === 'phase3' && mod.phase === 3);
+                
+                const matchesSearch = search === '' ||
+                    mod.name.toLowerCase().includes(search.toLowerCase()) ||
+                    mod.portal.toLowerCase().includes(search.toLowerCase()) ||
+                    mod.data.toLowerCase().includes(search.toLowerCase());
+                
+                return matchesFilter && matchesSearch;
+            });
+
+            filtered.forEach(mod => {
+                const card = document.createElement('div');
+                card.className = `module-card ${mod.status === 'planned' ? 'planned' : ''}`;
+                
+                const badgeClass = `badge-phase${mod.phase}`;
+                const statusClass = mod.status === 'active' ? 'status-active' : 'status-planned';
+                
+                let componentsHtml = '';
+                Object.entries(mod.components).forEach(([key, has]) => {
+                    componentsHtml += `<div class="component ${has ? 'has' : 'missing'}">${componentLabels[key]}</div>`;
+                });
+
+                card.innerHTML = `
+                    <div class="module-header">
+                        <div class="module-name">${mod.name}</div>
+                        <span class="module-badge ${badgeClass}">Phase ${mod.phase}</span>
+                    </div>
+                    <div class="module-portal">${mod.portal}</div>
+                    <div class="module-data">${mod.data}</div>
+                    <div class="module-status ${statusClass}">${mod.status.toUpperCase()}</div>
+                    <div class="components">${componentsHtml}</div>
+                `;
+                
+                grid.appendChild(card);
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 3rem;">No modules match your search.</p>';
+            }
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderModules(btn.dataset.filter, document.getElementById('searchBox').value);
+            });
+        });
+
+        // Search box
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            renderModules(activeFilter, e.target.value);
+        });
+
+        // Initial render
+        renderModules();
+    </script>
+</body>
+</html>
