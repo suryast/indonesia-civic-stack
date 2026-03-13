@@ -13,6 +13,7 @@ vcr_config = vcr.VCR(
     cassette_library_dir=CASSETTE_DIR,
     record_mode="none",
     match_on=["uri", "method"],
+    decode_compressed_response=True,
 )
 
 

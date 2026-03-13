@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import re
 from typing import Any
 
@@ -84,6 +83,8 @@ def normalize_tender(raw: dict[str, Any]) -> dict[str, Any] | None:
             out[dst] = val
 
     # coerce numeric fields
+    import contextlib
+
     for field in ("ceiling_value", "hps_value"):
         if field in out:
             with contextlib.suppress(ValueError, TypeError):

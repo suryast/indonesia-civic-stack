@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -39,8 +38,7 @@ _VENDOR_SEARCH = "/dt/rekanan"  # ?term=&draw=&start=0&length=10
 _TENDER_DETAIL = "/tender/{id}/view"
 _VENDOR_DETAIL = "/rekanan/{id}/view"
 
-_limiter = RateLimiter(rate=1.0)
-
+_limiter = RateLimiter(rate=1.0)  # conservative: 1 req/s across all portals
 
 MODULE = "lpse"
 SOURCE_BASE = "https://lpse.lkpp.go.id/eproc4"
@@ -104,7 +102,9 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
     if not all_records:
         return not_found_response(
             module=MODULE,
+            query=query,
             source_url=source_url,
+            extra={"portal_errors": failures} if failures else {},
         )
 
     # deduplicate by NPWP
@@ -125,7 +125,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=confidence,
         source_url=source_url,
-        fetched_at=datetime.now(UTC),
+        fetched_at=__import__("datetime").datetime.utcnow(),
         module=MODULE,
         raw={"portals_queried": len(PORTALS), "portals_succeeded": len(successes)},
     )
@@ -162,7 +162,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=source_url,
-                    fetched_at=datetime.now(UTC),
+                    fetched_at=__import__("datetime").datetime.utcnow(),
                     module=MODULE,
                 )
             )
@@ -201,7 +201,7 @@ async def search_tenders(keyword: str, *, proxy_url: str | None = None) -> list[
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=source_url,
-                    fetched_at=datetime.now(UTC),
+                    fetched_at=__import__("datetime").datetime.utcnow(),
                     module=MODULE,
                 )
             )

@@ -15,6 +15,10 @@ This monorepo uses per-module licensing. The table below is the authoritative re
 | `modules/ojk/` | Apache-2.0 | OJK investor alerts / licensed institution scraper |
 | `modules/kpu/` | Apache-2.0 | KPU election candidate and results scraper |
 | `modules/lpse/` | Apache-2.0 | LPSE government procurement scraper |
+| `modules/lhkpn/` | Apache-2.0 | KPK LHKPN wealth declaration scraper (PDF pipeline) |
+| `modules/bps/` | Apache-2.0 | BPS Statistics Indonesia API wrapper |
+| `modules/bmkg/` | Apache-2.0 | BMKG meteorological and disaster data wrapper |
+| `modules/simbg/` | Apache-2.0 | SIMBG building permit aggregator |
 
 Full license texts are in the `LICENSE` file at each module's root and at the repo root (MIT).
 

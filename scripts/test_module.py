@@ -60,6 +60,23 @@ MODULE_REGISTRY: dict[str, dict[str, Any]] = {
         "fetch_query": "PT Telkom",
         "search_keyword": "telkom",
     },
+    # Phase 3
+    "lhkpn": {
+        "fetch_query": "Sri Mulyani",
+        "search_keyword": "Menteri",
+    },
+    "bps": {
+        "fetch_query": "kemiskinan",
+        "search_keyword": "penduduk",
+    },
+    "bmkg": {
+        "fetch_query": "gempa terbaru",
+        "search_keyword": "sulawesi",
+    },
+    "simbg": {
+        "fetch_query": "Jl. Sudirman No. 1",
+        "search_keyword": "Jakarta",
+    },
 }
 
 

@@ -66,7 +66,7 @@ body:
     id: use_cases
     attributes:
       label: What Kah products or use cases does this enable?
-      placeholder: "e.g. a financial license verification product, consumer safety product for unlicensed fintech detection"
+      placeholder: "e.g. legalkah.id financial license verification, AmanKah unlicensed fintech detection"
     validations:
       required: true
 

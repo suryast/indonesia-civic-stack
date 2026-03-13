@@ -1,0 +1,68 @@
+interactions:
+- request:
+    body: '{"nama": "Budi Gunawan"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-httpx/0.27.0
+    method: POST
+    uri: https://elhkpn.kpk.go.id/portal/user/check_a_lhkpn
+  response:
+    body:
+      string: >-
+        {"status":"success","data":[
+          {"id_laporan":"LHP-2024-001","no_laporan":"001/LHKPN/2024",
+           "nama":"BUDI GUNAWAN","jabatan":"Kepala BIN","instansi":"Badan Intelijen Negara",
+           "satuan_kerja":"BIN Pusat","tahun_laporan":"2023",
+           "tgl_selesai":"2024-03-31","jenis_laporan":"Tahunan",
+           "total_harta":45000000000,"total_hutang":5000000000,
+           "harta_bersih":40000000000}
+        ]}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"id_laporan": "LHP-2024-001"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-httpx/0.27.0
+    method: POST
+    uri: https://elhkpn.kpk.go.id/portal/user/detail_laporan_harta
+  response:
+    body:
+      string: >-
+        {"status":"success","data":{
+          "id_laporan":"LHP-2024-001","no_laporan":"001/LHKPN/2024",
+          "nama":"BUDI GUNAWAN","jabatan":"Kepala BIN","instansi":"Badan Intelijen Negara",
+          "satuan_kerja":"BIN Pusat","tahun_laporan":"2023",
+          "tgl_selesai":"2024-03-31","jenis_laporan":"Tahunan",
+          "total_harta":45000000000,"total_hutang":5000000000,"harta_bersih":40000000000,
+          "harta_tidak_bergerak":30000000000,"harta_bergerak":8000000000,
+          "surat_berharga":4000000000,"kas_setara_kas":2000000000,"harta_lainnya":1000000000,
+          "penghasilan_dari_jabatan":240000000,"penghasilan_lainnya":500000000
+        }}
+    headers:
+      Content-Type:
+      - application/json;charset=UTF-8
+    status:
+      code: 200
+      message: OK
+version: 1
