@@ -170,11 +170,13 @@ async def test_fetch_uses_normalizer(monkeypatch):
     mock_page.goto = AsyncMock()
     mock_page.content = AsyncMock(return_value=html_content)
     mock_page.wait_for_load_state = AsyncMock()
-    mock_page.query_selector = AsyncMock(return_value=MagicMock(
-        fill=AsyncMock(),
-        press=AsyncMock(),
-        click=AsyncMock(),
-    ))
+    mock_page.query_selector = AsyncMock(
+        return_value=MagicMock(
+            fill=AsyncMock(),
+            press=AsyncMock(),
+            click=AsyncMock(),
+        )
+    )
 
     @asynccontextmanager
     async def mock_ahu_page(*args, **kwargs):
@@ -184,6 +186,7 @@ async def test_fetch_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=True))
 
     from modules.ahu.scraper import fetch
+
     resp = await fetch("PT Contoh Indonesia Tbk")
 
     assert isinstance(resp, CivicStackResponse)
@@ -212,6 +215,7 @@ async def test_blocked_response_returns_error(monkeypatch):
     monkeypatch.setattr("modules.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=False))
 
     from modules.ahu.scraper import fetch
+
     resp = await fetch("PT Contoh Indonesia Tbk")
 
     assert resp.found is False

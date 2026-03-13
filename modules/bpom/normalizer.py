@@ -162,6 +162,7 @@ def _confidence(raw: dict[str, str], queried_no: str) -> float:
     (after stripping whitespace and normalizing case), 0.9 otherwise.
     """
     returned_no = raw.get("registration_no", "")
+
     # Normalize: remove spaces, uppercase
     def _norm(s: str) -> str:
         return re.sub(r"\s+", "", s).upper()

@@ -66,7 +66,9 @@ async def fetch(
 
             search_input = await _find_search_input(page)
             if search_input is None:
-                return error_response(MODULE, url, detail="Could not locate search input on AHU page")
+                return error_response(
+                    MODULE, url, detail="Could not locate search input on AHU page"
+                )
 
             await search_input.fill(query)
             await search_input.press("Enter")

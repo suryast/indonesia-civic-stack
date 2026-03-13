@@ -7,10 +7,9 @@ Falls back to standard Playwright chromium if camoufox is not installed.
 
 from __future__ import annotations
 
-import asyncio
 import logging
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
 logger = logging.getLogger(__name__)

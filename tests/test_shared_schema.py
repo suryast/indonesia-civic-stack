@@ -56,7 +56,7 @@ def test_error_response_no_detail():
 
 
 def test_confidence_bounds():
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         CivicStackResponse(
             found=False,
             status=RecordStatus.NOT_FOUND,

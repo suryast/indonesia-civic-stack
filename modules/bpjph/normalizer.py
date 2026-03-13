@@ -34,9 +34,18 @@ _DATE_FORMATS = ["%d %B %Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d"]
 
 # Indonesian month names → numbers
 _ID_MONTHS = {
-    "januari": "01", "februari": "02", "maret": "03", "april": "04",
-    "mei": "05", "juni": "06", "juli": "07", "agustus": "08",
-    "september": "09", "oktober": "10", "november": "11", "desember": "12",
+    "januari": "01",
+    "februari": "02",
+    "maret": "03",
+    "april": "04",
+    "mei": "05",
+    "juni": "06",
+    "juli": "07",
+    "agustus": "08",
+    "september": "09",
+    "oktober": "10",
+    "november": "11",
+    "desember": "12",
 }
 
 
@@ -168,8 +177,16 @@ def _extract_table_rows(soup: BeautifulSoup) -> list[dict[str, str]]:
 
 def _build_result(raw: dict[str, str]) -> dict[str, Any]:
     result: dict[str, Any] = {}
-    for key in ("cert_no", "company", "product_list", "issuer", "inspection_body",
-                "issue_date", "expiry_date", "status"):
+    for key in (
+        "cert_no",
+        "company",
+        "product_list",
+        "issuer",
+        "inspection_body",
+        "issue_date",
+        "expiry_date",
+        "status",
+    ):
         if raw.get(key):
             result[key] = raw[key]
 

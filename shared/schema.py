@@ -9,13 +9,13 @@ changing application logic.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class RecordStatus(str, Enum):
+class RecordStatus(StrEnum):
     ACTIVE = "ACTIVE"
     EXPIRED = "EXPIRED"
     SUSPENDED = "SUSPENDED"

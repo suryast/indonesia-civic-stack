@@ -5,7 +5,6 @@ BPOM FastAPI router — mounts at /bpom.
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
-from pydantic import BaseModel
 
 from modules.bpom.scraper import fetch, search
 from shared.schema import CivicStackResponse
@@ -72,7 +71,12 @@ async def get_bpom_status(
             update={
                 "result": {
                     k: resp.result[k]
-                    for k in ("registration_no", "registration_status", "expiry_date", "product_name")
+                    for k in (
+                        "registration_no",
+                        "registration_status",
+                        "expiry_date",
+                        "product_name",
+                    )
                     if k in resp.result
                 }
             }
