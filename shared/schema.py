@@ -73,7 +73,7 @@ def not_found_response(
     source_url: str,
     *,
     query: str | None = None,
-    extra: dict | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> CivicStackResponse:
     """Convenience constructor for a clean NOT_FOUND response."""
     result = extra if extra else None
