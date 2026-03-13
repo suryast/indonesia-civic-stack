@@ -163,11 +163,18 @@ python -m modules.bpom.server
 # Run all modules
 uvicorn app:app --port 8000
 
+# With API key auth (recommended)
+CIVIC_API_KEY=your-secret-key uvicorn app:app --port 8000
+
 # Or individual module
 uvicorn modules.bpom.app:app --port 8001
 ```
 
-```
+```bash
+# With API key
+curl -H "X-API-Key: your-secret-key" http://localhost:8000/bpom/check/MD123456789012
+
+# Endpoints
 GET /bpom/check/MD123456789012
 GET /bpom/search?q=paracetamol
 GET /bpjph/check/BPJPH-12345
@@ -222,12 +229,32 @@ graph LR
 
 ---
 
+## Security
+
+| Feature | Config | Default |
+|---------|--------|---------|
+| **API key auth** | `CIVIC_API_KEY` env var | Disabled (open) |
+| **Rate limiting** | `CIVIC_RATE_LIMIT` env var | 60 req/min per IP |
+| **Proxy allowlist** | `CIVIC_ALLOWED_PROXIES` env var | Any non-private IP |
+| **SSRF prevention** | Built-in | Blocks RFC 1918 + localhost |
+| **Container user** | Dockerfile | Non-root (`civicapp`, uid 1000) |
+
+```bash
+# Production deployment
+export CIVIC_API_KEY="your-secret-key"
+export CIVIC_RATE_LIMIT=30                          # 30 req/min
+export CIVIC_ALLOWED_PROXIES="proxy.example.com"    # optional proxy allowlist
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+---
+
 ## Docker
 
 ```bash
 docker compose up                             # All modules
 docker build -t civic-bpom modules/bpom/      # Individual
-docker run -p 8001:8000 civic-bpom
+docker run -p 8001:8000 -e CIVIC_API_KEY=secret civic-bpom
 ```
 
 ---
@@ -245,6 +272,28 @@ pytest -v              # VCR replay — no live portal calls
 ruff check .           # Lint
 ruff format --check .  # Format check
 mypy shared/           # Type check
+```
+
+---
+
+## Tests
+
+```bash
+pytest -v                       # 57 tests, VCR replay (no live calls)
+pytest tests/bpom/ -v           # Single module
+pytest --tb=short -q            # Quick summary
+```
+
+```mermaid
+pie title Test Coverage (57 tests)
+    "BPOM" : 7
+    "BPJPH" : 8
+    "AHU" : 12
+    "OJK" : 3
+    "KPU" : 5
+    "LPSE" : 9
+    "OSS-NIB" : 7
+    "Schema" : 6
 ```
 
 ---
