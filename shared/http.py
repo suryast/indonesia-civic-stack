@@ -1,148 +1,154 @@
-"""Shared HTTP utilities — rate limiting, retries, proxy support."""
+"""
+Shared HTTP utilities for indonesia-civic-stack modules.
+
+Provides:
+- A pre-configured httpx.AsyncClient factory with sensible defaults
+- Exponential backoff retry logic (respects 429 / 503 / 5xx)
+- Rate limiting (token bucket, per-module configurable)
+- proxy_url passthrough so operators can supply their own proxy pool
+"""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import random
+import time
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import httpx
 
-logger = logging.getLogger("civic_stack")
+logger = logging.getLogger(__name__)
 
-# Default rate limits per module (requests per minute)
-DEFAULT_RATE_LIMIT = 10
-DEFAULT_MAX_RETRIES = 3
-DEFAULT_TIMEOUT = 30.0
-
-# Retry status codes
+# Retryable HTTP status codes
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+DEFAULT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+}
 
 
 class ScraperBlockedError(Exception):
-    """Raised when bot detection blocks the request."""
-
-    pass
+    """Raised when the portal actively blocks the scraper after exhausting retries."""
 
 
-class RateLimitedClient:
-    """httpx client with built-in rate limiting and exponential backoff.
+class RateLimiter:
+    """
+    Simple async token-bucket rate limiter.
 
-    Usage:
-        async with RateLimitedClient(rpm=10) as client:
-            response = await client.get("https://example.go.id/api")
+    Args:
+        rate: Maximum requests per second.
     """
 
-    def __init__(
-        self,
-        rpm: int = DEFAULT_RATE_LIMIT,
-        max_retries: int = DEFAULT_MAX_RETRIES,
-        timeout: float = DEFAULT_TIMEOUT,
-        proxy_url: str | None = None,
-        headers: dict[str, str] | None = None,
-    ):
-        self.rpm = rpm
-        self.min_interval = 60.0 / rpm
-        self.max_retries = max_retries
-        self.timeout = timeout
-        self.proxy_url = proxy_url
-        self._last_request_time = 0.0
+    def __init__(self, rate: float) -> None:
+        self._rate = rate
+        self._min_interval = 1.0 / rate
+        self._last_call: float = 0.0
         self._lock = asyncio.Lock()
 
-        default_headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/131.0.0.0 Safari/537.36"
-            ),
-            "Accept-Language": "id-ID,id;q=0.9,en;q=0.8",
-        }
-        if headers:
-            default_headers.update(headers)
-
-        transport = httpx.AsyncHTTPTransport(proxy=proxy_url) if proxy_url else None
-        self._client = httpx.AsyncClient(
-            timeout=timeout,
-            headers=default_headers,
-            transport=transport,
-            follow_redirects=True,
-        )
-
-    async def __aenter__(self) -> "RateLimitedClient":
-        return self
-
-    async def __aexit__(self, *args: Any) -> None:
-        await self._client.aclose()
-
-    async def _wait_for_rate_limit(self) -> None:
-        """Enforce minimum interval between requests."""
+    async def acquire(self) -> None:
         async with self._lock:
-            now = asyncio.get_event_loop().time()
-            elapsed = now - self._last_request_time
-            if elapsed < self.min_interval:
-                wait = self.min_interval - elapsed
-                logger.debug(f"Rate limiting: waiting {wait:.2f}s")
+            now = time.monotonic()
+            wait = self._min_interval - (now - self._last_call)
+            if wait > 0:
                 await asyncio.sleep(wait)
-            self._last_request_time = asyncio.get_event_loop().time()
+            self._last_call = time.monotonic()
 
-    async def request(
-        self,
-        method: str,
-        url: str,
-        **kwargs: Any,
-    ) -> httpx.Response:
-        """Make an HTTP request with rate limiting and retries."""
-        last_error: Exception | None = None
 
-        for attempt in range(self.max_retries + 1):
-            await self._wait_for_rate_limit()
+@asynccontextmanager
+async def civic_client(
+    proxy_url: str | None = None,
+    timeout: float = 30.0,
+    extra_headers: dict[str, str] | None = None,
+) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """
+    Context manager that yields a configured httpx.AsyncClient.
 
-            try:
-                response = await self._client.request(method, url, **kwargs)
+    Args:
+        proxy_url: Optional HTTP/HTTPS proxy URL (e.g. Cloudflare Worker endpoint).
+        timeout: Request timeout in seconds.
+        extra_headers: Module-specific headers merged on top of defaults.
+    """
+    headers = {**DEFAULT_HEADERS, **(extra_headers or {})}
+    proxies: dict[str, str] | None = (
+        {"http://": proxy_url, "https://": proxy_url} if proxy_url else None
+    )
+    async with httpx.AsyncClient(
+        headers=headers,
+        timeout=timeout,
+        follow_redirects=True,
+        proxies=proxies,  # type: ignore[arg-type]
+    ) as client:
+        yield client
 
-                # Check for bot detection
-                if response.status_code == 403:
-                    body = response.text[:500].lower()
-                    if any(kw in body for kw in ["captcha", "blocked", "forbidden", "cloudflare"]):
-                        raise ScraperBlockedError(
-                            f"Bot detection triggered at {url} (HTTP 403)"
-                        )
 
-                if response.status_code in RETRYABLE_STATUS:
-                    retry_after = response.headers.get("Retry-After")
-                    wait = float(retry_after) if retry_after else _backoff(attempt)
-                    logger.warning(
-                        f"Retryable {response.status_code} from {url}, "
-                        f"attempt {attempt + 1}/{self.max_retries + 1}, "
-                        f"waiting {wait:.1f}s"
-                    )
+async def fetch_with_retry(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    *,
+    max_retries: int = 4,
+    base_backoff: float = 2.0,
+    rate_limiter: RateLimiter | None = None,
+    **kwargs: Any,
+) -> httpx.Response:
+    """
+    Perform an HTTP request with exponential backoff on retryable errors.
+
+    Backoff schedule: 2s, 4s, 8s, 16s (base_backoff ** attempt).
+
+    Raises:
+        ScraperBlockedError: If all retries are exhausted on a 429/503.
+        httpx.HTTPStatusError: For non-retryable 4xx responses.
+        httpx.RequestError: For network-level failures after all retries.
+    """
+    last_exc: Exception | None = None
+
+    for attempt in range(max_retries + 1):
+        if rate_limiter:
+            await rate_limiter.acquire()
+
+        try:
+            response = await client.request(method, url, **kwargs)
+
+            if response.status_code in RETRYABLE_STATUS:
+                wait = base_backoff**attempt
+                logger.warning(
+                    "Retryable %s from %s — attempt %d/%d, backing off %.1fs",
+                    response.status_code,
+                    url,
+                    attempt + 1,
+                    max_retries + 1,
+                    wait,
+                )
+                if attempt < max_retries:
                     await asyncio.sleep(wait)
                     continue
-
-                response.raise_for_status()
-                return response
-
-            except (httpx.ConnectError, httpx.ReadTimeout) as e:
-                last_error = e
-                wait = _backoff(attempt)
-                logger.warning(
-                    f"Connection error for {url}: {e}, "
-                    f"attempt {attempt + 1}/{self.max_retries + 1}, "
-                    f"waiting {wait:.1f}s"
+                raise ScraperBlockedError(
+                    f"Portal returned {response.status_code} after {max_retries + 1} attempts: {url}"
                 )
+
+            response.raise_for_status()
+            return response
+
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RemoteProtocolError) as exc:
+            wait = base_backoff**attempt
+            logger.warning(
+                "Network error on %s — attempt %d/%d, backing off %.1fs: %s",
+                url,
+                attempt + 1,
+                max_retries + 1,
+                wait,
+                exc,
+            )
+            last_exc = exc
+            if attempt < max_retries:
                 await asyncio.sleep(wait)
 
-        raise last_error or Exception(f"Request to {url} failed after {self.max_retries} retries")
-
-    async def get(self, url: str, **kwargs: Any) -> httpx.Response:
-        return await self.request("GET", url, **kwargs)
-
-    async def post(self, url: str, **kwargs: Any) -> httpx.Response:
-        return await self.request("POST", url, **kwargs)
-
-
-def _backoff(attempt: int) -> float:
-    """Exponential backoff with jitter."""
-    base = min(2**attempt, 60)
-    return base + random.uniform(0, base * 0.5)
+    raise httpx.RequestError(f"All {max_retries + 1} attempts failed for {url}") from last_exc
