@@ -126,6 +126,36 @@ mypy shared/                 # Type check
 | `CIVIC_API_KEY` | For REST API auth | Set to enable API key checking |
 | `CIVIC_RATE_LIMIT` | No | Requests per minute (default: 60) |
 
+## Common Tasks (Copy-Paste Recipes)
+
+### "Add a new search parameter to an existing module"
+1. Read `modules/<name>/scraper.py` — find the `search()` function
+2. Add the new parameter to the function signature (with default `None`)
+3. Pass it to `fetch_with_retry()` via `params=` dict
+4. Update `modules/<name>/server.py` — add parameter to MCP tool
+5. Update `modules/<name>/router.py` — add query param to FastAPI endpoint
+6. Record new VCR cassette: `pytest tests/<name>/ --vcr-record=new_episodes`
+
+### "Fix a broken portal URL"
+1. Check the portal manually: `curl -sI "https://portal.go.id/old-path"`
+2. Find the new URL (check portal homepage, inspect network tab)
+3. Update the URL constant at top of `modules/<name>/scraper.py`
+4. Re-record VCR cassettes
+5. Update `modules/<name>/README.md` with the URL change
+6. Check if other modules reference the same portal
+
+### "Add proxy support to a new function"
+1. Add `proxy_url: str | None = None` to function signature
+2. Pass to `civic_client(proxy_url=proxy_url)` — that's it
+3. `civic_client()` auto-reads `PROXY_URL` from env when `proxy_url=None`
+
+### "Debug a failing scraper"
+1. Check if it's a geo-block: `curl -sI "https://portal.go.id" | head -5`
+2. Check if URL changed: compare with `modules/<name>/README.md`
+3. Check portal HTML structure: `curl -s "https://portal.go.id" | python -m bs4`
+4. Run with debug: `await fetch(query, debug=True)` — check `.raw` field in response
+5. Check GitHub issues for known portal changes
+
 ## File Conventions
 
 - `scraper.py` — all HTTP logic lives here
