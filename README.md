@@ -1,5 +1,13 @@
 # 🇮🇩 indonesia-civic-stack
 
+<!-- mcp-name: io.github.suryast/indonesia-civic-stack -->
+
+[![PyPI](https://img.shields.io/pypi/v/indonesia-civic-stack?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/indonesia-civic-stack/)
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.suryast-blue?style=flat-square&logo=anthropic&logoColor=white)](https://registry.modelcontextprotocol.io)
+[![CI](https://img.shields.io/github/actions/workflow/status/suryast/indonesia-civic-stack/ci.yml?style=flat-square&logo=github&label=CI)](https://github.com/suryast/indonesia-civic-stack/actions)
+[![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://pypi.org/project/indonesia-civic-stack/)
+[![License](https://img.shields.io/github/license/suryast/indonesia-civic-stack?style=flat-square)](LICENSE)
+
 Production-ready scrapers, normalizers, and API wrappers for Indonesian government data sources.
 
 The infrastructure layer beneath [halalkah.id](https://halalkah.id), [legalkah.id](https://legalkah.id), and a public good for the Indonesian civic tech and developer community.
