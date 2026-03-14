@@ -213,14 +213,12 @@ asyncio.run(main())
 All 11 modules expose **40 MCP tools** for use with Claude, GPT, or any MCP-compatible agent.
 
 ```bash
-# Add to Claude Desktop / any MCP client
-claude mcp add civic-stack-bpom -- python -m civic_stack.bpom.server
+# Fastest — use the hosted server (no install):
+claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
 
-# Or run standalone
-python -m civic_stack.bpom.server
-
-# With proxy for non-ID deployments
-PROXY_URL="https://your-proxy.workers.dev" python -m civic_stack.bmkg.server
+# Or install locally:
+pip install "indonesia-civic-stack[mcp]"
+claude mcp add civic-stack -- civic-stack-mcp
 ```
 
 MCP server classes support two init styles:
@@ -456,51 +454,58 @@ This repo is built for AI agents as first-class consumers.
 | [`SKILL.md`](SKILL.md) | Skill discovery (AgentSkills format) | Skill-aware agents |
 | [`PROMPTS.md`](PROMPTS.md) | Example prompts + interactive artifact recipes | All AI agents |
 
-### Claude Code (Recommended)
+### Connect MCP Tools (Pick One)
 
-Clone the repo, and Claude Code auto-discovers 40 MCP tools via `.mcp.json`:
+**Option A — Remote server (no install needed):**
 
 ```bash
-git clone https://github.com/suryast/indonesia-civic-stack.git
-cd indonesia-civic-stack
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[mcp]"
+# Claude Code
+claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
 
-# Claude Code auto-detects .mcp.json — all 40 tools available immediately
-claude
+# Claude Desktop — add to claude_desktop_config.json:
 ```
 
-Or install from PyPI and add the MCP server manually:
+```json
+{
+  "mcpServers": {
+    "civic-stack": {
+      "transport": "streamable-http",
+      "url": "https://mcp-server-production-d1a2.up.railway.app/mcp"
+    }
+  }
+}
+```
+
+**Option B — Local install via pip:**
 
 ```bash
 pip install "indonesia-civic-stack[mcp]"
 claude mcp add civic-stack -- civic-stack-mcp
 ```
 
-Either way, all 40 tools are available. You can ask:
+**Option C — Clone repo (auto-discovery):**
+
+```bash
+git clone https://github.com/suryast/indonesia-civic-stack.git
+cd indonesia-civic-stack
+pip install -e ".[mcp]"
+claude  # Claude Code auto-detects .mcp.json — 40 tools available immediately
+```
+
+All three options give you the same 40 tools. Then ask:
 
 > "Check if BPOM registration MD 123456789 is still active"
 > "Search for companies named 'Maju Bersama' in the AHU registry"
 > "What was the latest earthquake in Indonesia?"
 
-### Manual MCP Setup (Claude Desktop / Other Agents)
+See [PROMPTS.md](PROMPTS.md) for more example prompts and interactive artifact recipes.
+
+### REST API
 
 ```bash
-# Option 1: Unified server — all 40 tools in one process (after pip install)
-claude mcp add civic-stack -- civic-stack-mcp
-
-# Option 2: Individual modules
-claude mcp add civic-bpom -- python -m civic_stack.bpom.server
-claude mcp add civic-bmkg -- .venv/bin/python -m civic_stack.bmkg.server
-claude mcp add civic-ojk  -- .venv/bin/python -m civic_stack.ojk.server
-# ... repeat for all 11 modules
-```
-
-### REST API (for HTTP-based agents)
-
-```bash
-CIVIC_API_KEY=secret uvicorn app:app --port 8000
-# Agent calls: GET http://localhost:8000/bpom/search?q=paracetamol
+pip install "indonesia-civic-stack[api]"
+civic-stack api --port 8000
+# GET http://localhost:8000/bpom/search?q=paracetamol
 ```
 
 ### Example Prompts
