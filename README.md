@@ -136,18 +136,6 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 
 ---
 
-## Visualiser
-
-Explore the module architecture interactively: **[docs/visualiser.html](docs/visualiser.html)**
-
-Features:
-- Module cards with component checklists
-- Filter by phase or search
-- Architecture diagram
-- Dark theme with Indonesian flag colors
-
----
-
 ## Quick Start
 
 ### Python SDK
@@ -274,6 +262,84 @@ graph LR
 | bps | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bmkg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | simbg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## Deployment Notes
+
+### Geo-blocking & Proxy Requirements
+
+Most Indonesian government portals (`*.go.id`) restrict access to Indonesian IP addresses. If deploying outside Indonesia, you **must** set `PROXY_URL` to route requests through an Indonesian endpoint.
+
+```bash
+# Option 1: Cloudflare Worker proxy (recommended — free tier, Jakarta PoP)
+export PROXY_URL="https://your-civic-proxy.workers.dev"
+
+# Option 2: Any HTTPS proxy with Indonesian IP
+export PROXY_URL="https://id-proxy.example.com:8080"
+```
+
+**Without a proxy, expect:** DNS resolution failures, connection timeouts, or HTTP 403/404 responses from most modules.
+
+<details>
+<summary>Setting up a Cloudflare Worker proxy</summary>
+
+Create a Worker that forwards requests to the target portal:
+
+```javascript
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const target = url.searchParams.get('url');
+    if (!target) return new Response('Missing ?url= parameter', { status: 400 });
+    return fetch(target, {
+      method: request.method,
+      headers: { ...Object.fromEntries(request.headers), host: new URL(target).host },
+      body: request.body,
+    });
+  }
+};
+```
+
+Deploy to a Cloudflare account with Indonesian routing enabled.
+</details>
+
+### Portal URL Stability
+
+Indonesian government portals frequently change their URL structure without notice. The SDK includes retry logic and error envelopes, but endpoints may need periodic updates.
+
+**Known volatile portals** (as of March 2026):
+- `cekbpom.pom.go.id` — URL structure changes
+- `infopemilu.kpu.go.id` — API versioning shifts
+- `elhkpn.kpk.go.id` — Endpoint restructuring
+- `data.bmkg.go.id` — JSON feed paths change
+
+Run the test suite with `--live` flag to verify current portal status. Modules that fail for 60+ days are flagged `DEGRADED`.
+
+### API Keys
+
+| Module | Key Required | Registration |
+|--------|-------------|--------------|
+| BPS | Yes (`BPS_API_KEY`) | [webapi.bps.go.id/developer/register](https://webapi.bps.go.id/developer/register) (free) |
+| All others | No | — |
+
+### MCP Tool Inventory
+
+All 11 modules expose **40 MCP tools** total:
+
+| Module | Tools |
+|--------|-------|
+| bpom | `check_bpom`, `search_bpom`, `get_bpom_status` |
+| bpjph | `check_halal_cert`, `lookup_halal_by_product`, `get_halal_status`, `cross_reference_halal_bpom` |
+| ahu | `lookup_company_ahu`, `get_company_directors`, `verify_company_status`, `search_companies_ahu` |
+| ojk | `check_ojk_license`, `search_ojk_institutions`, `get_ojk_status`, `check_ojk_waspada` |
+| oss_nib | `lookup_nib`, `verify_nib`, `search_oss_businesses` |
+| lpse | `lookup_vendor_lpse`, `search_lpse_vendors`, `search_lpse_tenders`, `get_lpse_portals` |
+| kpu | `get_candidate`, `search_kpu_candidates`, `get_election_results_kpu`, `get_campaign_finance_kpu` |
+| lhkpn | `get_lhkpn`, `search_lhkpn`, `compare_lhkpn`, `get_lhkpn_pdf` |
+| bps | `search_bps_datasets`, `get_bps_indicator`, `list_bps_regions` |
+| bmkg | `get_bmkg_alerts`, `get_weather_forecast`, `get_earthquake_history`, `get_latest_earthquake` |
+| simbg | `lookup_building_permit`, `search_permits_by_area`, `list_simbg_portals` |
 
 ---
 
