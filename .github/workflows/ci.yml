@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,mcp]"
       - run: ruff check civic_stack/ tests/
       - run: ruff format --check civic_stack/ tests/
       - run: mypy civic_stack/shared/
