@@ -22,7 +22,12 @@ from typing import Any
 import httpx
 
 from civic_stack.shared.http import RateLimiter, civic_client
-from civic_stack.shared.schema import CivicStackResponse, RecordStatus, not_found_response
+from civic_stack.shared.schema import (
+    CivicStackResponse,
+    RecordStatus,
+    error_response,
+    not_found_response,
+)
 
 from .normalizer import normalize_dataset, normalize_indicator, normalize_region
 
@@ -100,8 +105,13 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
     try:
         _api_key()  # fail fast with clear error
     except BPSKeyMissingError:
-        return [error_response(MODULE, SOURCE_URL,
-            detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register")]
+        return [
+            error_response(
+                MODULE,
+                SOURCE_URL,
+                detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register",
+            )
+        ]
     async with civic_client(proxy_url=proxy_url) as client:
         data = await _get(
             client,
@@ -155,8 +165,11 @@ async def get_indicator(
     try:
         _api_key()
     except BPSKeyMissingError:
-        return error_response(MODULE, SOURCE_URL,
-            detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register")
+        return error_response(
+            MODULE,
+            SOURCE_URL,
+            detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register",
+        )
 
     async with civic_client(proxy_url=proxy_url) as client:
         data = await _get(client, "/list/model/statictable/lang/ind/", params)
