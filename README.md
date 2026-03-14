@@ -136,17 +136,17 @@ sequenceDiagram
 
 | Module | Source | Data | Status | Live Test |
 |--------|--------|------|--------|-----------|
-| [`bpom`](modules/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ⚠️ Phase 1 | Portal migrated to DataTables; URL updated |
-| [`bpjph`](modules/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 | Requires Playwright browser |
-| [`ahu`](modules/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 | Requires Playwright + proxy |
-| [`ojk`](modules/ojk/) | ojk.go.id | Licensed financial institutions + Waspada list | ✅ Phase 2 | API may be geo-restricted |
-| [`oss_nib`](modules/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
-| [`lpse`](modules/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
-| [`kpu`](modules/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
-| [`lhkpn`](modules/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | Portal moved behind auth (~2026) |
-| [`bps`](modules/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 | Requires free `BPS_API_KEY` |
-| [`bmkg`](modules/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 | `autogempa.json` ✅, alert endpoint updated |
-| [`simbg`](modules/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | ✅ Phase 3 | Regional portals may be unreachable |
+| [`bpom`](civic_stack/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ⚠️ Phase 1 | Portal migrated to DataTables; URL updated |
+| [`bpjph`](civic_stack/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 | Requires Playwright browser |
+| [`ahu`](civic_stack/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 | Requires Playwright + proxy |
+| [`ojk`](civic_stack/ojk/) | ojk.go.id | Licensed financial institutions + Waspada list | ✅ Phase 2 | API may be geo-restricted |
+| [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
+| [`lpse`](civic_stack/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
+| [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
+| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | Portal moved behind auth (~2026) |
+| [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 | Requires free `BPS_API_KEY` |
+| [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 | `autogempa.json` ✅, alert endpoint updated |
+| [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | ✅ Phase 3 | Regional portals may be unreachable |
 
 Every module returns the same `CivicStackResponse` envelope — swap data sources without touching application logic.
 
@@ -173,7 +173,10 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 ### Install
 
 ```bash
-pip install indonesia-civic-stack
+pip install indonesia-civic-stack          # Core SDK
+pip install "indonesia-civic-stack[mcp]"   # + MCP server (40 tools)
+pip install "indonesia-civic-stack[api]"   # + REST API (FastAPI + uvicorn)
+pip install "indonesia-civic-stack[all]"   # Everything
 ```
 
 ### Python SDK
@@ -294,7 +297,7 @@ When a module can't reach its portal or is missing configuration (e.g., `BPS_API
 ## Module Internals
 
 ```
-modules/bpom/
+civic_stack/bpom/
 ├── __init__.py
 ├── app.py          # FastAPI application
 ├── normalizer.py   # Raw HTML/JSON → structured dict
@@ -452,13 +455,20 @@ Clone the repo, and Claude Code auto-discovers 40 MCP tools via `.mcp.json`:
 git clone https://github.com/suryast/indonesia-civic-stack.git
 cd indonesia-civic-stack
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[mcp]"
 
 # Claude Code auto-detects .mcp.json — all 40 tools available immediately
 claude
 ```
 
-That's it. Claude Code reads `.mcp.json` and connects to the unified MCP server with all 40 tools. You can now ask:
+Or install from PyPI and add the MCP server manually:
+
+```bash
+pip install "indonesia-civic-stack[mcp]"
+claude mcp add civic-stack -- civic-stack-mcp
+```
+
+Either way, all 40 tools are available. You can ask:
 
 > "Check if BPOM registration MD 123456789 is still active"
 > "Search for companies named 'Maju Bersama' in the AHU registry"
@@ -467,11 +477,11 @@ That's it. Claude Code reads `.mcp.json` and connects to the unified MCP server 
 ### Manual MCP Setup (Claude Desktop / Other Agents)
 
 ```bash
-# Option 1: Unified server — all 40 tools in one process
-claude mcp add civic-stack -- .venv/bin/python server.py
+# Option 1: Unified server — all 40 tools in one process (after pip install)
+claude mcp add civic-stack -- civic-stack-mcp
 
 # Option 2: Individual modules
-claude mcp add civic-bpom -- .venv/bin/python -m civic_stack.bpom.server
+claude mcp add civic-bpom -- python -m civic_stack.bpom.server
 claude mcp add civic-bmkg -- .venv/bin/python -m civic_stack.bmkg.server
 claude mcp add civic-ojk  -- .venv/bin/python -m civic_stack.ojk.server
 # ... repeat for all 11 modules
@@ -550,7 +560,7 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 
 ```bash
 docker compose up                             # All modules
-docker build -t civic-bpom modules/bpom/      # Individual
+docker build -t civic-bpom civic_stack/bpom/      # Individual
 docker run -p 8001:8000 -e CIVIC_API_KEY=secret -e PROXY_URL=socks5://proxy:1080 civic-bpom
 ```
 
@@ -562,7 +572,7 @@ docker run -p 8001:8000 -e CIVIC_API_KEY=secret -e PROXY_URL=socks5://proxy:1080
 git clone https://github.com/suryast/indonesia-civic-stack.git
 cd indonesia-civic-stack
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,playwright]"
+pip install -e ".[all,dev]"
 playwright install chromium
 
 pytest -v              # VCR replay — no live portal calls
