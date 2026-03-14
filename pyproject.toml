@@ -85,6 +85,15 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 
+[tool.ruff.lint.per-file-ignores]
+"civic_stack/ahu/browser.py" = ["E501"]  # user agent strings
+"civic_stack/bpjph/browser.py" = ["E501"]
+"civic_stack/shared/http.py" = ["E501"]
+"civic_stack/shared/schema.py" = ["E501"]
+"civic_stack/*/server.py" = ["E501"]  # tool descriptions
+"civic_stack/*/app.py" = ["E501"]  # FastAPI descriptions
+"tests/*" = ["E501"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = false

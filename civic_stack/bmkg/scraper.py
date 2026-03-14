@@ -19,7 +19,12 @@ from typing import Any
 import httpx
 
 from civic_stack.shared.http import RateLimiter, civic_client
-from civic_stack.shared.schema import CivicStackResponse, RecordStatus, error_response, not_found_response
+from civic_stack.shared.schema import (
+    CivicStackResponse,
+    RecordStatus,
+    error_response,
+    not_found_response,
+)
 
 from .normalizer import normalize_alert, normalize_earthquake, normalize_forecast
 

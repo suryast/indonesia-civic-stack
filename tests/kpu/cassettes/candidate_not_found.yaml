@@ -7,7 +7,7 @@ interactions:
       Connection: [keep-alive]
       User-Agent: ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36']
     method: GET
-    uri: https://infopemilu.kpu.go.id/Pemilu/caleg/list?nama=KANDIDAT+TIDAK+ADA&limit=1
+    uri: https://infopemilu.kpu.go.id/Pemilu/Peserta_pemilu?nama=KANDIDAT+TIDAK+ADA&limit=1
   response:
     body:
       string: '{"data": [], "total": 0}'
