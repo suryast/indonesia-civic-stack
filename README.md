@@ -151,7 +151,7 @@ sequenceDiagram
 | [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
 | [`lpse`](civic_stack/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
 | [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
-| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | Portal moved behind auth (~2026) |
+| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | reCAPTCHA v3 on e-Announcement search |
 | [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 | Requires free `BPS_API_KEY` |
 | [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 | `autogempa.json` ✅, alert endpoint updated |
 | [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | ✅ Phase 3 | Regional portals may be unreachable |
@@ -169,7 +169,7 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 | oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | lpse | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | kpu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ URL changed |
-| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔴 Auth required |
+| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔴 reCAPTCHA v3 |
 | bps | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bmkg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | simbg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -213,14 +213,12 @@ asyncio.run(main())
 All 11 modules expose **40 MCP tools** for use with Claude, GPT, or any MCP-compatible agent.
 
 ```bash
-# Add to Claude Desktop / any MCP client
-claude mcp add civic-stack-bpom -- python -m civic_stack.bpom.server
+# Fastest — use the hosted server (no install):
+claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
 
-# Or run standalone
-python -m civic_stack.bpom.server
-
-# With proxy for non-ID deployments
-PROXY_URL="https://your-proxy.workers.dev" python -m civic_stack.bmkg.server
+# Or install locally:
+pip install "indonesia-civic-stack[mcp]"
+claude mcp add civic-stack -- civic-stack-mcp
 ```
 
 MCP server classes support two init styles:
@@ -372,7 +370,7 @@ cd proxy && npx wrangler deploy
 | api.ojk.go.id | ❌ 530 | CF origin error |
 | infopemilu.kpu.go.id | ❌ 403 | CF-protected |
 | lpse.*.go.id | ❌ 403 | CF-protected |
-| elhkpn.kpk.go.id | ❌ 403 | CF-protected + auth required |
+| elhkpn.kpk.go.id | ❌ 403 | reCAPTCHA v3 enforced on search |
 
 **For production with CF-protected portals**, use an Indonesian VPS with a SOCKS5/HTTP proxy and set `PROXY_MODE=connect`.
 
@@ -385,7 +383,7 @@ Indonesian government portals frequently change their URL structure without noti
 | BPOM | `/index.php/home/produk/1/{keyword}/...` | `/all-produk?q={keyword}` | ✅ Updated |
 | KPU | `/Pemilu/caleg/list` | `/Pemilu/Peserta_pemilu` | ✅ Updated |
 | BMKG | `/DataMKG/MEWS/Warning/cuacasignifikan.json` | `/DataMKG/TEWS/gempadirasakan.json` | ✅ Updated |
-| LHKPN | `/portal/user/check_a_lhkpn` | _(behind auth)_ | 🔴 Degraded |
+| LHKPN | `/portal/user/check_search_announ` | reCAPTCHA v3 | 🔴 Degraded |
 
 Modules that fail for **60 days** are flagged `DEGRADED` and may be archived.
 
@@ -456,51 +454,58 @@ This repo is built for AI agents as first-class consumers.
 | [`SKILL.md`](SKILL.md) | Skill discovery (AgentSkills format) | Skill-aware agents |
 | [`PROMPTS.md`](PROMPTS.md) | Example prompts + interactive artifact recipes | All AI agents |
 
-### Claude Code (Recommended)
+### Connect MCP Tools (Pick One)
 
-Clone the repo, and Claude Code auto-discovers 40 MCP tools via `.mcp.json`:
+**Option A — Remote server (no install needed):**
 
 ```bash
-git clone https://github.com/suryast/indonesia-civic-stack.git
-cd indonesia-civic-stack
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[mcp]"
+# Claude Code
+claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
 
-# Claude Code auto-detects .mcp.json — all 40 tools available immediately
-claude
+# Claude Desktop — add to claude_desktop_config.json:
 ```
 
-Or install from PyPI and add the MCP server manually:
+```json
+{
+  "mcpServers": {
+    "civic-stack": {
+      "transport": "streamable-http",
+      "url": "https://mcp-server-production-d1a2.up.railway.app/mcp"
+    }
+  }
+}
+```
+
+**Option B — Local install via pip:**
 
 ```bash
 pip install "indonesia-civic-stack[mcp]"
 claude mcp add civic-stack -- civic-stack-mcp
 ```
 
-Either way, all 40 tools are available. You can ask:
+**Option C — Clone repo (auto-discovery):**
+
+```bash
+git clone https://github.com/suryast/indonesia-civic-stack.git
+cd indonesia-civic-stack
+pip install -e ".[mcp]"
+claude  # Claude Code auto-detects .mcp.json — 40 tools available immediately
+```
+
+All three options give you the same 40 tools. Then ask:
 
 > "Check if BPOM registration MD 123456789 is still active"
 > "Search for companies named 'Maju Bersama' in the AHU registry"
 > "What was the latest earthquake in Indonesia?"
 
-### Manual MCP Setup (Claude Desktop / Other Agents)
+See [PROMPTS.md](PROMPTS.md) for more example prompts and interactive artifact recipes.
+
+### REST API
 
 ```bash
-# Option 1: Unified server — all 40 tools in one process (after pip install)
-claude mcp add civic-stack -- civic-stack-mcp
-
-# Option 2: Individual modules
-claude mcp add civic-bpom -- python -m civic_stack.bpom.server
-claude mcp add civic-bmkg -- .venv/bin/python -m civic_stack.bmkg.server
-claude mcp add civic-ojk  -- .venv/bin/python -m civic_stack.ojk.server
-# ... repeat for all 11 modules
-```
-
-### REST API (for HTTP-based agents)
-
-```bash
-CIVIC_API_KEY=secret uvicorn app:app --port 8000
-# Agent calls: GET http://localhost:8000/bpom/search?q=paracetamol
+pip install "indonesia-civic-stack[api]"
+civic-stack api --port 8000
+# GET http://localhost:8000/bpom/search?q=paracetamol
 ```
 
 ### Example Prompts

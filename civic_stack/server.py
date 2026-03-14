@@ -33,6 +33,14 @@ mcp = FastMCP(
 )
 
 
+# Health endpoint for Railway/load balancers
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    from starlette.responses import JSONResponse
+
+    return JSONResponse({"status": "ok", "server": "indonesia-civic-stack", "tools": 40})
+
+
 # --- BPOM (Food & Drug) ---
 
 
@@ -477,6 +485,8 @@ def create_mcp_server() -> FastMCP:
 
 
 def main():
+    import os
+
     parser = argparse.ArgumentParser(description="indonesia-civic-stack unified MCP server")
     parser.add_argument(
         "--transport",
@@ -484,10 +494,21 @@ def main():
         default="stdio",
         help="Transport mode (default: stdio for Claude Code)",
     )
+    parser.add_argument(
+        "--host",
+        default=os.environ.get("HOST", "0.0.0.0"),
+        help="Host to bind to (default: 0.0.0.0)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", "8000")),
+        help="Port to bind to (default: 8000, or PORT env var)",
+    )
     args = parser.parse_args()
 
     logger.info("Starting unified civic-stack MCP server (%d tools)", 40)
-    mcp.run(transport=args.transport)
+    mcp.run(transport=args.transport, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
