@@ -13,7 +13,7 @@ interactions:
       User-Agent:
       - python-httpx/0.27.0
     method: POST
-    uri: https://elhkpn.kpk.go.id/portal/user/check_a_lhkpn
+    uri: https://elhkpn.kpk.go.id/portal/user/check_search_announ
   response:
     body:
       string: '{"status":"success","data":[]}'
