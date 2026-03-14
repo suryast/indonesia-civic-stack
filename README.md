@@ -558,6 +558,189 @@ A module that breaks for **60 days** is flagged `DEGRADED` and archived.
 - [**legalkah.id**](https://legalkah.id) — Financial institution legality checker
 - [**datarakyat.id**](https://datarakyat.id) — Landing page & documentation
 
+## Sample Architectures
+
+### Simple: Halal Product Checker
+
+A single-page app that checks if a product is halal-certified. One module, no proxy needed for Indonesian users.
+
+```mermaid
+graph LR
+    subgraph Client
+        A[Mobile App / Web]
+    end
+
+    subgraph Your Server
+        B[FastAPI]
+        C[bpjph module]
+    end
+
+    subgraph Government Portal
+        D[sertifikasi.halal.go.id]
+    end
+
+    A -->|POST /check| B
+    B --> C
+    C -->|scrape| D
+    D -->|HTML| C
+    C -->|CivicStackResponse| B
+    B -->|JSON| A
+
+    style A fill:#f9f9f9,stroke:#333
+    style B fill:#e8f5e9,stroke:#2e7d32
+    style C fill:#e8f5e9,stroke:#2e7d32
+    style D fill:#fff3e0,stroke:#e65100
+```
+
+```python
+# app.py — 15 lines, production-ready
+from fastapi import FastAPI
+from modules.bpjph.scraper import fetch
+
+app = FastAPI()
+
+@app.get("/check/{product_id}")
+async def check_halal(product_id: str):
+    result = await fetch(product_id)
+    return {"halal": result.found, "data": result.result}
+```
+
+---
+
+### Intermediate: Multi-Source Due Diligence API
+
+A compliance tool that cross-checks a company across multiple government databases. Runs behind a proxy for overseas deployment.
+
+```mermaid
+graph TB
+    subgraph Client
+        A[Compliance Dashboard]
+    end
+
+    subgraph Your Infrastructure
+        B[API Gateway]
+        C[Due Diligence Service]
+        D[ahu module]
+        E[ojk module]
+        F[bpom module]
+        G[oss_nib module]
+        H[(Redis Cache)]
+    end
+
+    subgraph Proxy Layer
+        I[CF Worker Proxy]
+    end
+
+    subgraph Government Portals
+        J[ahu.go.id]
+        K[api.ojk.go.id]
+        L[cekbpom.pom.go.id]
+        M[oss.go.id]
+    end
+
+    A -->|GET /company/:name| B
+    B --> C
+    C --> H
+    C --> D & E & F & G
+    D & E & F & G -->|via PROXY_URL| I
+    I --> J & K & L & M
+
+    style A fill:#f9f9f9,stroke:#333
+    style B fill:#e3f2fd,stroke:#1565c0
+    style C fill:#e8f5e9,stroke:#2e7d32
+    style D fill:#e8f5e9,stroke:#2e7d32
+    style E fill:#e8f5e9,stroke:#2e7d32
+    style F fill:#e8f5e9,stroke:#2e7d32
+    style G fill:#e8f5e9,stroke:#2e7d32
+    style H fill:#fce4ec,stroke:#c62828
+    style I fill:#fff8e1,stroke:#f57f17
+    style J fill:#fff3e0,stroke:#e65100
+    style K fill:#fff3e0,stroke:#e65100
+    style L fill:#fff3e0,stroke:#e65100
+    style M fill:#fff3e0,stroke:#e65100
+```
+
+```python
+# due_diligence.py — parallel checks across 4 portals
+import asyncio
+from modules.ahu.scraper import search as ahu_search
+from modules.ojk.scraper import search as ojk_search
+from modules.bpom.scraper import search as bpom_search
+from modules.oss_nib.scraper import search as nib_search
+
+async def check_company(name: str) -> dict:
+    ahu, ojk, bpom, nib = await asyncio.gather(
+        ahu_search(name),
+        ojk_search(name),
+        bpom_search(name),
+        nib_search(name),
+    )
+    return {
+        "company": name,
+        "registered": any(r.found for r in ahu),
+        "ojk_licensed": any(r.found for r in ojk),
+        "bpom_products": len([r for r in bpom if r.found]),
+        "nib_valid": any(r.found for r in nib),
+        "risk_flags": _assess_risk(ahu, ojk, bpom, nib),
+    }
+```
+
+---
+
+### Advanced: AI Agent with MCP Tools
+
+An AI assistant that answers natural language questions about Indonesian civic data using MCP tools. The agent reasons about which portals to query.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Agent as AI Agent (Claude/GPT)
+    participant MCP as MCP Server
+    participant SDK as civic-stack modules
+    participant Proxy as CF Worker Proxy
+    participant Gov as Government Portals
+
+    User->>Agent: "Is PT Maju Bersama a legitimate company<br/>with halal certification?"
+
+    Note over Agent: Agent reasons: need AHU (company)<br/>+ BPJPH (halal) + OJK (finance)
+
+    Agent->>MCP: search_companies_ahu("PT Maju Bersama")
+    MCP->>SDK: ahu.search()
+    SDK->>Proxy: GET ahu.go.id/...
+    Proxy->>Gov: Forward request
+    Gov-->>Proxy: HTML response
+    Proxy-->>SDK: Response
+    SDK-->>MCP: CivicStackResponse
+    MCP-->>Agent: {found: true, status: "ACTIVE", ...}
+
+    Agent->>MCP: check_halal_cert("PT Maju Bersama")
+    MCP->>SDK: bpjph.fetch()
+    SDK->>Proxy: GET sertifikasi.halal.go.id/...
+    Proxy-->>SDK: Response
+    SDK-->>MCP: CivicStackResponse
+    MCP-->>Agent: {found: true, status: "ACTIVE", ...}
+
+    Agent->>MCP: check_ojk_license("PT Maju Bersama")
+    MCP->>SDK: ojk.fetch()
+    SDK-->>MCP: {found: false, status: "NOT_FOUND"}
+
+    Note over Agent: Agent synthesizes results
+
+    Agent->>User: "PT Maju Bersama is a registered company (AHU ✅)<br/>with active halal certification (BPJPH ✅).<br/>No OJK financial license found — this is normal<br/>for non-financial companies."
+```
+
+```bash
+# Connect MCP servers to Claude Desktop — one command per module
+claude mcp add civic-ahu   -- python -m modules.ahu.server
+claude mcp add civic-bpjph -- python -m modules.bpjph.server
+claude mcp add civic-ojk   -- python -m modules.ojk.server
+
+# Or run unified REST API for HTTP-based agents
+PROXY_URL=https://your-proxy.workers.dev uvicorn app:app
+```
+
+---
+
 ## Related
 
 - [**datarakyat.id**](https://datarakyat.id) — Project homepage with full module documentation
