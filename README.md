@@ -457,6 +457,38 @@ CIVIC_API_KEY=secret uvicorn app:app --port 8000
 # Agent calls: GET http://localhost:8000/bpom/search?q=paracetamol
 ```
 
+### Example Prompts
+
+Once MCP tools are connected, try these with your AI agent:
+
+> **Food Safety**
+> "Check if BPOM registration number `MD 123456789` is still active"
+> "Search for all paracetamol products registered with BPOM"
+
+> **Halal Verification**
+> "Is product XYZ halal certified? Cross-reference with BPOM registration"
+> "Find all halal certificates issued to PT Indofood"
+
+> **Company Due Diligence**
+> "Look up PT Maju Bersama in the AHU company registry and check who the directors are"
+> "Is this company OJK-licensed? Check both the license registry and the waspada (warning) list"
+
+> **Public Finance**
+> "Search LHKPN wealth declarations for officials in Jakarta"
+> "Find government procurement tenders for road construction on LPSE"
+
+> **Disaster & Weather**
+> "What was the latest earthquake in Indonesia?"
+> "Get the weather forecast for DKI Jakarta from BMKG"
+
+> **Statistics**
+> "Find BPS datasets about poverty rates by province"
+> "Get the inflation indicator for the last 5 years"
+
+> **Multi-Source Queries**
+> "I want to verify a food company: check AHU for registration, OJK for financial license, BPOM for product registrations, and BPJPH for halal certificates"
+> "Compare LHKPN wealth declarations for these two officials over the last 3 reporting periods"
+
 ### Design Decisions for AI Agents
 
 1. **Uniform response envelope** — every tool returns `CivicStackResponse` with the same fields. Agents don't need module-specific parsing logic.
