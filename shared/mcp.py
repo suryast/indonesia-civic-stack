@@ -4,21 +4,26 @@ Base class for all indonesia-civic-stack MCP servers.
 Every module's MCP server must:
 1. Inherit from CivicStackMCPBase
 2. Implement the abstract tools using @mcp.tool() decorators
-3. Call super().__init__(module_name) in __init__
+3. Set module_name (either as class attribute or via super().__init__)
 
-Usage example (in modules/bpom/server.py):
+Usage — either style works:
 
-    from shared.mcp import CivicStackMCPBase
-
+    # Style 1: Pass name to __init__
     class BpomMCPServer(CivicStackMCPBase):
         def __init__(self) -> None:
             super().__init__("bpom")
-            self._register_tools()
 
         def _register_tools(self) -> None:
             @self.mcp.tool()
-            async def check_bpom(registration_no: str) -> dict:
-                ...
+            async def check_bpom(registration_no: str) -> dict: ...
+
+    # Style 2: Class attribute (no __init__ needed)
+    class BmkgMCPServer(CivicStackMCPBase):
+        module_name = "bmkg"
+
+        def _register_tools(self) -> None:
+            @self.mcp.tool()
+            async def get_weather(city: str) -> dict: ...
 """
 
 from __future__ import annotations
@@ -43,7 +48,9 @@ class CivicStackMCPBase(ABC):
     @mcp.tool() decorated functions before the server is started.
     """
 
-    def __init__(self, module_name: str) -> None:
+    module_name: str = ""  # Can be set as class attribute or passed to __init__
+
+    def __init__(self, module_name: str | None = None) -> None:
         # Import here so FastMCP is only required at runtime, not at import time
         # (keeps shared/ importable in envs where fastmcp is not installed)
         try:
@@ -53,7 +60,14 @@ class CivicStackMCPBase(ABC):
                 "fastmcp is required to use CivicStackMCPBase. Install it with: pip install fastmcp"
             ) from exc
 
-        self.module_name = module_name
+        # Support both: __init__("name") and class attribute module_name = "name"
+        resolved = module_name or self.module_name
+        if not resolved:
+            raise ValueError(
+                f"{type(self).__name__} must either pass module_name to __init__() "
+                "or set module_name as a class attribute."
+            )
+        self.module_name = resolved
         self.mcp: Any = FastMCP(
             name=f"indonesia-civic-stack/{module_name}",
             instructions=(
