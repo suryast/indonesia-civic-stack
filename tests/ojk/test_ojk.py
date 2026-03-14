@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.ojk.scraper import check_waspada, fetch
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.ojk.scraper import check_waspada, fetch
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/ojk/cassettes"
 vcr_config = vcr.VCR(

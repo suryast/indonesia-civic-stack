@@ -2,14 +2,14 @@
 Bootstrap tests for shared/schema.py.
 
 These verify the Sprint 0 done condition:
-  "CivicStackResponse is importable from shared.schema and pytest passes."
+  "CivicStackResponse is importable from civic_stack.shared.schema and pytest passes."
 """
 
 from datetime import datetime
 
 import pytest
 
-from shared.schema import (
+from civic_stack.shared.schema import (
     CivicStackResponse,
     RecordStatus,
     error_response,

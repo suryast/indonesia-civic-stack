@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from modules.ahu.normalizer import normalize_company_page, normalize_search_results
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.ahu.normalizer import normalize_company_page, normalize_search_results
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -185,7 +185,7 @@ async def test_fetch_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.ahu.scraper.ahu_page", mock_ahu_page)
     monkeypatch.setattr("modules.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=True))
 
-    from modules.ahu.scraper import fetch
+    from civic_stack.ahu.scraper import fetch
 
     resp = await fetch("PT Contoh Indonesia Tbk")
 
@@ -214,7 +214,7 @@ async def test_blocked_response_returns_error(monkeypatch):
     monkeypatch.setattr("modules.ahu.scraper.ahu_page", mock_ahu_page)
     monkeypatch.setattr("modules.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=False))
 
-    from modules.ahu.scraper import fetch
+    from civic_stack.ahu.scraper import fetch
 
     resp = await fetch("PT Contoh Indonesia Tbk")
 

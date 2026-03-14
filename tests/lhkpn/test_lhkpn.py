@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.lhkpn.normalizer import normalize_declaration, normalize_search_result
-from modules.lhkpn.scraper import fetch, search
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.lhkpn.normalizer import normalize_declaration, normalize_search_result
+from civic_stack.lhkpn.scraper import fetch, search
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/lhkpn/cassettes"
 vcr_config = vcr.VCR(

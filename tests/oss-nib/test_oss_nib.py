@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from modules.oss_nib.normalizer import normalize_nib_page, normalize_search_results
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.oss_nib.normalizer import normalize_nib_page, normalize_search_results
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -89,7 +89,7 @@ async def test_fetch_monkeypatched(monkeypatch):
     monkeypatch.setattr("modules.oss_nib.scraper.new_page", mock_new_page)
     monkeypatch.setattr("modules.oss_nib.scraper.wait_for_results", AsyncMock(return_value=True))
 
-    from modules.oss_nib.scraper import fetch
+    from civic_stack.oss_nib.scraper import fetch
 
     resp = await fetch("PT Gojek Indonesia")
     assert isinstance(resp, CivicStackResponse)

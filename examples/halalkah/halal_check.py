@@ -20,9 +20,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from modules.bpjph import cross_ref_bpom
-from modules.bpjph import fetch as bpjph_fetch
-from modules.bpom import fetch as bpom_fetch
+from civic_stack.bpjph import cross_ref_bpom
+from civic_stack.bpjph import fetch as bpjph_fetch
+from civic_stack.bpom import fetch as bpom_fetch
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class HalalKahChecker:
 
         # Enrich with BPOM data if we have a product name
         if product_name:
-            from modules.bpom import search as bpom_search
+            from civic_stack.bpom import search as bpom_search
 
             bpom_results = await bpom_search(product_name)
             if bpom_results and bpom_results[0].found:
@@ -140,7 +140,7 @@ class HalalKahChecker:
         }
 
         if product_name:
-            from modules.bpjph import search as bpjph_search
+            from civic_stack.bpjph import search as bpjph_search
 
             bpjph_results = await bpjph_search(product_name, proxy_url=self.proxy_url)
             if bpjph_results and bpjph_results[0].found:

@@ -28,13 +28,13 @@ pytest tests/<module>/ -v
 ruff check . && ruff format --check .
 
 # Type check
-mypy shared/ modules/
+mypy shared/ civic_stack/
 
 # Run unified MCP server (40 tools)
 python server.py
 
 # Run single module MCP server
-python -m modules.bpom.server
+python -m civic_stack.bpom.server
 
 # Run single module REST API
 uvicorn modules.bpom.app:app --port 8001

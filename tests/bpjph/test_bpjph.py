@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from modules.bpjph.normalizer import normalize_cert_page, normalize_search_results
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.bpjph.normalizer import normalize_cert_page, normalize_search_results
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -143,7 +143,7 @@ async def test_fetch_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.bpjph.scraper.new_page", mock_new_page)
     monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
 
-    from modules.bpjph.scraper import fetch
+    from civic_stack.bpjph.scraper import fetch
 
     resp = await fetch("ID00110019882120240001")
 
@@ -176,7 +176,7 @@ async def test_search_uses_normalizer(monkeypatch):
     monkeypatch.setattr("modules.bpjph.scraper.new_page", mock_new_page)
     monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
 
-    from modules.bpjph.scraper import search
+    from civic_stack.bpjph.scraper import search
 
     results = await search("mie instan")
 

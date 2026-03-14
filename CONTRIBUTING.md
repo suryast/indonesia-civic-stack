@@ -12,7 +12,7 @@ A PR that is missing any item will not be merged.
 ### 1. Required functions
 
 ```python
-# modules/<name>/__init__.py
+# civic_stack/<name>/__init__.py
 
 async def fetch(query: str, *, debug: bool = False, proxy_url: str | None = None, **kwargs) -> CivicStackResponse:
     """Primary single-record lookup. query is a registration/cert/company ID or name."""
@@ -28,10 +28,10 @@ and `error_response()` helpers for non-result cases.
 
 ### 2. MCP server
 
-Create `modules/<name>/server.py` with a class inheriting `CivicStackMCPBase`:
+Create `civic_stack/<name>/server.py` with a class inheriting `CivicStackMCPBase`:
 
 ```python
-from shared.mcp import CivicStackMCPBase
+from civic_stack.shared.mcp import CivicStackMCPBase
 
 class MyModuleMCPServer(CivicStackMCPBase):
     def __init__(self) -> None:
@@ -48,7 +48,7 @@ The server must expose at minimum: `check_<module>(id)`, `search_<module>(keywor
 
 ### 3. FastAPI router
 
-Create `modules/<name>/router.py` exposing GET endpoints that mirror the MCP tools.
+Create `civic_stack/<name>/router.py` exposing GET endpoints that mirror the MCP tools.
 Mount it in the module's `app.py` with prefix `/<module_name>`.
 
 ### 4. VCR.py fixtures
@@ -66,7 +66,7 @@ Run `pytest --vcr-record=new_episodes` once against the live portal to capture c
 
 ### 5. Module README
 
-Copy `docs/module-spec.md` to `modules/<name>/README.md` and fill in all sections:
+Copy `docs/module-spec.md` to `civic_stack/<name>/README.md` and fill in all sections:
 source URL, scrape method, rate limits, known IP-block behaviour, normalized schema fields,
 MCP tools, and example responses.
 
@@ -77,7 +77,7 @@ MCP tools, and example responses.
 1. Fork the repo and create a branch: `feat/module-<name>` or `fix/<module>-<description>`.
 2. Implement the full module contract (all 5 items above).
 3. Run the test suite locally: `pytest tests/<name>/` — all tests must pass.
-4. Run lint: `ruff check . && mypy shared/ modules/<name>/`.
+4. Run lint: `ruff check . && mypy shared/ civic_stack/<name>/`.
 5. Open a PR against `main`. Fill in the PR checklist (auto-populated from the template).
 6. Maintainer review SLA: **2 weeks** from PR open.
 
@@ -99,8 +99,8 @@ If you are fixing a degraded module, reference the issue number in your PR.
 
 This repo uses per-module licensing (see `LICENSES.md`). When adding a new module:
 
-- Copy the correct `LICENSE` file into `modules/<name>/LICENSE` based on the table in `LICENSES.md`.
-- State the license in your `modules/<name>/README.md` (the `License` field in the module spec).
+- Copy the correct `LICENSE` file into `civic_stack/<name>/LICENSE` based on the table in `LICENSES.md`.
+- State the license in your `civic_stack/<name>/README.md` (the `License` field in the module spec).
 - Do **not** use a license not already present in the repo without opening a discussion issue first.
 
 ---

@@ -34,7 +34,7 @@ indonesia-civic-stack/
 ### Every module MUST follow this contract:
 
 ```python
-# modules/<name>/scraper.py
+# civic_stack/<name>/scraper.py
 async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackResponse:
     """Single-record lookup by ID."""
 
@@ -45,7 +45,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
 ### HTTP client — always use civic_client():
 
 ```python
-from shared.http import civic_client, fetch_with_retry
+from civic_stack.shared.http import civic_client, fetch_with_retry
 
 async with civic_client(proxy_url=proxy_url) as client:
     response = await fetch_with_retry(client, "GET", url, rate_limiter=_limiter)
@@ -71,7 +71,7 @@ class BmkgMCPServer(CivicStackMCPBase):
 ### Error handling — return envelopes, don't raise:
 
 ```python
-from shared.schema import error_response, not_found_response
+from civic_stack.shared.schema import error_response, not_found_response
 
 # When portal is unreachable:
 return error_response("bpom", url, detail="Portal returned 404")
@@ -85,7 +85,7 @@ return not_found_response("bpom", url)
 1. **Never break `shared/`** — all 11 modules depend on schema.py, http.py, mcp.py
 2. **Never hit live portals in tests** — use VCR cassettes (`tests/<module>/cassettes/`)
 3. **Always return CivicStackResponse** — never return raw dicts or raise on not-found
-4. **Rate limiting is mandatory** — every scraper must use `RateLimiter` from shared.http
+4. **Rate limiting is mandatory** — every scraper must use `RateLimiter` from civic_stack.shared.http
 5. **Proxy support is mandatory** — every function takes `proxy_url` kwarg and passes to `civic_client()`
 6. **No data persistence** — modules fetch and return, no databases, no file writes
 
@@ -100,7 +100,7 @@ mypy shared/                 # Type check
 
 ## Adding a New Module
 
-1. Copy `modules/bpom/` as template
+1. Copy `civic_stack/bpom/` as template
 2. Implement `scraper.py` (fetch + search)
 3. Add `normalizer.py`, `router.py`, `server.py`, `app.py`
 4. Record VCR cassettes: `pytest --vcr-record=new_episodes`
@@ -129,19 +129,19 @@ mypy shared/                 # Type check
 ## Common Tasks (Copy-Paste Recipes)
 
 ### "Add a new search parameter to an existing module"
-1. Read `modules/<name>/scraper.py` — find the `search()` function
+1. Read `civic_stack/<name>/scraper.py` — find the `search()` function
 2. Add the new parameter to the function signature (with default `None`)
 3. Pass it to `fetch_with_retry()` via `params=` dict
-4. Update `modules/<name>/server.py` — add parameter to MCP tool
-5. Update `modules/<name>/router.py` — add query param to FastAPI endpoint
+4. Update `civic_stack/<name>/server.py` — add parameter to MCP tool
+5. Update `civic_stack/<name>/router.py` — add query param to FastAPI endpoint
 6. Record new VCR cassette: `pytest tests/<name>/ --vcr-record=new_episodes`
 
 ### "Fix a broken portal URL"
 1. Check the portal manually: `curl -sI "https://portal.go.id/old-path"`
 2. Find the new URL (check portal homepage, inspect network tab)
-3. Update the URL constant at top of `modules/<name>/scraper.py`
+3. Update the URL constant at top of `civic_stack/<name>/scraper.py`
 4. Re-record VCR cassettes
-5. Update `modules/<name>/README.md` with the URL change
+5. Update `civic_stack/<name>/README.md` with the URL change
 6. Check if other modules reference the same portal
 
 ### "Add proxy support to a new function"
@@ -151,7 +151,7 @@ mypy shared/                 # Type check
 
 ### "Debug a failing scraper"
 1. Check if it's a geo-block: `curl -sI "https://portal.go.id" | head -5`
-2. Check if URL changed: compare with `modules/<name>/README.md`
+2. Check if URL changed: compare with `civic_stack/<name>/README.md`
 3. Check portal HTML structure: `curl -s "https://portal.go.id" | python -m bs4`
 4. Run with debug: `await fetch(query, debug=True)` — check `.raw` field in response
 5. Check GitHub issues for known portal changes

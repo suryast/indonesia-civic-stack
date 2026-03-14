@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.lpse.normalizer import normalize_tender, normalize_vendor
-from modules.lpse.scraper import fetch, search_tenders
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.lpse.normalizer import normalize_tender, normalize_vendor
+from civic_stack.lpse.scraper import fetch, search_tenders
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/lpse/cassettes"
 vcr_config = vcr.VCR(
