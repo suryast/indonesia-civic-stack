@@ -1,5 +1,10 @@
 # CLAUDE.md — Instructions for Claude Code
 
+## MCP Integration
+
+This repo includes `.mcp.json` — Claude Code auto-discovers 40 MCP tools on startup.
+The unified server (`server.py`) registers all tools from all 11 modules in one process.
+
 ## Quick Context
 
 This is a Python SDK for Indonesian government data. 11 modules, each wrapping a gov portal.
@@ -25,14 +30,23 @@ ruff check . && ruff format --check .
 # Type check
 mypy shared/ modules/
 
-# Run single module
+# Run unified MCP server (40 tools)
+python server.py
+
+# Run single module MCP server
+python -m modules.bpom.server
+
+# Run single module REST API
 uvicorn modules.bpom.app:app --port 8001
 
-# Run MCP server
-python -m modules.bpom.server
+# Run unified REST API
+uvicorn app:app --port 8000
 
 # Build & deploy proxy
 cd proxy && npx wrangler deploy
+
+# Verify MCP tools load
+python -c "import asyncio; from server import mcp; print(asyncio.run(mcp.list_tools()))"
 ```
 
 ## Do Not

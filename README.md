@@ -438,19 +438,40 @@ This repo is built for AI agents as first-class consumers.
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Module contract + PR checklist | All |
 | [`SKILL.md`](SKILL.md) | Skill discovery (AgentSkills format) | Skill-aware agents |
 
-### For AI Runtime Agents (MCP)
+### Claude Code (Recommended)
 
-Every module exposes tools via [Model Context Protocol](https://modelcontextprotocol.io):
+Clone the repo, and Claude Code auto-discovers 40 MCP tools via `.mcp.json`:
 
 ```bash
-# Add all civic-stack tools to Claude Desktop
-claude mcp add civic-bpom -- python -m modules.bpom.server
-claude mcp add civic-bmkg -- python -m modules.bmkg.server
-claude mcp add civic-ojk  -- python -m modules.ojk.server
+git clone https://github.com/suryast/indonesia-civic-stack.git
+cd indonesia-civic-stack
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Claude Code auto-detects .mcp.json — all 40 tools available immediately
+claude
+```
+
+That's it. Claude Code reads `.mcp.json` and connects to the unified MCP server with all 40 tools. You can now ask:
+
+> "Check if BPOM registration MD 123456789 is still active"
+> "Search for companies named 'Maju Bersama' in the AHU registry"
+> "What was the latest earthquake in Indonesia?"
+
+### Manual MCP Setup (Claude Desktop / Other Agents)
+
+```bash
+# Option 1: Unified server — all 40 tools in one process
+claude mcp add civic-stack -- .venv/bin/python server.py
+
+# Option 2: Individual modules
+claude mcp add civic-bpom -- .venv/bin/python -m modules.bpom.server
+claude mcp add civic-bmkg -- .venv/bin/python -m modules.bmkg.server
+claude mcp add civic-ojk  -- .venv/bin/python -m modules.ojk.server
 # ... repeat for all 11 modules
 ```
 
-Or run the unified REST API and let your agent call HTTP endpoints:
+### REST API (for HTTP-based agents)
 
 ```bash
 CIVIC_API_KEY=secret uvicorn app:app --port 8000
