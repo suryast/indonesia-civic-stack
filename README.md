@@ -3,7 +3,7 @@
 <!-- mcp-name: io.github.suryast/indonesia-civic-stack -->
 
 [![PyPI](https://img.shields.io/pypi/v/indonesia-civic-stack?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/indonesia-civic-stack/)
-[![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.suryast-blue?style=flat-square&logo=anthropic&logoColor=white)](https://registry.modelcontextprotocol.io)
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.suryast-blue?style=flat-square&logo=anthropic&logoColor=white)](https://registry.modelcontextprotocol.io/servers/io.github.suryast/indonesia-civic-stack)
 [![CI](https://img.shields.io/github/actions/workflow/status/suryast/indonesia-civic-stack/ci.yml?style=flat-square&logo=github&label=CI)](https://github.com/suryast/indonesia-civic-stack/actions)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://pypi.org/project/indonesia-civic-stack/)
 [![License](https://img.shields.io/github/license/suryast/indonesia-civic-stack?style=flat-square)](LICENSE)
