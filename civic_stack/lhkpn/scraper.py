@@ -31,16 +31,18 @@ from .normalizer import normalize_declaration, normalize_search_result
 
 logger = logging.getLogger(__name__)
 
-# elhkpn public API endpoints (no auth required for public tier)
+# elhkpn public e-Announcement search (on login page #announ section)
 _BASE = "https://elhkpn.kpk.go.id"
-# NOTE: The public search endpoint was removed ~2026 (portal now requires auth).
-# Kept for reference; module is DEGRADED until a new public API is found.
-_SEARCH_URL = _BASE + "/portal/user/check_a_lhkpn"  # POST: {"nama": "..."} — CURRENTLY 404
+# Public search: POST /portal/user/check_search_announ
+# Fields: CARI[NAMA] (name/NIK), CARI[TAHUN] (year), CARI[LEMBAGA] (institution)
+# Requires reCAPTCHA v3 token (server-side enforced) — module DEGRADED.
+# Old endpoint check_a_lhkpn -> 404 since ~2026.
+_SEARCH_URL = _BASE + "/portal/user/check_search_announ"  # POST — needs reCAPTCHA v3
 _DETAIL_URL = _BASE + "/portal/user/detail_laporan_harta"  # POST: {"id_laporan": "..."}
 _PDF_URL = _BASE + "/portal/user/preview_laporan_pdf"  # GET: ?id_laporan=...
 
 MODULE = "lhkpn"
-SOURCE_URL = _BASE + "/portal/user/check_a_lhkpn"
+SOURCE_URL = _BASE + "/portal/user/login#announ"
 
 _limiter = RateLimiter(rate=0.25)  # 1 req / 4s — KPK portal is conservative
 

@@ -151,7 +151,7 @@ sequenceDiagram
 | [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
 | [`lpse`](civic_stack/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
 | [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
-| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | Portal moved behind auth (~2026) |
+| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | reCAPTCHA v3 on e-Announcement search |
 | [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 | Requires free `BPS_API_KEY` |
 | [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 | `autogempa.json` ✅, alert endpoint updated |
 | [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | ✅ Phase 3 | Regional portals may be unreachable |
@@ -169,7 +169,7 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 | oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | lpse | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | kpu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ URL changed |
-| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔴 Auth required |
+| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔴 reCAPTCHA v3 |
 | bps | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bmkg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | simbg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -370,7 +370,7 @@ cd proxy && npx wrangler deploy
 | api.ojk.go.id | ❌ 530 | CF origin error |
 | infopemilu.kpu.go.id | ❌ 403 | CF-protected |
 | lpse.*.go.id | ❌ 403 | CF-protected |
-| elhkpn.kpk.go.id | ❌ 403 | CF-protected + auth required |
+| elhkpn.kpk.go.id | ❌ 403 | reCAPTCHA v3 enforced on search |
 
 **For production with CF-protected portals**, use an Indonesian VPS with a SOCKS5/HTTP proxy and set `PROXY_MODE=connect`.
 
@@ -383,7 +383,7 @@ Indonesian government portals frequently change their URL structure without noti
 | BPOM | `/index.php/home/produk/1/{keyword}/...` | `/all-produk?q={keyword}` | ✅ Updated |
 | KPU | `/Pemilu/caleg/list` | `/Pemilu/Peserta_pemilu` | ✅ Updated |
 | BMKG | `/DataMKG/MEWS/Warning/cuacasignifikan.json` | `/DataMKG/TEWS/gempadirasakan.json` | ✅ Updated |
-| LHKPN | `/portal/user/check_a_lhkpn` | _(behind auth)_ | 🔴 Degraded |
+| LHKPN | `/portal/user/check_search_announ` | reCAPTCHA v3 | 🔴 Degraded |
 
 Modules that fail for **60 days** are flagged `DEGRADED` and may be archived.
 

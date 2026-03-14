@@ -4,7 +4,7 @@
 **Scrape method:** REST API (search + detail) + pdfplumber + Claude Vision API fallback for PDF extraction
 **Phase:** 3
 **License:** MIT
-**Status:** ACTIVE
+**Status:** 🔴 DEGRADED (reCAPTCHA v3)
 
 ---
 
@@ -12,10 +12,10 @@
 
 | Field | Value |
 |---|---|
-| Portal URL | `https://elhkpn.kpk.go.id/portal/user/check_a_lhkpn` |
+| Portal URL | `https://elhkpn.kpk.go.id/portal/user/login#announ` |
 | Operator | Komisi Pemberantasan Korupsi (KPK RI) |
 | Data type | LHKPN (Laporan Harta Kekayaan Penyelenggara Negara) — public official wealth declarations |
-| Auth required | None — public search tier |
+| Auth required | reCAPTCHA v3 (server-side enforced) |
 | Last verified | 2026-03-13 |
 
 ---
