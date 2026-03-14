@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "civic-stack": {
+      "command": ".venv/bin/python",
+      "args": ["server.py"],
+      "env": {
+        "PROXY_URL": "",
+        "BPS_API_KEY": ""
+      }
+    }
+  }
+}
