@@ -55,7 +55,7 @@ async def fetch(
         debug: If True, include raw API response in result.
         proxy_url: Optional proxy (not typically needed for KPU).
     """
-    url = f"{INFOPEMILU_BASE}/caleg/list"
+    url = f"{INFOPEMILU_BASE}/Peserta_pemilu"
     params = {"nama": candidate_id, "limit": 1}
 
     try:
@@ -92,7 +92,7 @@ async def search(
         region_code: Province or regency code (e.g. "31" for DKI Jakarta)
         party: Party name or abbreviation
     """
-    url = f"{INFOPEMILU_BASE}/caleg/list"
+    url = f"{INFOPEMILU_BASE}/Peserta_pemilu"
     params: dict = {"nama": keyword, "limit": 10}
     if filters:
         if filters.get("election_type"):

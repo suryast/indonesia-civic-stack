@@ -32,7 +32,9 @@ _INATEWS_BASE = "https://inatews.bmkg.go.id"
 _FORECAST_URL = _BMKG_BASE + "/DataMKG/MEWS/DigitalForecast/DigitalForecast-{province}.xml"
 _EARTHQUAKE_URL = _BMKG_BASE + "/DataMKG/TEWS/autogempa.json"
 _EQ_HISTORY_URL = _BMKG_BASE + "/DataMKG/TEWS/gempaterkini.json"  # last 15 significant quakes
-_ALERT_URL = _BMKG_BASE + "/DataMKG/MEWS/Warning/cuacasignifikan.json"
+# cuacasignifikan.json was removed ~2026. Use gempadirasakan as fallback for alerts.
+_ALERT_URL = _BMKG_BASE + "/DataMKG/TEWS/gempadirasakan.json"
+_EQ_FELT_URL = _BMKG_BASE + "/DataMKG/TEWS/gempadirasakan.json"
 
 MODULE = "bmkg"
 SOURCE_URL = _BMKG_BASE

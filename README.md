@@ -120,16 +120,16 @@ pie title Module Coverage by Phase
 
 | Module | Source | Data | Status |
 |---|---|---|---|
-| [`bpom`](modules/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ✅ Phase 1 |
+| [`bpom`](modules/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ⚠️ Phase 1 — URL updated |
 | [`bpjph`](modules/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 |
 | [`ahu`](modules/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 |
 | [`ojk`](modules/ojk/) | ojk.go.id | Licensed financial institutions + Waspada list | ✅ Phase 2 |
 | [`oss_nib`](modules/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 |
 | [`lpse`](modules/lpse/) | lpse.*.go.id | Government procurement (5 major portals) | ✅ Phase 2 |
-| [`kpu`](modules/kpu/) | kpu.go.id | Election data — candidates, results, finance | ✅ Phase 2 |
-| [`lhkpn`](modules/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | ✅ Phase 3 |
-| [`bps`](modules/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 |
-| [`bmkg`](modules/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 |
+| [`kpu`](modules/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 — URL updated |
+| [`lhkpn`](modules/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED — portal requires auth |
+| [`bps`](modules/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 (needs `BPS_API_KEY`) |
+| [`bmkg`](modules/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 — alert URL updated |
 | [`simbg`](modules/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal aggregator | ✅ Phase 3 |
 
 Every module returns the same `CivicStackResponse` envelope — swap data sources without touching application logic.

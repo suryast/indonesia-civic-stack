@@ -22,10 +22,20 @@ from shared.schema import CivicStackResponse, error_response, not_found_response
 logger = logging.getLogger(__name__)
 
 BPOM_BASE = "https://cekbpom.pom.go.id"
-# Direct product lookup by registration number
+# Product detail by registration number (legacy path, may still work for direct lookups)
 BPOM_DETAIL_URL = f"{BPOM_BASE}/index.php/home/produk/0"
-# Search by product name — returns a table of matches
-BPOM_SEARCH_URL = f"{BPOM_BASE}/index.php/home/produk/1"
+# Search — new DataTables endpoint (POST, server-side)
+# The portal migrated from /index.php/home/produk/1 to /all-produk
+BPOM_SEARCH_URL = f"{BPOM_BASE}/all-produk"
+# Category-specific search pages (alternative)
+BPOM_CATEGORY_URLS = {
+    "obat": f"{BPOM_BASE}/produk-obat",
+    "obat_tradisional": f"{BPOM_BASE}/produk-obat-tradisional",
+    "obat_kuasi": f"{BPOM_BASE}/produk-obat-kuasi",
+    "suplemen": f"{BPOM_BASE}/produk-suplemen-kesehatan",
+    "kosmetika": f"{BPOM_BASE}/produk-kosmetika",
+    "pangan": f"{BPOM_BASE}/produk-pangan-olahan",
+}
 
 # ~10 req/min = ~0.167 req/s; use 0.15 for safety margin
 _rate_limiter = RateLimiter(rate=0.15)
@@ -87,7 +97,7 @@ async def search(
     Returns:
         List of CivicStackResponse objects (may be empty, never raises on not-found).
     """
-    url = f"{BPOM_SEARCH_URL}/{quote(keyword)}/10/1/1"
+    url = f"{BPOM_SEARCH_URL}?q={quote(keyword)}"
 
     try:
         async with civic_client(proxy_url=proxy_url) as client:

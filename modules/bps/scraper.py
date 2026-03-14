@@ -35,10 +35,14 @@ SOURCE_URL = "https://webapi.bps.go.id"
 _limiter = RateLimiter(rate=2.0)  # BPS API is clean — 2 req/s is safe
 
 
+class BPSKeyMissingError(Exception):
+    """Raised when BPS_API_KEY is not configured."""
+
+
 def _api_key() -> str:
     key = os.environ.get("BPS_API_KEY", "")
     if not key:
-        raise OSError(
+        raise BPSKeyMissingError(
             "BPS_API_KEY is not set. Register for a free key at: "
             "https://webapi.bps.go.id/developer/register"
         )
@@ -93,6 +97,11 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
 
 async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicStackResponse]:
     """Search BPS datasets/subjects by keyword."""
+    try:
+        _api_key()  # fail fast with clear error
+    except BPSKeyMissingError:
+        return [error_response(MODULE, SOURCE_URL,
+            detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register")]
     async with civic_client(proxy_url=proxy_url) as client:
         data = await _get(
             client,
@@ -143,6 +152,12 @@ async def get_indicator(
     if year_range:
         params["th"] = year_range
 
+    try:
+        _api_key()
+    except BPSKeyMissingError:
+        return error_response(MODULE, SOURCE_URL,
+            detail="BPS_API_KEY not set. Register at https://webapi.bps.go.id/developer/register")
+
     async with civic_client(proxy_url=proxy_url) as client:
         data = await _get(client, "/list/model/statictable/lang/ind/", params)
 
@@ -171,6 +186,11 @@ async def list_regions(
     proxy_url: str | None = None,
 ) -> list[dict[str, Any]]:
     """List BPS regional codes (wilayah), optionally filtered by parent."""
+    try:
+        _api_key()
+    except BPSKeyMissingError:
+        return []
+
     async with civic_client(proxy_url=proxy_url) as client:
         data = await _get(
             client,

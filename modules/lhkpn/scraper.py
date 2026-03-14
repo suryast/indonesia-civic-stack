@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 
 # elhkpn public API endpoints (no auth required for public tier)
 _BASE = "https://elhkpn.kpk.go.id"
-_SEARCH_URL = _BASE + "/portal/user/check_a_lhkpn"  # POST: {"nama": "..."}
+# NOTE: The public search endpoint was removed ~2026 (portal now requires auth).
+# Kept for reference; module is DEGRADED until a new public API is found.
+_SEARCH_URL = _BASE + "/portal/user/check_a_lhkpn"  # POST: {"nama": "..."} — CURRENTLY 404
 _DETAIL_URL = _BASE + "/portal/user/detail_laporan_harta"  # POST: {"id_laporan": "..."}
 _PDF_URL = _BASE + "/portal/user/preview_laporan_pdf"  # GET: ?id_laporan=...
 
