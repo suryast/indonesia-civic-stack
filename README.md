@@ -12,6 +12,17 @@ Indonesian public data is nominally open but practically inaccessible. Every dev
 
 **This repo is that layer.** One `pip install` to query Indonesian government portals — no more bespoke scrapers.
 
+### AI-Agent First
+
+This SDK is designed for both humans and AI agents:
+
+- 🤖 **40 MCP tools** — plug into Claude, GPT, or any MCP-compatible agent
+- 📋 **[SKILL.md](SKILL.md)** — AI agent skill discovery (AgentSkills format)
+- 🧑‍💻 **[AGENTS.md](AGENTS.md)** — architecture guide for coding agents (Claude Code, Codex, Cursor)
+- 📝 **[CLAUDE.md](CLAUDE.md)** — Claude Code-specific instructions
+- ✅ **Typed responses** — `CivicStackResponse` envelope, never raw dicts
+- 🔁 **Consistent patterns** — every module follows the same contract
+
 ---
 
 ## Architecture
@@ -409,6 +420,49 @@ All 11 modules expose **40 MCP tools** total:
 | bps | `search_bps_datasets`, `get_bps_indicator`, `list_bps_regions` | 3 |
 | bmkg | `get_bmkg_alerts`, `get_weather_forecast`, `get_earthquake_history`, `get_latest_earthquake` | 4 |
 | simbg | `lookup_building_permit`, `search_permits_by_area`, `list_simbg_portals` | 3 |
+
+---
+
+## AI Agent Integration
+
+This repo is built for AI agents as first-class consumers.
+
+### For AI Coding Agents
+
+| File | Purpose | Agent |
+|------|---------|-------|
+| [`AGENTS.md`](AGENTS.md) | Architecture, patterns, critical rules, gotchas | All coding agents |
+| [`CLAUDE.md`](CLAUDE.md) | Commands, do/don't rules, style guide | Claude Code |
+| [`.cursorrules`](.cursorrules) | Project rules for Cursor | Cursor |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Instructions for Copilot | GitHub Copilot |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Module contract + PR checklist | All |
+| [`SKILL.md`](SKILL.md) | Skill discovery (AgentSkills format) | Skill-aware agents |
+
+### For AI Runtime Agents (MCP)
+
+Every module exposes tools via [Model Context Protocol](https://modelcontextprotocol.io):
+
+```bash
+# Add all civic-stack tools to Claude Desktop
+claude mcp add civic-bpom -- python -m modules.bpom.server
+claude mcp add civic-bmkg -- python -m modules.bmkg.server
+claude mcp add civic-ojk  -- python -m modules.ojk.server
+# ... repeat for all 11 modules
+```
+
+Or run the unified REST API and let your agent call HTTP endpoints:
+
+```bash
+CIVIC_API_KEY=secret uvicorn app:app --port 8000
+# Agent calls: GET http://localhost:8000/bpom/search?q=paracetamol
+```
+
+### Design Decisions for AI Agents
+
+1. **Uniform response envelope** — every tool returns `CivicStackResponse` with the same fields. Agents don't need module-specific parsing logic.
+2. **Error envelopes, not exceptions** — agents receive structured error info they can reason about, not stack traces.
+3. **Self-documenting tools** — MCP tool descriptions include parameter types, expected values, and response format.
+4. **Deterministic naming** — `check_<module>`, `search_<module>`, `get_<module>_status` pattern across all modules.
 
 ---
 
