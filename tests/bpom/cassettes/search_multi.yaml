@@ -14,7 +14,7 @@ interactions:
       - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0
         Safari/537.36
     method: GET
-    uri: https://cekbpom.pom.go.id/index.php/home/produk/1/paracetamol/10/1/1
+    uri: https://cekbpom.pom.go.id/all-produk?q=paracetamol
   response:
     body:
       string: |
