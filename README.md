@@ -446,6 +446,7 @@ This repo is built for AI agents as first-class consumers.
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Instructions for Copilot | GitHub Copilot |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Module contract + PR checklist | All |
 | [`SKILL.md`](SKILL.md) | Skill discovery (AgentSkills format) | Skill-aware agents |
+| [`PROMPTS.md`](PROMPTS.md) | Example prompts + interactive artifact recipes | All AI agents |
 
 ### Claude Code (Recommended)
 
