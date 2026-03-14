@@ -272,37 +272,25 @@ graph LR
 Most Indonesian government portals (`*.go.id`) restrict access to Indonesian IP addresses. If deploying outside Indonesia, you **must** set `PROXY_URL` to route requests through an Indonesian endpoint.
 
 ```bash
-# Option 1: Cloudflare Worker proxy (recommended — free tier, Jakarta PoP)
-export PROXY_URL="https://your-civic-proxy.workers.dev"
+# Option 1: Indonesian VPS/SOCKS proxy (recommended for production)
+export PROXY_URL="socks5://id-proxy.example.com:1080"
+export PROXY_MODE="connect"
 
-# Option 2: Any HTTPS proxy with Indonesian IP
-export PROXY_URL="https://id-proxy.example.com:8080"
+# Option 2: CF Worker proxy (free, but limited — see below)
+export PROXY_URL="https://your-proxy.workers.dev"
+# PROXY_MODE auto-detects "rewrite" for *.workers.dev
 ```
 
 **Without a proxy, expect:** DNS resolution failures, connection timeouts, or HTTP 403/404 responses from most modules.
 
-<details>
-<summary>Setting up a Cloudflare Worker proxy</summary>
+The SDK auto-reads `PROXY_URL` from environment in all modules. Two proxy modes:
 
-Create a Worker that forwards requests to the target portal:
+| Mode | When to use | How it works |
+|------|-------------|--------------|
+| `connect` | Indonesian VPS, SOCKS5, HTTP proxy | Standard httpx transport proxy |
+| `rewrite` | CF Worker (auto-detected for `*.workers.dev`) | Rewrites URLs to `?url=<target>` |
 
-```javascript
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const target = url.searchParams.get('url');
-    if (!target) return new Response('Missing ?url= parameter', { status: 400 });
-    return fetch(target, {
-      method: request.method,
-      headers: { ...Object.fromEntries(request.headers), host: new URL(target).host },
-      body: request.body,
-    });
-  }
-};
-```
-
-Deploy to a Cloudflare account with Indonesian routing enabled.
-</details>
+> **⚠️ CF Worker limitation:** Many `.go.id` portals are themselves behind Cloudflare. CF Workers can't reliably proxy to CF-protected origins (403/522 errors). Use a proper Indonesian proxy for production. See [`proxy/README.md`](proxy/README.md) for details.
 
 ### Portal URL Stability
 

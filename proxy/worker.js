@@ -10,6 +10,7 @@
 const ALLOWED_DOMAINS = [
   'cekbpom.pom.go.id',
   'sertifikasi.halal.go.id',
+  'halal.go.id',
   'ahu.go.id',
   'api.ojk.go.id',
   'ojk.go.id',
@@ -20,10 +21,19 @@ const ALLOWED_DOMAINS = [
   'lpse.kominfo.go.id',
   'lpse.kemenkes.go.id',
   'infopemilu.kpu.go.id',
+  'kpu.go.id',
   'elhkpn.kpk.go.id',
+  'kpk.go.id',
   'webapi.bps.go.id',
+  'bps.go.id',
   'data.bmkg.go.id',
+  'bmkg.go.id',
   'simbg.pu.go.id',
+  'jakevo.jakarta.go.id',
+  'simbg.surabaya.go.id',
+  'simbg.bandung.go.id',
+  'simbg.makassar.go.id',
+  'simbg.pemkomedan.go.id',
 ];
 
 export default {
@@ -64,11 +74,12 @@ export default {
       });
     }
 
-    // Domain allowlist
-    if (!ALLOWED_DOMAINS.some(d => target.hostname === d || target.hostname.endsWith('.' + d))) {
+    // Domain allowlist — match exact or subdomain
+    const hostname = target.hostname;
+    if (!ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
       return new Response(JSON.stringify({
         error: 'Domain not allowed',
-        domain: target.hostname,
+        domain: hostname,
         allowed: ALLOWED_DOMAINS,
       }), {
         status: 403,
@@ -76,22 +87,27 @@ export default {
       });
     }
 
-    // Forward headers (strip CF-specific)
-    const headers = new Headers(request.headers);
-    headers.set('Host', target.host);
-    headers.delete('cf-connecting-ip');
-    headers.delete('cf-ipcountry');
-    headers.delete('cf-ray');
-    headers.delete('x-forwarded-for');
-    headers.delete('x-real-ip');
+    // Build clean headers — only forward safe ones, set correct Host
+    const outHeaders = new Headers({
+      'Host': target.host,
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept': request.headers.get('Accept') || 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
+      'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept-Encoding': 'gzip, deflate, br',
+    });
 
-    // Set Indonesian locale headers
-    headers.set('Accept-Language', 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7');
+    // Forward Content-Type for POST/PUT
+    const ct = request.headers.get('Content-Type');
+    if (ct) outHeaders.set('Content-Type', ct);
+
+    // Forward cookies if present
+    const cookie = request.headers.get('Cookie');
+    if (cookie) outHeaders.set('Cookie', cookie);
 
     try {
       const response = await fetch(target.toString(), {
         method: request.method,
-        headers,
+        headers: outHeaders,
         body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
         redirect: 'follow',
       });
