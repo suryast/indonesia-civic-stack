@@ -7,6 +7,12 @@
  * Or: POST with same ?url= param and body forwarded.
  */
 
+const ALLOWED_ORIGINS = [
+  'https://datarakyat.id',
+  'https://halalkah.id',
+  'https://legalkah.id',
+];
+
 const ALLOWED_DOMAINS = [
   'cekbpom.pom.go.id',
   'sertifikasi.halal.go.id',
@@ -38,13 +44,16 @@ const ALLOWED_DOMAINS = [
 
 export default {
   async fetch(request) {
+    const origin = request.headers.get('Origin') || '';
+    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': corsOrigin,
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': '*',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Max-Age': '86400',
         },
       });
@@ -114,7 +123,7 @@ export default {
 
       // Return with CORS headers
       const responseHeaders = new Headers(response.headers);
-      responseHeaders.set('Access-Control-Allow-Origin', '*');
+      responseHeaders.set('Access-Control-Allow-Origin', corsOrigin);
       responseHeaders.set('X-Proxied-Via', 'civic-stack-proxy');
 
       return new Response(response.body, {
