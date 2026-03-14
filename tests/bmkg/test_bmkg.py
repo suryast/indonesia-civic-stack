@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.bmkg.normalizer import normalize_earthquake, normalize_forecast
-from modules.bmkg.scraper import get_earthquake_history, get_latest_earthquake
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.bmkg.normalizer import normalize_earthquake, normalize_forecast
+from civic_stack.bmkg.scraper import get_earthquake_history, get_latest_earthquake
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/bmkg/cassettes"
 vcr_config = vcr.VCR(

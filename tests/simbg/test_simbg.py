@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.simbg.normalizer import normalize_permit, normalize_search_result
-from modules.simbg.scraper import fetch
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.simbg.normalizer import normalize_permit, normalize_search_result
+from civic_stack.simbg.scraper import fetch
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/simbg/cassettes"
 vcr_config = vcr.VCR(

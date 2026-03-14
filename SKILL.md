@@ -25,8 +25,8 @@ triggers:
 
 ```python
 import asyncio
-from modules.bpom.scraper import search as bpom_search
-from modules.bmkg.scraper import get_latest_earthquake
+from civic_stack.bpom.scraper import search as bpom_search
+from civic_stack.bmkg.scraper import get_latest_earthquake
 
 async def main():
     # Search BPOM products
@@ -45,17 +45,17 @@ asyncio.run(main())
 
 | Module | Import | Primary Function |
 |--------|--------|-----------------|
-| bpom | `from modules.bpom.scraper import fetch, search` | Food, drug, cosmetic registry |
-| bpjph | `from modules.bpjph.scraper import fetch, search` | Halal certificates |
-| ahu | `from modules.ahu.scraper import fetch, search` | Company registry (PT, CV, Yayasan) |
-| ojk | `from modules.ojk.scraper import fetch, search` | Financial institution licenses |
-| oss_nib | `from modules.oss_nib.scraper import fetch, search` | Business identity (NIB) |
-| lpse | `from modules.lpse.scraper import fetch, search` | Government procurement |
-| kpu | `from modules.kpu.scraper import fetch, search` | Election data |
-| lhkpn | `from modules.lhkpn.scraper import fetch, search` | Wealth declarations (⚠️ DEGRADED) |
-| bps | `from modules.bps.scraper import search` | Statistics (needs BPS_API_KEY) |
-| bmkg | `from modules.bmkg.scraper import search, get_latest_earthquake` | Weather & earthquakes |
-| simbg | `from modules.simbg.scraper import fetch, search` | Building permits |
+| bpom | `from civic_stack.bpom.scraper import fetch, search` | Food, drug, cosmetic registry |
+| bpjph | `from civic_stack.bpjph.scraper import fetch, search` | Halal certificates |
+| ahu | `from civic_stack.ahu.scraper import fetch, search` | Company registry (PT, CV, Yayasan) |
+| ojk | `from civic_stack.ojk.scraper import fetch, search` | Financial institution licenses |
+| oss_nib | `from civic_stack.oss_nib.scraper import fetch, search` | Business identity (NIB) |
+| lpse | `from civic_stack.lpse.scraper import fetch, search` | Government procurement |
+| kpu | `from civic_stack.kpu.scraper import fetch, search` | Election data |
+| lhkpn | `from civic_stack.lhkpn.scraper import fetch, search` | Wealth declarations (⚠️ DEGRADED) |
+| bps | `from civic_stack.bps.scraper import search` | Statistics (needs BPS_API_KEY) |
+| bmkg | `from civic_stack.bmkg.scraper import search, get_latest_earthquake` | Weather & earthquakes |
+| simbg | `from civic_stack.simbg.scraper import fetch, search` | Building permits |
 
 ## Response Envelope
 
@@ -75,11 +75,11 @@ Each module exposes MCP tools via FastMCP:
 
 ```bash
 # Run a module's MCP server
-python -m modules.bpom.server      # stdio mode
-python -m modules.bmkg.server      # stdio mode
+python -m civic_stack.bpom.server      # stdio mode
+python -m civic_stack.bmkg.server      # stdio mode
 
 # Add to Claude Desktop
-claude mcp add civic-bpom -- python -m modules.bpom.server
+claude mcp add civic-bpom -- python -m civic_stack.bpom.server
 ```
 
 ## Proxy (for non-Indonesian IPs)

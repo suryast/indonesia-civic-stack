@@ -1,14 +1,14 @@
 This is indonesia-civic-stack — a Python SDK for Indonesian government data.
 
-Architecture: shared/ (core) + modules/ (11 gov portal wrappers) + proxy/ (CF Worker).
+Architecture: shared/ (core) + civic_stack/ (11 gov portal wrappers) + proxy/ (CF Worker).
 All async Python 3.11+, Pydantic v2, httpx, FastMCP for MCP servers.
 
 Rules:
-- Use civic_client() from shared.http, never raw httpx.AsyncClient
-- Return CivicStackResponse from shared.schema, never raw dicts
+- Use civic_client() from civic_stack.shared.http, never raw httpx.AsyncClient
+- Return CivicStackResponse from civic_stack.shared.schema, never raw dicts
 - On errors: return error_response(), never raise in search()
 - All functions take proxy_url: str | None = None
-- Rate limit with RateLimiter from shared.http
+- Rate limit with RateLimiter from civic_stack.shared.http
 - Tests use VCR cassettes, never live portal calls
 - Line length 100, ruff formatting
 

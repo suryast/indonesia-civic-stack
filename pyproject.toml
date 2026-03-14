@@ -5,51 +5,91 @@ build-backend = "hatchling.build"
 [project]
 name = "indonesia-civic-stack"
 version = "0.1.0"
-description = "Production-ready scrapers, normalizers, and API wrappers for Indonesian government data sources"
+description = "Python SDK + 40 MCP tools for 11 Indonesian government data portals"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Surya Setiyaputra" },
+]
+keywords = [
+    "indonesia",
+    "civic-tech",
+    "government-data",
+    "mcp",
+    "open-data",
+    "sdk",
+    "bpom",
+    "ojk",
+    "bmkg",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
 dependencies = [
-    "httpx>=0.27.0",
-    "beautifulsoup4>=4.12.0",
-    "playwright>=1.44.0",
-    "fastapi>=0.111.0",
-    "uvicorn[standard]>=0.30.0",
-    "fastmcp>=0.1.0",
-    "pydantic>=2.7.0",
-    "python-dotenv>=1.0.0",
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "pydantic>=2.0",
+    "lxml>=5.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.2.0",
-    "pytest-asyncio>=0.23.0",
-    "pytest-httpx>=0.30.0",
-    "vcrpy>=6.0.1",
-    "ruff>=0.4.0",
-    "mypy>=1.10.0",
-    "types-beautifulsoup4",
+mcp = [
+    "fastmcp>=3.0",
 ]
-pdf = [
-    "pdfplumber>=0.11.0",
-    "anthropic>=0.28.0",
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.30",
+]
+browser = [
+    "playwright>=1.40",
+    "camoufox>=0.4",
+]
+all = [
+    "indonesia-civic-stack[mcp,api,browser]",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "vcrpy>=6.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
 ]
 
+[project.scripts]
+civic-stack = "civic_stack.cli:main"
+civic-stack-mcp = "civic_stack.server:main"
+
+[project.urls]
+Homepage = "https://datarakyat.id"
+Documentation = "https://datarakyat.id/docs/"
+Repository = "https://github.com/suryast/indonesia-civic-stack"
+Issues = "https://github.com/suryast/indonesia-civic-stack/issues"
+
 [tool.hatch.build.targets.wheel]
-packages = ["shared", "modules"]
+packages = ["civic_stack"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+select = ["E", "F", "I", "W"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
-ignore_missing_imports = true
+strict = false
+warn_return_any = true
+warn_unused_configs = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

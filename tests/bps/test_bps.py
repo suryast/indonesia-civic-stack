@@ -7,9 +7,9 @@ import os
 import pytest
 import vcr
 
-from modules.bps.normalizer import normalize_dataset, normalize_indicator, normalize_region
-from modules.bps.scraper import get_indicator, search
-from shared.schema import CivicStackResponse
+from civic_stack.bps.normalizer import normalize_dataset, normalize_indicator, normalize_region
+from civic_stack.bps.scraper import get_indicator, search
+from civic_stack.shared.schema import CivicStackResponse
 
 # Patch the API key for tests so _api_key() doesn't raise
 os.environ.setdefault("BPS_API_KEY", "TEST_KEY")

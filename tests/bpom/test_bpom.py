@@ -7,8 +7,8 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.bpom.scraper import fetch, search
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.bpom.scraper import fetch, search
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/bpom/cassettes"
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 import vcr
 
-from modules.kpu.scraper import fetch, get_election_results, search
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.kpu.scraper import fetch, get_election_results, search
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 CASSETTE_DIR = "tests/kpu/cassettes"
 vcr_config = vcr.VCR(

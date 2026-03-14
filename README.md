@@ -170,12 +170,18 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 
 ## Quick Start
 
+### Install
+
+```bash
+pip install indonesia-civic-stack
+```
+
 ### Python SDK
 
 ```python
 import asyncio
-from modules.bpom.scraper import search as bpom_search
-from modules.bmkg.scraper import get_latest_earthquake
+from civic_stack.bpom.scraper import search as bpom_search
+from civic_stack.bmkg.scraper import get_latest_earthquake
 
 async def main():
     # Search BPOM product registry
@@ -197,13 +203,13 @@ All 11 modules expose **40 MCP tools** for use with Claude, GPT, or any MCP-comp
 
 ```bash
 # Add to Claude Desktop / any MCP client
-claude mcp add civic-stack-bpom -- python -m modules.bpom.server
+claude mcp add civic-stack-bpom -- python -m civic_stack.bpom.server
 
 # Or run standalone
-python -m modules.bpom.server
+python -m civic_stack.bpom.server
 
 # With proxy for non-ID deployments
-PROXY_URL="https://your-proxy.workers.dev" python -m modules.bmkg.server
+PROXY_URL="https://your-proxy.workers.dev" python -m civic_stack.bmkg.server
 ```
 
 MCP server classes support two init styles:
@@ -465,9 +471,9 @@ That's it. Claude Code reads `.mcp.json` and connects to the unified MCP server 
 claude mcp add civic-stack -- .venv/bin/python server.py
 
 # Option 2: Individual modules
-claude mcp add civic-bpom -- .venv/bin/python -m modules.bpom.server
-claude mcp add civic-bmkg -- .venv/bin/python -m modules.bmkg.server
-claude mcp add civic-ojk  -- .venv/bin/python -m modules.ojk.server
+claude mcp add civic-bpom -- .venv/bin/python -m civic_stack.bpom.server
+claude mcp add civic-bmkg -- .venv/bin/python -m civic_stack.bmkg.server
+claude mcp add civic-ojk  -- .venv/bin/python -m civic_stack.ojk.server
 # ... repeat for all 11 modules
 ```
 
@@ -648,7 +654,7 @@ graph LR
 ```python
 # app.py — 15 lines, production-ready
 from fastapi import FastAPI
-from modules.bpjph.scraper import fetch
+from civic_stack.bpjph.scraper import fetch
 
 app = FastAPI()
 
@@ -716,10 +722,10 @@ graph TB
 ```python
 # due_diligence.py — parallel checks across 4 portals
 import asyncio
-from modules.ahu.scraper import search as ahu_search
-from modules.ojk.scraper import search as ojk_search
-from modules.bpom.scraper import search as bpom_search
-from modules.oss_nib.scraper import search as nib_search
+from civic_stack.ahu.scraper import search as ahu_search
+from civic_stack.ojk.scraper import search as ojk_search
+from civic_stack.bpom.scraper import search as bpom_search
+from civic_stack.oss_nib.scraper import search as nib_search
 
 async def check_company(name: str) -> dict:
     ahu, ojk, bpom, nib = await asyncio.gather(
@@ -784,9 +790,9 @@ sequenceDiagram
 
 ```bash
 # Connect MCP servers to Claude Desktop — one command per module
-claude mcp add civic-ahu   -- python -m modules.ahu.server
-claude mcp add civic-bpjph -- python -m modules.bpjph.server
-claude mcp add civic-ojk   -- python -m modules.ojk.server
+claude mcp add civic-ahu   -- python -m civic_stack.ahu.server
+claude mcp add civic-bpjph -- python -m civic_stack.bpjph.server
+claude mcp add civic-ojk   -- python -m civic_stack.ojk.server
 
 # Or run unified REST API for HTTP-based agents
 PROXY_URL=https://your-proxy.workers.dev uvicorn app:app
