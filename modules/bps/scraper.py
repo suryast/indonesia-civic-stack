@@ -22,7 +22,7 @@ from typing import Any
 import httpx
 
 from shared.http import RateLimiter, civic_client
-from shared.schema import CivicStackResponse, RecordStatus, not_found_response
+from shared.schema import CivicStackResponse, RecordStatus, error_response, not_found_response
 
 from .normalizer import normalize_dataset, normalize_indicator, normalize_region
 

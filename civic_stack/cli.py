@@ -19,7 +19,8 @@ def main() -> None:
         description="indonesia-civic-stack — Python SDK for Indonesian government data",
     )
     parser.add_argument(
-        "--version", "-V",
+        "--version",
+        "-V",
         action="version",
         version=f"%(prog)s {_get_version()}",
     )
@@ -42,6 +43,7 @@ def main() -> None:
 
     if args.command == "mcp":
         from civic_stack.server import create_mcp_server
+
         mcp = create_mcp_server()
         mcp.run(transport=args.transport)
     elif args.command == "api":
@@ -58,6 +60,7 @@ def main() -> None:
 def _get_version() -> str:
     try:
         from civic_stack import __version__
+
         return __version__
     except ImportError:
         return "unknown"
