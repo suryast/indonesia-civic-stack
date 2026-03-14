@@ -1,5 +1,7 @@
 # 🇮🇩 indonesia-civic-stack
 
+<!-- mcp-name: io.github.suryast/indonesia-civic-stack -->
+
 Production-ready scrapers, normalizers, and API wrappers for Indonesian government data sources.
 
 The infrastructure layer beneath [halalkah.id](https://halalkah.id), [legalkah.id](https://legalkah.id), and a public good for the Indonesian civic tech and developer community.
