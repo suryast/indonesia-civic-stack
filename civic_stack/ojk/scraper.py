@@ -202,8 +202,10 @@ async def check_waspada_list(*, proxy_url: str | None = None) -> list[dict]:
                 locale="id-ID",
             )
             page = await context.new_page()
-            await page.goto(url, timeout=60000, wait_until="networkidle")
-            await page.wait_for_selector("table tbody tr", timeout=30000)
+            await page.goto(url, timeout=120000, wait_until="networkidle")
+            # networkidle already waits for the 11MB table to render;
+            # explicit wait_for_selector as a safety net with generous timeout
+            await page.wait_for_selector("table tbody tr", timeout=60000)
 
             html = await page.content()
             await browser.close()
