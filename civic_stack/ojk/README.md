@@ -1,6 +1,6 @@
 # Module: `ojk`
 
-**Source portal:** api.ojk.go.id (REST API) + investor.ojk.go.id (Waspada Investasi)
+**Source portal:** www.ojk.go.id + sikapiuangmu.ojk.go.id (Waspada Investasi)
 **Scrape method:** REST wrapper + httpx fallback for portal HTML
 **Phase:** 2
 **License:** MIT
@@ -12,7 +12,7 @@
 
 | Field | Value |
 |---|---|
-| Portal URL | `https://api.ojk.go.id/v1/lembaga` (primary) + `https://investor.ojk.go.id/InvestorAlert` (waspada) |
+| Portal URL | `https://www.ojk.go.id` (primary) + `https://sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative` (waspada) |
 | Operator | Otoritas Jasa Keuangan (OJK RI) |
 | Data type | Licensed financial institution registry — banks, fintech, insurance, pension funds, investment managers, securities firms |
 | Auth required | None — public API |
@@ -107,7 +107,7 @@ claude mcp add ojk -- python -m modules.ojk.server
   "found": true,
   "status": "ACTIVE",
   "confidence": 1.0,
-  "source_url": "https://api.ojk.go.id/v1/lembaga/pencarian",
+  "source_url": "https://www.ojk.go.id/id/kanal/perbankan/data-dan-statistik/Pages/Direktori.aspx",
   "fetched_at": "2026-03-13T10:00:00Z",
   "last_updated": null,
   "module": "ojk",
