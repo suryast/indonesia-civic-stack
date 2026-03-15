@@ -202,8 +202,10 @@ async def check_waspada_list(*, proxy_url: str | None = None) -> list[dict]:
                 locale="id-ID",
             )
             page = await context.new_page()
-            await page.goto(url, timeout=60000, wait_until="networkidle")
-            await page.wait_for_selector("table tbody tr", timeout=30000)
+            await page.goto(url, timeout=120000, wait_until="networkidle")
+            # networkidle already waits for the 11MB table to render;
+            # explicit wait_for_selector as a safety net with generous timeout
+            await page.wait_for_selector("table tbody tr", timeout=60000)
 
             html = await page.content()
             await browser.close()
@@ -214,16 +216,18 @@ async def check_waspada_list(*, proxy_url: str | None = None) -> list[dict]:
                 cols = [td.get_text(strip=True) for td in row.find_all("td")]
                 # cols[0] is checkbox, cols[1] is Nama
                 if len(cols) >= 6 and cols[1]:
-                    records.append({
-                        "entity_name": cols[1],  # Nama
-                        "address": cols[2] if len(cols) > 2 else "",  # Alamat
-                        "phone": cols[3] if len(cols) > 3 else "",  # No. Telp
-                        "website": cols[4] if len(cols) > 4 else "",  # Website
-                        "entity_type": cols[5] if len(cols) > 5 else "",  # Jenis Entitas
-                        "activity_type": cols[6] if len(cols) > 6 else "",  # Jenis Kegiatan
-                        "blacklist_date": cols[7] if len(cols) > 7 else "",  # Tgl Input
-                        "notes": cols[8] if len(cols) > 8 else "",  # Keterangan
-                    })
+                    records.append(
+                        {
+                            "entity_name": cols[1],  # Nama
+                            "address": cols[2] if len(cols) > 2 else "",  # Alamat
+                            "phone": cols[3] if len(cols) > 3 else "",  # No. Telp
+                            "website": cols[4] if len(cols) > 4 else "",  # Website
+                            "entity_type": cols[5] if len(cols) > 5 else "",  # Jenis Entitas
+                            "activity_type": cols[6] if len(cols) > 6 else "",  # Jenis Kegiatan
+                            "blacklist_date": cols[7] if len(cols) > 7 else "",  # Tgl Input
+                            "notes": cols[8] if len(cols) > 8 else "",  # Keterangan
+                        }
+                    )
 
             logger.info("OJK waspada list: fetched %d blacklist entries", len(records))
             return records

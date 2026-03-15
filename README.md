@@ -848,8 +848,9 @@ PROXY_URL=https://your-proxy.workers.dev uvicorn app:app
 
 ## Related
 
-- [**datarakyat.id**](https://datarakyat.id) — Project homepage with full module documentation
+- [**indonesia-civic-signal-monitor**](https://github.com/suryast/indonesia-civic-signal-monitor) — Anomaly detection engine built on this SDK, monitors 11 government data sources for newsworthy changes
 - [**indonesia-gov-apis**](https://github.com/suryast/indonesia-gov-apis) — Reference docs for 50+ Indonesian government APIs
+- [**datarakyat.id**](https://datarakyat.id) — Project homepage with full module documentation
 
 ## License
 
