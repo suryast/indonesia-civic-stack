@@ -2,13 +2,13 @@
 OJK licensed institution registry scraper.
 
 OJK exposes several data endpoints:
-- Public REST API for licensed institution lists (banks, fintech, insurers, etc.)
-- investor.ojk.go.id for investment alert / waspada investasi list
-- Web pages for some institution types that lack REST endpoints
+- sikapiuangmu.ojk.go.id for investment alert / waspada investasi list
+- Web pages for institution types on www.ojk.go.id
+- NOTE: api.ojk.go.id and investor.ojk.go.id are DNS-dead as of March 2026
 
 Strategy:
-1. Try the OJK public API first
-2. Fall back to scraping the portal HTML for types not covered by the API
+1. Try the OJK portal pages for institution data
+2. Use sikapiuangmu.ojk.go.id for waspada/investor alert list
 """
 
 from __future__ import annotations
@@ -23,9 +23,12 @@ from civic_stack.shared.schema import CivicStackResponse, error_response, not_fo
 
 logger = logging.getLogger(__name__)
 
-OJK_API_BASE = "https://api.ojk.go.id/v1"
+# NOTE: api.ojk.go.id is DNS-dead (NXDOMAIN) as of March 2026.
+# investor.ojk.go.id is also DNS-dead.
+# Waspada list moved to sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative
+OJK_API_BASE = "https://api.ojk.go.id/v1"  # DEPRECATED — DNS dead
 OJK_PORTAL_BASE = "https://www.ojk.go.id"
-OJK_WASPADA_URL = "https://investor.ojk.go.id/InvestorAlert/getList"
+OJK_WASPADA_URL = "https://sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative"
 
 MODULE = "ojk"
 _rate_limiter = RateLimiter(rate=0.5)  # OJK portal is slow — 30 req/min

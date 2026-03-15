@@ -147,7 +147,7 @@ sequenceDiagram
 | [`bpom`](civic_stack/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ⚠️ Phase 1 | Portal migrated to DataTables; URL updated |
 | [`bpjph`](civic_stack/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 | Requires Playwright browser |
 | [`ahu`](civic_stack/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 | Requires Playwright + proxy |
-| [`ojk`](civic_stack/ojk/) | ojk.go.id | Licensed financial institutions + Waspada list | ✅ Phase 2 | API may be geo-restricted |
+| [`ojk`](civic_stack/ojk/) | www.ojk.go.id + sikapiuangmu.ojk.go.id | Licensed financial institutions + Waspada list | ⚠️ Phase 2 | api.ojk.go.id DNS-dead; ID-only geo-restriction |
 | [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
 | [`lpse`](civic_stack/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
 | [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
@@ -367,12 +367,34 @@ cd proxy && npx wrangler deploy
 |--------|--------|-------|
 | data.bmkg.go.id | ✅ Works | JSON API, not behind CF |
 | cekbpom.pom.go.id | ❌ 403/522 | Portal is CF-protected |
-| api.ojk.go.id | ❌ 530 | CF origin error |
+| api.ojk.go.id | ❌ DNS dead | NXDOMAIN since March 2026 |
 | infopemilu.kpu.go.id | ❌ 403 | CF-protected |
 | lpse.*.go.id | ❌ 403 | CF-protected |
 | elhkpn.kpk.go.id | ❌ 403 | reCAPTCHA v3 enforced on search |
 
 **For production with CF-protected portals**, use an Indonesian VPS with a SOCKS5/HTTP proxy and set `PROXY_MODE=connect`.
+
+### Geo-Restriction Test Results (March 2026)
+
+Tested from three locations to map which portals enforce geo-blocking vs WAF:
+
+| Portal | Sydney (AU) | Singapore | Jakarta (ID) | Verdict |
+|--------|:-----------:|:---------:|:------------:|---------|
+| ahu.go.id | ❌ | ✅ | ✅ | Geo-blocked (SEA+ OK) |
+| elhkpn.kpk.go.id | ❌ | ✅ | ✅ | Geo-blocked (SEA+ OK) |
+| ojk.go.id | ❌ 403 | ❌ 403 | ✅ | **ID-only** |
+| jaga.id (KPK) | ✅ | ✅ | ✅ | No restriction |
+| data.bmkg.go.id | ✅ | ✅ | ✅ | No restriction |
+| cekbpom.pom.go.id | ⚠️ | ⚠️ | ⚠️ | CF-protected (all locations) |
+| webapi.bps.go.id | ❌ 403 | ❌ 403 | ❌ 403 | WAF, not geo (needs API key) |
+| lpse.lkpp.go.id | ❌ | ❌ | ❌ | Unreliable (all locations) |
+| coretaxdjp.pajak.go.id | ❌ | ❌ | ❌ | Unreliable (all locations) |
+
+**Takeaway:** An Indonesian proxy (e.g., CloudKilat Jakarta) unlocks OJK — the most important geo-restricted portal. Singapore unlocks AHU + LHKPN. BPS and LPSE failures are not geo-related.
+
+### VPS Hardening Lesson
+
+> ⚠️ **Never disable password auth and restart sshd in one automated script on a fresh VPS.** If the SSH key wasn't copied correctly, you're locked out with no recovery path except a web console. Always: (1) copy key, (2) verify key login works in a *separate session*, (3) *then* disable password auth.
 
 ### Portal URL Stability
 
@@ -716,7 +738,7 @@ graph TB
 
     subgraph Government Portals
         J[ahu.go.id]
-        K[api.ojk.go.id]
+        K[www.ojk.go.id]
         L[cekbpom.pom.go.id]
         M[oss.go.id]
     end

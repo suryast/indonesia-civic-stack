@@ -150,11 +150,30 @@ mypy shared/                 # Type check
 3. `civic_client()` auto-reads `PROXY_URL` from env when `proxy_url=None`
 
 ### "Debug a failing scraper"
-1. Check if it's a geo-block: `curl -sI "https://portal.go.id" | head -5`
-2. Check if URL changed: compare with `civic_stack/<name>/README.md`
-3. Check portal HTML structure: `curl -s "https://portal.go.id" | python -m bs4`
-4. Run with debug: `await fetch(query, debug=True)` — check `.raw` field in response
-5. Check GitHub issues for known portal changes
+1. **Read `references/endpoint-status.md`** — is the endpoint still alive?
+2. **Read `references/geo-restrictions.md`** — is it geo-blocked from your location?
+3. Check if URL changed: compare with `civic_stack/<name>/README.md`
+4. Check portal HTML structure: `curl -s "https://portal.go.id" | python -m bs4`
+5. Run with debug: `await fetch(query, debug=True)` — check `.raw` field in response
+6. **Read `references/portal-patterns.md`** — is it a known pattern (iframe, reCAPTCHA, JS-rendered)?
+7. Check GitHub issues for known portal changes
+
+### "Set up a proxy for geo-restricted portals"
+1. Read `references/geo-restrictions.md` for the test matrix
+2. Read `references/vps-hardening.md` for the proxy setup guide
+3. Set `PROXY_URL=socks5h://127.0.0.1:1080` in your environment
+4. The SDK auto-reads `PROXY_URL` via `civic_client()`
+
+## Reference Documents
+
+| File | Purpose |
+|------|---------|
+| [`references/geo-restrictions.md`](references/geo-restrictions.md) | Which portals are geo-blocked and from where |
+| [`references/endpoint-status.md`](references/endpoint-status.md) | Living doc of active/dead endpoints |
+| [`references/portal-patterns.md`](references/portal-patterns.md) | SharePoint iframes, reCAPTCHA, JS rendering patterns |
+| [`references/vps-hardening.md`](references/vps-hardening.md) | VPS setup for Indonesian proxy servers |
+
+**Read these before debugging portal issues.** Most "broken" scrapers are geo-blocks or URL changes.
 
 ## File Conventions
 

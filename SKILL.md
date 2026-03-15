@@ -85,9 +85,25 @@ claude mcp add civic-bpom -- python -m civic_stack.bpom.server
 ## Proxy (for non-Indonesian IPs)
 
 ```bash
+# Indonesian VPS proxy (recommended — see references/vps-hardening.md)
+export PROXY_URL="socks5h://127.0.0.1:1080"
+
+# CF Worker proxy (limited — doesn't work for CF-protected portals)
 export PROXY_URL="https://your-proxy.workers.dev"
-# SDK auto-detects and routes all requests through proxy
 ```
+
+See `references/geo-restrictions.md` for which portals need which proxy tier.
+
+## Operational References
+
+Read these before debugging portal issues:
+
+| File | When to read |
+|------|-------------|
+| `references/geo-restrictions.md` | Scraper returns 403 or times out |
+| `references/endpoint-status.md` | Scraper returns 404 (URL may have changed) |
+| `references/portal-patterns.md` | Portal returns empty/stub HTML |
+| `references/vps-hardening.md` | Setting up an Indonesian proxy server |
 
 ## Dependencies
 
