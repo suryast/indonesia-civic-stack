@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 OJK_API_BASE = "https://api.ojk.go.id/v1"  # DEPRECATED — DNS dead
 OJK_PORTAL_BASE = "https://www.ojk.go.id"
 OJK_WASPADA_URL = "https://sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative"
+OJK_WASPADA_LIST_URL = "https://emiten.ojk.go.id/Satgas/AlertPortal/IndexAlertPortal"
 
 MODULE = "ojk"
 _rate_limiter = RateLimiter(rate=0.5)  # OJK portal is slow — 30 req/min
@@ -162,6 +163,74 @@ async def check_waspada(entity_name: str, *, proxy_url: str | None = None) -> Ci
     except Exception as exc:
         logger.exception("OJK waspada check failed for '%s'", entity_name)
         return error_response(MODULE, url, detail=str(exc))
+
+
+async def check_waspada_list(*, proxy_url: str | None = None) -> list[dict]:
+    """
+    Fetch the full OJK Waspada Investasi blacklist (11,383 illegal entities).
+
+    Returns raw dicts with: entity_name, address, phone, website, entity_type,
+    activity_type, blacklist_date, notes.
+
+    Requires Playwright + Indonesian IP proxy (geo-blocked outside ID).
+    Uses socks5:// (not socks5h://) for Chromium compatibility.
+    """
+    url = OJK_WASPADA_LIST_URL
+    records: list[dict] = []
+
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError:
+        logger.warning("Playwright not installed — skipping OJK waspada list fetch")
+        return records
+
+    # Chromium doesn't support socks5h:// — convert to socks5://
+    proxy_config = None
+    if proxy_url:
+        proxy_server = proxy_url.replace("socks5h://", "socks5://")
+        proxy_config = {"server": proxy_server}
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(
+                proxy=proxy_config,
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
+                ),
+                locale="id-ID",
+            )
+            page = await context.new_page()
+            await page.goto(url, timeout=60000, wait_until="networkidle")
+            await page.wait_for_selector("table tbody tr", timeout=30000)
+
+            html = await page.content()
+            await browser.close()
+
+            # Parse the table
+            soup = BeautifulSoup(html, "html.parser")
+            for row in soup.select("table tbody tr"):
+                cols = [td.get_text(strip=True) for td in row.find_all("td")]
+                # cols[0] is checkbox, cols[1] is Nama
+                if len(cols) >= 6 and cols[1]:
+                    records.append({
+                        "entity_name": cols[1],  # Nama
+                        "address": cols[2] if len(cols) > 2 else "",  # Alamat
+                        "phone": cols[3] if len(cols) > 3 else "",  # No. Telp
+                        "website": cols[4] if len(cols) > 4 else "",  # Website
+                        "entity_type": cols[5] if len(cols) > 5 else "",  # Jenis Entitas
+                        "activity_type": cols[6] if len(cols) > 6 else "",  # Jenis Kegiatan
+                        "blacklist_date": cols[7] if len(cols) > 7 else "",  # Tgl Input
+                        "notes": cols[8] if len(cols) > 8 else "",  # Keterangan
+                    })
+
+            logger.info("OJK waspada list: fetched %d blacklist entries", len(records))
+            return records
+
+    except Exception as exc:
+        logger.exception("OJK waspada list fetch failed: %s", exc)
+        return records
 
 
 async def _scrape_portal_search(
