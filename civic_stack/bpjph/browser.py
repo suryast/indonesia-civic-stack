@@ -47,7 +47,9 @@ async def new_page(
 
     viewport = random.choice(_VIEWPORTS)
     user_agent = random.choice(_USER_AGENTS)
-    proxy = {"server": proxy_url} if proxy_url else None
+    # Chromium/Playwright doesn't support socks5h:// — convert to socks5://
+    _proxy_url = proxy_url.replace("socks5h://", "socks5://") if proxy_url else None
+    proxy = {"server": _proxy_url} if _proxy_url else None
 
     try:
         from camoufox.async_api import AsyncCamoufox  # type: ignore[import]
