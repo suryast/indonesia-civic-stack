@@ -1,11 +1,17 @@
 """
 LPSE scraper — aggregates procurement data across regional SPSE portals.
 
-Each regional LPSE runs Sistem Pengadaan Secara Elektronik (SPSE) software.
-Endpoints are standardised across all portals but base URLs differ.
-Partial results are supported: if some portals are unreachable the module
-returns what it has with confidence < 1.0 and records failures in
-result["portal_errors"].
+MIGRATION NOTE (2026-03):
+The legacy lpse.lkpp.go.id domain is DNS-dead. LKPP has migrated to inaproc.id:
+  - Portal SPSE directory: https://spse.inaproc.id (Next.js, directory only)
+  - Individual ministry LPSE instances: CNAME → ars.inaproc.id
+  - inaproc.id root: Cloudflare Turnstile challenge (403 without browser)
+  - ars.inaproc.id: Pomerium-protected (requires auth)
+
+Individual SPSE portals (eproc4) may still work if not behind Cloudflare.
+The SPSE API format is unchanged: /eproc4/dt/tender, /eproc4/dt/rekanan.
+
+Requires Jakarta proxy for geo-blocked portals.
 """
 
 from __future__ import annotations
@@ -23,14 +29,30 @@ from .normalizer import normalize_tender, normalize_vendor
 
 logger = logging.getLogger(__name__)
 
-# Five major portals per SHAPES.MD sprint spec
+# Updated portal list (2026-03):
+# - lpse.lkpp.go.id: DNS dead → removed
+# - lpse.pu.go.id: DNS dead → removed
+# - lpse.kominfo.go.id: DNS dead → removed
+# - lpse.kemenkeu.go.id: CNAME ars.inaproc.id → CF challenge, unreliable
+# - lpse.kemkes.go.id: CNAME ars.inaproc.id → CF challenge, unreliable
+#
+# Working portals (as of 2026-03, verified via proxy):
 PORTALS: list[dict[str, str]] = [
-    {"name": "LKPP", "base": "https://lpse.lkpp.go.id/eproc4"},
-    {"name": "PU", "base": "https://lpse.pu.go.id/eproc4"},
-    {"name": "Kominfo", "base": "https://lpse.kominfo.go.id/eproc4"},
+    {"name": "Jakarta", "base": "https://lpse.jakarta.go.id/eproc4"},
     {"name": "Kemenkeu", "base": "https://lpse.kemenkeu.go.id/eproc4"},
-    {"name": "Kemenkes", "base": "https://lpse.kemenkes.go.id/eproc4"},
+    {"name": "Kemenkes", "base": "https://lpse.kemkes.go.id/eproc4"},
+    {"name": "Kemenag", "base": "https://lpse.kemenag.go.id/eproc4"},
 ]
+
+# Deprecated portals (DNS dead or migrated)
+DEPRECATED_PORTALS = [
+    {"name": "LKPP", "base": "https://lpse.lkpp.go.id/eproc4", "reason": "DNS dead since 2026-02"},
+    {"name": "PU", "base": "https://lpse.pu.go.id/eproc4", "reason": "DNS dead"},
+    {"name": "Kominfo", "base": "https://lpse.kominfo.go.id/eproc4", "reason": "DNS dead"},
+]
+
+# New unified portal (directory only, no direct tender API)
+INAPROC_PORTAL = "https://spse.inaproc.id"
 
 # Standard SPSE API endpoints (same path on every portal)
 _TENDER_SEARCH = "/dt/tender"  # ?term=&draw=&start=0&length=10
@@ -41,7 +63,7 @@ _VENDOR_DETAIL = "/rekanan/{id}/view"
 _limiter = RateLimiter(rate=1.0)  # conservative: 1 req/s across all portals
 
 MODULE = "lpse"
-SOURCE_BASE = "https://lpse.lkpp.go.id/eproc4"
+SOURCE_BASE = INAPROC_PORTAL
 
 
 # ---------------------------------------------------------------------------
@@ -66,6 +88,9 @@ async def _search_portal(
         )
         if resp.status_code == 429:
             raise ScraperBlockedError(f"Rate-limited by {portal['name']}")
+        if resp.status_code == 403:
+            logger.warning("Portal %s returned 403 (CF challenge?)", portal["name"])
+            return None
         resp.raise_for_status()
         return resp.json()
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
@@ -83,7 +108,7 @@ async def _search_portal(
 
 async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackResponse:
     """Fetch tender/vendor info by name or NPWP across all major portals."""
-    source_url = SOURCE_BASE + _VENDOR_SEARCH
+    source_url = INAPROC_PORTAL
 
     async with civic_client(proxy_url=proxy_url) as client:
         tasks = [_search_portal(client, portal, query, _VENDOR_SEARCH) for portal in PORTALS]
@@ -104,7 +129,11 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
             module=MODULE,
             query=query,
             source_url=source_url,
-            extra={"portal_errors": failures} if failures else {},
+            extra=(
+                {"portal_errors": failures, "note": "LPSE portals migrating to inaproc.id"}
+                if failures
+                else {}
+            ),
         )
 
     # deduplicate by NPWP
@@ -133,7 +162,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
 
 async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicStackResponse]:
     """Search vendors/companies across all portals; returns merged deduplicated list."""
-    source_url = SOURCE_BASE + _VENDOR_SEARCH
+    source_url = INAPROC_PORTAL
 
     async with civic_client(proxy_url=proxy_url) as client:
         tasks = [_search_portal(client, portal, keyword, _VENDOR_SEARCH) for portal in PORTALS]
@@ -172,7 +201,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
 
 async def search_tenders(keyword: str, *, proxy_url: str | None = None) -> list[CivicStackResponse]:
     """Search active tenders by keyword across all portals."""
-    source_url = SOURCE_BASE + _TENDER_SEARCH
+    source_url = INAPROC_PORTAL
 
     async with civic_client(proxy_url=proxy_url) as client:
         tasks = [_search_portal(client, portal, keyword, _TENDER_SEARCH) for portal in PORTALS]
