@@ -2,8 +2,8 @@
 BPOM scraper — cekbpom.pom.go.id
 
 The portal exposes product registrations (food, drug, cosmetics,
-traditional medicine) via a form-based HTML interface. This module
-uses httpx + BeautifulSoup to fetch and parse results.
+traditional medicine). As of 2026-03, the site uses Laravel with
+DataTables server-side rendering (POST + CSRF token).
 
 Rate limit: ~10 req/min observed. Enforced via RateLimiter.
 """
@@ -11,7 +11,7 @@ Rate limit: ~10 req/min observed. Enforced via RateLimiter.
 from __future__ import annotations
 
 import logging
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from bs4 import BeautifulSoup
 
@@ -22,25 +22,46 @@ from shared.schema import CivicStackResponse, error_response, not_found_response
 logger = logging.getLogger(__name__)
 
 BPOM_BASE = "https://cekbpom.pom.go.id"
-# Product detail by registration number (legacy path, may still work for direct lookups)
-BPOM_DETAIL_URL = f"{BPOM_BASE}/index.php/home/produk/0"
-# Search — new DataTables endpoint (POST, server-side)
-# The portal migrated from /index.php/home/produk/1 to /all-produk
-BPOM_SEARCH_URL = f"{BPOM_BASE}/all-produk"
-# Category-specific search pages (alternative)
-BPOM_CATEGORY_URLS = {
-    "obat": f"{BPOM_BASE}/produk-obat",
-    "obat_tradisional": f"{BPOM_BASE}/produk-obat-tradisional",
-    "obat_kuasi": f"{BPOM_BASE}/produk-obat-kuasi",
-    "suplemen": f"{BPOM_BASE}/produk-suplemen-kesehatan",
-    "kosmetika": f"{BPOM_BASE}/produk-kosmetika",
-    "pangan": f"{BPOM_BASE}/produk-pangan-olahan",
-}
+# DataTables server-side endpoint (POST, requires CSRF)
+BPOM_DT_URL = f"{BPOM_BASE}/produk-dt/all"
+# Page to get CSRF cookie from
+BPOM_SEARCH_PAGE = f"{BPOM_BASE}/all-produk"
+# Detail page (new format)
+BPOM_DETAIL_URL = f"{BPOM_BASE}/produk"
 
 # ~10 req/min = ~0.167 req/s; use 0.15 for safety margin
 _rate_limiter = RateLimiter(rate=0.15)
 
 MODULE = "bpom"
+
+# DataTables column mapping (from site JS)
+_DT_FIELD_MAP = {
+    "PRODUCT_REGISTER": "registration_no",
+    "PRODUCT_NAME": "product_name",
+    "APPLICATION": "category",
+    "CLASS": "class",
+    "PRODUCT_ID": "product_id",
+    "APPLICATION_ID": "application_id",
+    "ID": "bpom_id",
+}
+
+
+async def _get_csrf_session(
+    proxy_url: str | None = None,
+) -> tuple[str, dict[str, str]]:
+    """Get XSRF token and session cookies from BPOM search page."""
+    async with civic_client(proxy_url=proxy_url) as client:
+        resp = await fetch_with_retry(
+            client, "GET", BPOM_SEARCH_PAGE, rate_limiter=_rate_limiter,
+        )
+        cookies = {}
+        for name in ("XSRF-TOKEN", "webreg_session"):
+            val = resp.cookies.get(name)
+            if val:
+                cookies[name] = val
+
+        xsrf = unquote(cookies.get("XSRF-TOKEN", ""))
+        return xsrf, cookies
 
 
 async def fetch(
@@ -52,32 +73,28 @@ async def fetch(
     """
     Look up a single BPOM product by registration number.
 
-    Args:
-        registration_no: BPOM registration number, e.g. "BPOM MD 123456789012"
-                         or short form "MD 123456789012".
-        debug: If True, include raw scraped HTML in the response.
-        proxy_url: Optional proxy URL for IP rotation.
-
-    Returns:
-        CivicStackResponse with BPOM product details, or NOT_FOUND / ERROR.
+    Uses DataTables search with an exact registration number query.
+    Falls back to not_found if no match.
     """
     clean_no = registration_no.strip()
-    url = f"{BPOM_DETAIL_URL}/{quote(clean_no)}/10/1/0"
 
     try:
-        async with civic_client(proxy_url=proxy_url) as client:
-            response = await fetch_with_retry(
-                client,
-                "GET",
-                url,
-                rate_limiter=_rate_limiter,
-            )
-        soup = BeautifulSoup(response.text, "html.parser")
-        return normalize_detail(soup, registration_no=clean_no, source_url=url, debug=debug)
+        results = await search(clean_no, proxy_url=proxy_url)
+        # Find exact match
+        for r in results:
+            if r.found and r.result:
+                reg = r.result.get("registration_no", "")
+                if reg.replace(" ", "").upper() == clean_no.replace(" ", "").upper():
+                    return r
+
+        # No exact match — return first result or not_found
+        if results and results[0].found:
+            return results[0]
+        return not_found_response(MODULE, f"{BPOM_DT_URL}?q={clean_no}")
 
     except Exception as exc:
         logger.exception("BPOM fetch failed for %s", registration_no)
-        return error_response(MODULE, url, detail=str(exc))
+        return error_response(MODULE, BPOM_DT_URL, detail=str(exc))
 
 
 async def search(
@@ -85,59 +102,89 @@ async def search(
     filters: dict | None = None,  # noqa: ARG001 — reserved for future filters
     *,
     proxy_url: str | None = None,
+    length: int = 20,
 ) -> list[CivicStackResponse]:
     """
-    Search BPOM product registry by product name or company name.
+    Search BPOM product registry by product name, registration number, or company.
+
+    Uses the DataTables server-side endpoint (POST with CSRF).
 
     Args:
-        keyword: Search term (product name or partial name).
-        filters: Reserved for future use (category filter, etc.).
-        proxy_url: Optional proxy URL for IP rotation.
+        keyword: Search term.
+        filters: Reserved for future use.
+        proxy_url: Optional proxy URL.
+        length: Number of results to fetch (max per page, default 20).
 
     Returns:
-        List of CivicStackResponse objects (may be empty, never raises on not-found).
+        List of CivicStackResponse objects.
     """
-    url = f"{BPOM_SEARCH_URL}?q={quote(keyword)}"
+    source_url = f"{BPOM_SEARCH_PAGE}?q={quote(keyword)}"
 
     try:
+        xsrf, cookies = await _get_csrf_session(proxy_url=proxy_url)
+        if not xsrf:
+            logger.warning("No XSRF token from BPOM — CSRF may fail")
+
+        # DataTables POST params
+        form_data = {
+            "draw": "1",
+            "start": "0",
+            "length": str(length),
+            "search[value]": keyword,
+            "search[regex]": "false",
+        }
+
         async with civic_client(proxy_url=proxy_url) as client:
             response = await fetch_with_retry(
                 client,
-                "GET",
-                url,
+                "POST",
+                BPOM_DT_URL,
                 rate_limiter=_rate_limiter,
+                data=form_data,
+                headers={
+                    "X-XSRF-TOKEN": xsrf,
+                    "Referer": source_url,
+                },
+                cookies=cookies,
             )
-        soup = BeautifulSoup(response.text, "html.parser")
-        rows = _extract_search_rows(soup)
+
+        data = response.json()
+        rows = data.get("data", [])
 
         if not rows:
-            return [not_found_response(MODULE, url)]
+            return [not_found_response(MODULE, source_url)]
 
-        return [normalize_search_row(row, source_url=url) for row in rows]
+        results = []
+        for row in rows:
+            normalized = _normalize_dt_row(row)
+            results.append(
+                normalize_search_row(normalized, source_url=source_url)
+            )
+
+        logger.info(
+            "BPOM search '%s': %d/%d results (total %s)",
+            keyword, len(results), data.get("recordsFiltered", "?"),
+            data.get("recordsTotal", "?"),
+        )
+        return results
 
     except Exception as exc:
         logger.exception("BPOM search failed for keyword '%s'", keyword)
-        return [error_response(MODULE, url, detail=str(exc))]
+        return [error_response(MODULE, source_url, detail=str(exc))]
 
 
-def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
-    """Extract rows from a BPOM search results table."""
-    rows: list[dict] = []
-    table = soup.find("table", {"class": lambda c: c and "table" in c})
-    if not table:
-        return rows
+def _normalize_dt_row(row: dict) -> dict[str, str]:
+    """Convert a DataTables JSON row to normalized field dict."""
+    normalized: dict[str, str] = {}
+    for dt_key, norm_key in _DT_FIELD_MAP.items():
+        val = row.get(dt_key)
+        if val is not None:
+            normalized[norm_key] = str(val).strip()
 
-    headers: list[str] = []
-    for th in table.find_all("th"):
-        headers.append(th.get_text(strip=True).lower())
+    # Map remaining fields that may appear
+    for key in ("REGISTRAR", "REGISTRAR_NPWP", "MANUFACTURER", "BRAND"):
+        val = row.get(key)
+        if val:
+            normalized[key.lower()] = str(val).strip()
 
-    for tr in table.find_all("tr")[1:]:  # skip header row
-        cells = tr.find_all("td")
-        if not cells:
-            continue
-        row = {
-            headers[i]: cells[i].get_text(strip=True) for i in range(min(len(headers), len(cells)))
-        }
-        rows.append(row)
-
-    return rows
+    return normalized
