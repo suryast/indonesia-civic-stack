@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling<1.27"]
 build-backend = "hatchling.build"
 
 [project]
 name = "indonesia-civic-stack"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python SDK + 40 MCP tools for 11 Indonesian government data portals"
 readme = "README.md"
 license = "MIT"
