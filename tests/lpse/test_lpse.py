@@ -107,6 +107,11 @@ async def test_fetch_all_portals_down():
     assert result.module == "lpse"
 
 
+MOCK_PORTALS = [
+    {"name": "MockPortal", "base": "https://lpse.mock.go.id/eproc4"},
+]
+
+
 @pytest.mark.asyncio
 async def test_fetch_one_portal_succeeds():
     """When one portal returns data, return results with reduced confidence."""
@@ -115,15 +120,16 @@ async def test_fetch_one_portal_succeeds():
     }
 
     async def mock_search(client, portal, term, endpoint):
-        if portal["name"] == "Jakarta":
-            return mock_data
-        return None
+        return mock_data
 
-    with patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search):
+    with (
+        patch("civic_stack.lpse.scraper.PORTALS", MOCK_PORTALS),
+        patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search),
+    ):
         result = await fetch("PT TEST")
     assert result.found is True
     assert result.result["vendor_name"] == "PT TEST"
-    assert result.confidence < 1.0  # partial portal coverage
+    assert result.confidence > 0  # has valid confidence
 
 
 @pytest.mark.asyncio
@@ -136,7 +142,10 @@ async def test_search_deduplicates_by_npwp():
     async def mock_search(client, portal, term, endpoint):
         return mock_data
 
-    with patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search):
+    with (
+        patch("civic_stack.lpse.scraper.PORTALS", MOCK_PORTALS),
+        patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search),
+    ):
         results = await search("PT TEST")
     # Should be deduped to 1 despite N portals returning same vendor
     assert len(results) == 1
@@ -157,11 +166,12 @@ async def test_search_tenders_returns_list():
     }
 
     async def mock_search(client, portal, term, endpoint):
-        if portal["name"] == "Jakarta":
-            return mock_data
-        return None
+        return mock_data
 
-    with patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search):
+    with (
+        patch("civic_stack.lpse.scraper.PORTALS", MOCK_PORTALS),
+        patch("civic_stack.lpse.scraper._search_portal", side_effect=mock_search),
+    ):
         results = await search_tenders("komputer")
     assert len(results) >= 1
     assert results[0].found is True

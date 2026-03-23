@@ -40,13 +40,41 @@ PORTALS: list[dict[str, str]] = []
 
 # All legacy portals — dead or inaccessible
 DEPRECATED_PORTALS = [
-    {"name": "LKPP", "base": "https://lpse.lkpp.go.id/eproc4", "reason": "DNS dead since 2026-02"},
-    {"name": "PU", "base": "https://lpse.pu.go.id/eproc4", "reason": "DNS dead since 2026-02"},
-    {"name": "Kominfo", "base": "https://lpse.kominfo.go.id/eproc4", "reason": "DNS dead since 2026-02"},
-    {"name": "Jakarta", "base": "https://lpse.jakarta.go.id/eproc4", "reason": "DNS dead since 2026-03-18"},
-    {"name": "Kemenkeu", "base": "https://lpse.kemenkeu.go.id/eproc4", "reason": "CNAME ars.inaproc.id, CF 403"},
-    {"name": "Kemenkes", "base": "https://lpse.kemkes.go.id/eproc4", "reason": "CNAME ars.inaproc.id, CF 403"},
-    {"name": "Kemenag", "base": "https://lpse.kemenag.go.id/eproc4", "reason": "CNAME ars.inaproc.id, no response"},
+    {
+        "name": "LKPP",
+        "base": "https://lpse.lkpp.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "PU",
+        "base": "https://lpse.pu.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "Kominfo",
+        "base": "https://lpse.kominfo.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "Jakarta",
+        "base": "https://lpse.jakarta.go.id/eproc4",
+        "reason": "DNS dead since 2026-03-18",
+    },
+    {
+        "name": "Kemenkeu",
+        "base": "https://lpse.kemenkeu.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, CF 403",
+    },
+    {
+        "name": "Kemenkes",
+        "base": "https://lpse.kemkes.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, CF 403",
+    },
+    {
+        "name": "Kemenag",
+        "base": "https://lpse.kemenag.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, no response",
+    },
 ]
 
 # New unified portal (directory only, no direct tender API)
