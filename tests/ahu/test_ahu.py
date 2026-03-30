@@ -183,7 +183,9 @@ async def test_fetch_uses_normalizer(monkeypatch):
         yield mock_page
 
     monkeypatch.setattr("civic_stack.ahu.scraper.ahu_page", mock_ahu_page)
-    monkeypatch.setattr("civic_stack.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=True))
+    monkeypatch.setattr(
+        "civic_stack.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=True)
+    )
 
     from civic_stack.ahu.scraper import fetch
 
@@ -212,7 +214,9 @@ async def test_blocked_response_returns_error(monkeypatch):
         yield mock_page
 
     monkeypatch.setattr("civic_stack.ahu.scraper.ahu_page", mock_ahu_page)
-    monkeypatch.setattr("civic_stack.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=False))
+    monkeypatch.setattr(
+        "civic_stack.ahu.scraper.wait_for_ahu_results", AsyncMock(return_value=False)
+    )
 
     from civic_stack.ahu.scraper import fetch
 

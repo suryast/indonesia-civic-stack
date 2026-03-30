@@ -63,7 +63,7 @@ async def fetch(
 
     except Exception as exc:
         logger.exception("OJK fetch failed for '%s'", name_or_id)
-        return error_response(MODULE, url, detail=str(exc))
+        return error_response(MODULE, OJK_PORTAL_BASE, detail=str(exc))
 
 
 async def search(
@@ -79,7 +79,7 @@ async def search(
         institution_type: One of INSTITUTION_TYPE_MAP keys
         status: "aktif" | "dicabut" | "dibekukan"
     """
-    url = f"{OJK_API_BASE}/lembaga/pencarian"
+    url = f"{OJK_PORTAL_BASE}/lembaga/pencarian"
     params: dict = {"keyword": keyword, "limit": 10}
     if filters:
         if filters.get("institution_type"):

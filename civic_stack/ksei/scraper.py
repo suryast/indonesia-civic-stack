@@ -17,7 +17,7 @@ from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
-from civic_stack.ksei.normalizer import normalize_detail, normalize_search_row
+from civic_stack.ksei.normalizer import normalize_search_row
 from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
 
@@ -52,10 +52,10 @@ async def fetch(
     """
     # Try to find the report via search
     results = await search(report_id, proxy_url=proxy_url)
-    
+
     if not results or not results[0].found:
         return not_found_response(MODULE, f"{KSEI_STATS_URL}?q={quote(report_id)}")
-    
+
     # Return first match with debug flag applied
     result = results[0]
     if not debug:
@@ -106,7 +106,7 @@ def _extract_statistics(soup: BeautifulSoup, keyword: str) -> list[dict]:
     """Extract statistics entries from KSEI pages, filtering by keyword."""
     rows: list[dict] = []
     keyword_lower = keyword.lower()
-    
+
     # Look for tables with statistics data
     tables = soup.find_all("table")
     for table in tables:
@@ -120,19 +120,19 @@ def _extract_statistics(soup: BeautifulSoup, keyword: str) -> list[dict]:
             cells = tr.find_all("td")
             if not cells:
                 continue
-            
+
             row: dict[str, str] = {}
             row_text = ""
-            
+
             for i, cell in enumerate(cells):
                 text = cell.get_text(strip=True)
                 row_text += text.lower() + " "
-                
+
                 if i < len(headers):
                     row[headers[i]] = text
                 else:
                     row[f"column_{i}"] = text
-                
+
                 # Extract download links
                 link = cell.find("a", href=True)
                 if link:
@@ -140,30 +140,32 @@ def _extract_statistics(soup: BeautifulSoup, keyword: str) -> list[dict]:
                     if not href.startswith("http"):
                         href = f"{KSEI_BASE}{href}"
                     row["download_url"] = href
-            
+
             # Filter by keyword
             if keyword_lower in row_text and row:
                 rows.append(row)
-    
+
     # Alternative: Look for statistic cards/sections
     if not rows:
-        stat_sections = soup.find_all(["div", "section"], {"class": lambda c: c and ("stat" in c or "data" in c)})
+        stat_sections = soup.find_all(
+            ["div", "section"], {"class": lambda c: c and ("stat" in c or "data" in c)}
+        )
         for section in stat_sections:
             section_text = section.get_text(strip=True).lower()
-            
+
             if keyword_lower in section_text:
                 row: dict[str, str] = {}
-                
+
                 # Extract title
                 title = section.find(["h2", "h3", "h4", "strong"])
                 if title:
                     row["title"] = title.get_text(strip=True)
-                
+
                 # Extract value/data
                 value = section.find(["span", "p"], {"class": lambda c: c and "value" in c})
                 if value:
                     row["value"] = value.get_text(strip=True)
-                
+
                 # Extract link
                 link = section.find("a", href=True)
                 if link:
@@ -171,7 +173,7 @@ def _extract_statistics(soup: BeautifulSoup, keyword: str) -> list[dict]:
                     if not href.startswith("http"):
                         href = f"{KSEI_BASE}{href}"
                     row["download_url"] = href
-                
+
                 if row:
                     rows.append(row)
 

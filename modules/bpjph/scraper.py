@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from civic_stack.shared.http import civic_client, fetch_with_retry, RateLimiter
+from civic_stack.shared.http import civic_client
 from civic_stack.shared.schema import CivicStackResponse, RecordStatus, not_found_response
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,9 @@ async def fetch(
 
     result = _normalize_record(record)
     status = _parse_status(record.get("status_sertifikat", ""))
-    confidence = 1.0 if record.get("no_sertifikat", "").strip().upper() == cert_no.strip().upper() else 0.9
+    confidence = (
+        1.0 if record.get("no_sertifikat", "").strip().upper() == cert_no.strip().upper() else 0.9
+    )
 
     return CivicStackResponse(
         result=result,
@@ -152,6 +154,7 @@ async def cross_ref_bpom(
 
     try:
         from civic_stack.bpom.scraper import search as bpom_search
+
         bpom_results = await bpom_search(product_name, proxy_url=proxy_url)
     except Exception:
         bpom_results = []
@@ -229,6 +232,7 @@ def _normalize_record(record: dict) -> dict[str, Any]:
     # Normalize product_list to a list
     if "product_list" in result and isinstance(result["product_list"], str):
         import re
+
         products = re.split(r"[,\n;]+", result["product_list"])
         result["product_list"] = [p.strip() for p in products if p.strip()]
 

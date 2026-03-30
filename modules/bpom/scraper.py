@@ -13,9 +13,7 @@ from __future__ import annotations
 import logging
 from urllib.parse import quote, unquote
 
-from bs4 import BeautifulSoup
-
-from modules.bpom.normalizer import normalize_detail, normalize_search_row
+from modules.bpom.normalizer import normalize_search_row
 from shared.http import RateLimiter, civic_client, fetch_with_retry
 from shared.schema import CivicStackResponse, error_response, not_found_response
 
@@ -52,7 +50,10 @@ async def _get_csrf_session(
     """Get XSRF token and session cookies from BPOM search page."""
     async with civic_client(proxy_url=proxy_url) as client:
         resp = await fetch_with_retry(
-            client, "GET", BPOM_SEARCH_PAGE, rate_limiter=_rate_limiter,
+            client,
+            "GET",
+            BPOM_SEARCH_PAGE,
+            rate_limiter=_rate_limiter,
         )
         cookies = {}
         for name in ("XSRF-TOKEN", "webreg_session"):
@@ -157,13 +158,13 @@ async def search(
         results = []
         for row in rows:
             normalized = _normalize_dt_row(row)
-            results.append(
-                normalize_search_row(normalized, source_url=source_url)
-            )
+            results.append(normalize_search_row(normalized, source_url=source_url))
 
         logger.info(
             "BPOM search '%s': %d/%d results (total %s)",
-            keyword, len(results), data.get("recordsFiltered", "?"),
+            keyword,
+            len(results),
+            data.get("recordsFiltered", "?"),
             data.get("recordsTotal", "?"),
         )
         return results

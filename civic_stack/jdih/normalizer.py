@@ -55,10 +55,10 @@ def normalize_detail(
         )
 
     result = _build_result(raw)
-    
+
     # JDIH documents are generally ACTIVE if they appear in results
     status = RecordStatus.ACTIVE
-    
+
     return CivicStackResponse(
         result=result,
         found=True,
@@ -74,7 +74,7 @@ def normalize_detail(
 def normalize_search_row(row: dict[str, str], *, source_url: str) -> CivicStackResponse:
     """Normalize a single row from a JDIH search results table."""
     result = _build_result(row)
-    
+
     # JDIH documents are generally ACTIVE if they appear in results
     status = RecordStatus.ACTIVE
 
@@ -95,7 +95,7 @@ def normalize_search_row(row: dict[str, str], *, source_url: str) -> CivicStackR
 def _build_result(raw: dict[str, Any]) -> dict[str, Any]:
     """Build the normalized result dict from raw field data."""
     result: dict[str, Any] = {}
-    
+
     for src_key, dst_key in _FIELD_MAP.items():
         # raw may have normalized or raw keys
         val = raw.get(dst_key) or raw.get(src_key)
@@ -137,7 +137,7 @@ def _confidence(raw: dict[str, str], queried_id: str) -> float:
     """
     title = raw.get("title", "")
     reg_no = raw.get("regulation_number", "")
-    
+
     # Normalize: lowercase, remove extra whitespace
     def _norm(s: str) -> str:
         return re.sub(r"\s+", " ", s.lower().strip())
@@ -145,5 +145,5 @@ def _confidence(raw: dict[str, str], queried_id: str) -> float:
     query_norm = _norm(queried_id)
     title_norm = _norm(title)
     reg_norm = _norm(reg_no)
-    
+
     return 1.0 if (query_norm in title_norm or query_norm in reg_norm) else 0.9

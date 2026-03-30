@@ -55,6 +55,7 @@ def _resolve_proxy() -> tuple[str | None, str]:
 
     return url, "connect"
 
+
 # Retryable HTTP status codes
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
@@ -149,7 +150,17 @@ async def civic_client(
     """
     env_proxy, env_mode = _resolve_proxy()
     resolved_proxy = proxy_url or env_proxy
-    mode = env_mode if not proxy_url else ("rewrite" if proxy_url and urlparse(proxy_url).hostname and urlparse(proxy_url).hostname.endswith(".workers.dev") else "connect")
+    mode = (
+        env_mode
+        if not proxy_url
+        else (
+            "rewrite"
+            if proxy_url
+            and urlparse(proxy_url).hostname
+            and urlparse(proxy_url).hostname.endswith(".workers.dev")
+            else "connect"
+        )
+    )
 
     if resolved_proxy:
         logger.info("Using proxy %s (mode=%s)", resolved_proxy, mode)
@@ -169,7 +180,11 @@ async def civic_client(
             yield client
     else:
         # Standard client, optionally with CONNECT proxy transport
-        transport = httpx.AsyncHTTPTransport(proxy=resolved_proxy) if resolved_proxy and mode == "connect" else None
+        transport = (
+            httpx.AsyncHTTPTransport(proxy=resolved_proxy)
+            if resolved_proxy and mode == "connect"
+            else None
+        )
         async with httpx.AsyncClient(
             headers=headers,
             timeout=timeout,

@@ -17,7 +17,7 @@ from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
-from civic_stack.jdih.normalizer import normalize_detail, normalize_search_row
+from civic_stack.jdih.normalizer import normalize_search_row
 from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
 
@@ -58,10 +58,10 @@ async def fetch(
     """
     # Try to find the document via search
     results = await search(doc_id, proxy_url=proxy_url)
-    
+
     if not results or not results[0].found:
         return not_found_response(MODULE, f"{JDIH_SEARCH_URL}?keyword={quote(doc_id)}")
-    
+
     # Return first match with debug flag applied
     result = results[0]
     if not debug:
@@ -112,7 +112,7 @@ async def search(
 def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
     """Extract document entries from JDIH search results."""
     rows: list[dict] = []
-    
+
     # JDIH results are typically in a table or list structure
     # Look for common table patterns
     table = soup.find("table", {"class": lambda c: c and ("table" in c or "result" in c)})
@@ -127,36 +127,44 @@ def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
             cells = tr.find_all("td")
             if not cells:
                 continue
-            
+
             row: dict[str, str] = {}
             for i, cell in enumerate(cells):
                 if i < len(headers):
                     row[headers[i]] = cell.get_text(strip=True)
-                
+
                 # Extract PDF link if present
                 link = cell.find("a", href=True)
                 if link and link["href"].endswith(".pdf"):
-                    row["pdf_url"] = link["href"] if link["href"].startswith("http") else f"{JDIH_BASE}{link['href']}"
-            
+                    row["pdf_url"] = (
+                        link["href"]
+                        if link["href"].startswith("http")
+                        else f"{JDIH_BASE}{link['href']}"
+                    )
+
             if row:
                 rows.append(row)
-    
+
     # Alternative: Look for result divs/cards
     if not rows:
         result_items = soup.find_all("div", {"class": lambda c: c and "result" in c})
         for item in result_items:
             row: dict[str, str] = {}
-            
+
             # Extract title
             title = item.find(["h3", "h4", "strong"])
             if title:
                 row["title"] = title.get_text(strip=True)
-            
+
             # Extract link
             link = item.find("a", href=True)
             if link:
-                row["pdf_url"] = link["href"] if link["href"].startswith("http") else f"{JDIH_BASE}{link['href']}"
-            
+                row["pdf_url"] = (
+                    link["href"]
+                    if link["href"].startswith("http")
+                    else f"{JDIH_BASE}{link['href']}"
+                )
+
             if row:
                 rows.append(row)
 
