@@ -11,7 +11,6 @@ import pytest
 from civic_stack.ojk.scraper import check_waspada, fetch
 from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
-
 INSTITUTION_HTML = """
 <html><body>
 <table class="table table-bordered">
@@ -37,16 +36,18 @@ NOT_FOUND_HTML = """
 </body></html>
 """
 
-WASPADA_JSON = json.dumps({
-    "data": [
-        {
-            "nama_entitas": "PT UNTUNG BERLIPAT INVESTASI",
-            "jenis_kegiatan": "Investasi Ilegal",
-            "keterangan": "Tidak terdaftar di OJK",
-        }
-    ],
-    "recordsTotal": 1,
-})
+WASPADA_JSON = json.dumps(
+    {
+        "data": [
+            {
+                "nama_entitas": "PT UNTUNG BERLIPAT INVESTASI",
+                "jenis_kegiatan": "Investasi Ilegal",
+                "keterangan": "Tidak terdaftar di OJK",
+            }
+        ],
+        "recordsTotal": 1,
+    }
+)
 
 
 def _mock_response(body: str, status: int = 200) -> httpx.Response:
