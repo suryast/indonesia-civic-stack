@@ -221,12 +221,12 @@ asyncio.run(main())
 All 14 modules expose **46 MCP tools** for use with Claude, GPT, or any MCP-compatible agent.
 
 ```bash
-# Fastest — use the hosted server (no install):
-claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
-
-# Or install locally:
+# Install locally:
 pip install "indonesia-civic-stack[mcp]"
 claude mcp add civic-stack -- civic-stack-mcp
+
+# Or deploy your own remote server (Railway one-click):
+# See "Self-Hosted MCP Server" section below
 ```
 
 MCP server classes support two init styles:
@@ -486,13 +486,15 @@ This repo is built for AI agents as first-class consumers.
 
 ### Connect MCP Tools (Pick One)
 
-**Option A — Remote server (no install needed):**
+**Option A — Self-hosted remote server (deploy your own):**
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template)
 
 ```bash
-# Claude Code
-claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.up.railway.app/mcp
+# After deploying to Railway/Fly/Render, add to Claude Code:
+claude mcp add civic-stack --transport http https://your-deployment.up.railway.app/mcp
 
-# Claude Desktop — add to claude_desktop_config.json:
+# Or Claude Desktop — add to claude_desktop_config.json:
 ```
 
 ```json
@@ -500,11 +502,13 @@ claude mcp add civic-stack --transport http https://mcp-server-production-d1a2.u
   "mcpServers": {
     "civic-stack": {
       "transport": "streamable-http",
-      "url": "https://mcp-server-production-d1a2.up.railway.app/mcp"
+      "url": "https://your-deployment.up.railway.app/mcp"
     }
   }
 }
 ```
+
+> **Note:** There is no shared hosted server. Each user deploys their own instance to control proxy settings, rate limits, and API keys.
 
 **Option B — Local install via pip:**
 
