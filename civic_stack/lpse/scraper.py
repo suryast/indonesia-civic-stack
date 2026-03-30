@@ -1,22 +1,19 @@
 """
-LPSE scraper — aggregates procurement data across regional SPSE portals.
+LPSE scraper — aggregates procurement data across SPSE/INAPROC portals.
 
-STATUS: FULLY DEGRADED (2026-03-18)
-All legacy lpse.*.go.id portals are dead or inaccessible.
-LKPP completed migration to inaproc.id which has no public API.
+STATUS: ACTIVE (requires Indonesian proxy)
+🇮🇩 Requires Indonesian proxy — spse.inaproc.id is geo-blocked from international IPs.
+Set PROXY_URL env var to a SOCKS5/HTTP proxy in Indonesia.
 
-MIGRATION TIMELINE:
-  2026-02: lpse.lkpp.go.id, lpse.pu.go.id, lpse.kominfo.go.id → DNS dead
-  2026-03-16: lpse.kemenkeu.go.id, lpse.kemkes.go.id → CNAME ars.inaproc.id (CF 403)
-  2026-03-18: lpse.jakarta.go.id → DNS dead, lpse.kemenag.go.id → no response
+ACTIVE PORTALS (as of 2026-03-29):
+  - spse.inaproc.id: Main procurement portal (200 from ID, 403 from intl)
+  - data.inaproc.id: Streamlit dashboard (accessible via proxy)
+  - katalog.inaproc.id: Next.js e-katalog
 
-NEW ECOSYSTEM (inaproc.id):
-  - spse.inaproc.id: Custom WAF blocks all automation (even Jakarta browser)
-  - data.inaproc.id: Streamlit dashboard (accessible via proxy — most promising)
-  - katalog.inaproc.id: Next.js e-katalog (curl 200, Playwright 403)
-  - api.inaproc.id: Gateway exists (404 on root — routes unknown)
-  - sirup.inaproc.id: Login-gated procurement plans
-  - ars.inaproc.id: Pomerium SSO (internal only)
+DEAD PORTALS (legacy, migrated):
+  - lpse.lkpp.go.id, lpse.pu.go.id, lpse.kominfo.go.id → DNS dead (2026-02)
+  - lpse.kemenkeu.go.id, lpse.kemkes.go.id → CNAME ars.inaproc.id (2026-03)
+  - lpse.jakarta.go.id, lpse.kemenag.go.id → DNS dead (2026-03)
 """
 
 from __future__ import annotations

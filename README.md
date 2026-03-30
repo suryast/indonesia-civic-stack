@@ -24,7 +24,7 @@ Indonesian public data is nominally open but practically inaccessible. Every dev
 
 This SDK is designed for both humans and AI agents:
 
-- 🤖 **40 MCP tools** — plug into Claude, GPT, or any MCP-compatible agent
+- 🤖 **46 MCP tools** — plug into Claude, GPT, or any MCP-compatible agent
 - 📋 **[SKILL.md](SKILL.md)** — AI agent skill discovery (AgentSkills format)
 - 🧑‍💻 **[AGENTS.md](AGENTS.md)** — architecture guide for coding agents (Claude Code, Codex, Cursor)
 - 📝 **[CLAUDE.md](CLAUDE.md)** — Claude Code-specific instructions
@@ -142,37 +142,45 @@ sequenceDiagram
 
 ## Module Status
 
-| Module | Source | Data | Status | Live Test |
-|--------|--------|------|--------|-----------|
-| [`bpom`](civic_stack/bpom/README.md) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | ⚠️ Phase 1 | Portal migrated to DataTables; URL updated |
-| [`bpjph`](civic_stack/bpjph/README.md) | sertifikasi.halal.go.id | Halal certificates (BPJPH + MUI) | ✅ Phase 1 | Requires Playwright browser |
-| [`ahu`](civic_stack/ahu/README.md) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | ✅ Phase 1 | Requires Playwright + proxy |
-| [`ojk`](civic_stack/ojk/) | www.ojk.go.id + sikapiuangmu.ojk.go.id | Licensed financial institutions + Waspada list | ⚠️ Phase 2 | api.ojk.go.id DNS-dead; ID-only geo-restriction |
-| [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | ✅ Phase 2 | Requires Playwright browser |
-| [`lpse`](civic_stack/lpse/) | lpse.*.go.id | Government procurement (5 portals) | ✅ Phase 2 | Portals often unreachable from non-ID IPs |
-| [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | ⚠️ Phase 2 | Endpoint updated to `/Peserta_pemilu` |
-| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | 🔴 DEGRADED | reCAPTCHA v3 on e-Announcement search |
-| [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | ✅ Phase 3 | Requires free `BPS_API_KEY` |
-| [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | ✅ Phase 3 | `autogempa.json` ✅, alert endpoint updated |
-| [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | ✅ Phase 3 | Regional portals may be unreachable |
+| Module | Source | Data | Proxy | Status |
+|--------|--------|------|:-----:|--------|
+| [`bpom`](civic_stack/bpom/) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | 🌐 | ✅ Active |
+| [`bpjph`](civic_stack/bpjph/) | cmsbl.halal.go.id | Halal certificates (1.98M+ records) | 🌐 | ✅ Active — migrated to REST API (v1.0.0) |
+| [`ahu`](civic_stack/ahu/) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | 🌐 | ✅ Active |
+| [`ojk`](civic_stack/ojk/) | www.ojk.go.id + sikapiuangmu.ojk.go.id | Licensed financial institutions + Waspada list | 🇮🇩 | ✅ Active — dead endpoints removed (v1.0.0) |
+| [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | 🌐 | ✅ Active |
+| [`lpse`](civic_stack/lpse/) | spse.inaproc.id | Government procurement | 🇮🇩 | ✅ Active — un-deprecated (v1.0.0) |
+| [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | 🌐 | ✅ Active |
+| [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | 🌐 | ✅ Active (requires `BPS_API_KEY`) |
+| [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | 🌐 | ✅ Active |
+| [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | 🌐 | ✅ Active |
+| [`jdih`](civic_stack/jdih/) | jdih.bpk.go.id | BPK legal documents & audit reports | 🇮🇩 | ✅ **New in v1.0.0** |
+| [`ksei`](civic_stack/ksei/) | ksei.co.id | Securities & investor statistics | 🇮🇩 | ✅ **New in v1.0.0** |
+| [`djpb`](civic_stack/djpb/) | djpb.kemenkeu.go.id | APBN budget execution data | 🇮🇩 | ✅ **New in v1.0.0** |
+| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | — | ⛔ Deprecated (reCAPTCHA wall) |
+
+🌐 = works globally &nbsp; 🇮🇩 = requires Indonesian proxy (set `PROXY_URL`)
 
 Every module returns the same `CivicStackResponse` envelope — swap data sources without touching application logic.
 
 ### Module Maturity
 
-| Module | Scraper | Normalizer | Router | MCP | Tests | README | Dockerfile | Portal Status |
-|--------|:-------:|:----------:|:------:|:---:|:-----:|:------:|:----------:|:------------:|
-| bpom | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ URL changed |
-| bpjph | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ahu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ojk | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| lpse | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| kpu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ URL changed |
-| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔴 reCAPTCHA v3 |
-| bps | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| bmkg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| simbg | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Module | Scraper | Normalizer | MCP | Tests | Portal Status |
+|--------|:-------:|:----------:|:---:|:-----:|:------------:|
+| bpom | ✅ | ✅ | ✅ | ✅ | ✅ |
+| bpjph | ✅ | ✅ | ✅ | ✅ | ✅ REST API |
+| ahu | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ojk | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ |
+| lpse | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| kpu | ✅ | ✅ | ✅ | ✅ | ✅ |
+| bps | ✅ | ✅ | ✅ | ✅ | ✅ |
+| bmkg | ✅ | ✅ | ✅ | ✅ | ✅ |
+| simbg | ✅ | ✅ | ✅ | ✅ | ✅ |
+| jdih | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| ksei | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| djpb | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| lhkpn | ✅ | ✅ | ⛔ | ✅ | ⛔ Deprecated |
 
 ---
 
@@ -210,7 +218,7 @@ asyncio.run(main())
 
 ### MCP Server (for AI agents)
 
-All 11 modules expose **40 MCP tools** for use with Claude, GPT, or any MCP-compatible agent.
+All 14 modules expose **46 MCP tools** for use with Claude, GPT, or any MCP-compatible agent.
 
 ```bash
 # Fastest — use the hosted server (no install):

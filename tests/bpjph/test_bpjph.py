@@ -1,14 +1,15 @@
 """
 Tests for the BPJPH module.
 
-The scraper uses Playwright which cannot be VCR-recorded directly.
-Tests monkeypatch the browser layer and inject HTML fixtures, keeping
-CI free from live portal calls and browser binary requirements.
+The scraper uses httpx REST API calls to cmsbl.halal.go.id.
+Tests monkeypatch the HTTP layer and inject JSON fixtures.
 """
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -22,7 +23,11 @@ def _load(filename: str) -> str:
     return (FIXTURE_DIR / filename).read_text(encoding="utf-8")
 
 
-# ── Normalizer unit tests (no Playwright needed) ──────────────────────────────
+def _load_json(filename: str) -> dict:
+    return json.loads((FIXTURE_DIR / filename).read_text(encoding="utf-8"))
+
+
+# ── Normalizer unit tests (from HTML fixtures — backwards compat) ─────────────
 
 
 def test_normalize_cert_found():
@@ -111,37 +116,69 @@ def test_response_json_serializable():
     assert data["status"] in [s.value for s in RecordStatus]
 
 
-# ── Scraper integration tests (monkeypatched Playwright) ─────────────────────
+# ── REST API scraper tests (monkeypatched httpx) ─────────────────────────────
+
+
+def _mock_response(data: dict, status_code: int = 200):
+    """Create a mock httpx response."""
+    mock = MagicMock()
+    mock.status_code = status_code
+    mock.json.return_value = data
+    mock.raise_for_status = MagicMock()
+    return mock
+
+
+@pytest.fixture
+def cert_api_response():
+    """Sample API response for a certificate fetch."""
+    return {
+        "data": [
+            {
+                "no_sertifikat": "ID00110019882120240001",
+                "nama_perusahaan": "PT INDOFOOD SUKSES MAKMUR TBK",
+                "nama_produk": "Indomie Goreng, Indomie Soto, Supermi",
+                "status_sertifikat": "Berlaku",
+                "tgl_terbit": "2024-01-15",
+                "tgl_kadaluarsa": "2028-01-15",
+            }
+        ]
+    }
+
+
+@pytest.fixture
+def search_api_response():
+    """Sample API response for a product search."""
+    return {
+        "data": [
+            {
+                "no_sertifikat": "ID00110019882120240001",
+                "nama_perusahaan": "PT INDOFOOD",
+                "nama_produk": "Indomie Goreng",
+                "status_sertifikat": "Berlaku",
+            },
+            {
+                "no_sertifikat": "ID00110019882120240002",
+                "nama_perusahaan": "PT INDOFOOD",
+                "nama_produk": "Supermi",
+                "status_sertifikat": "Berlaku",
+            },
+        ]
+    }
 
 
 @pytest.mark.asyncio
-async def test_fetch_uses_normalizer(monkeypatch):
-    """
-    Monkeypatch the Playwright new_page context manager so fetch() can run
-    without a real browser. Injects the cert_found.html fixture.
-    """
+async def test_fetch_uses_rest_api(monkeypatch, cert_api_response):
+    """fetch() calls cmsbl.halal.go.id REST API and normalizes the result."""
     from contextlib import asynccontextmanager
-    from unittest.mock import AsyncMock, MagicMock
 
-    html_content = _load("cert_found.html")
-
-    # Mock page object
-    mock_page = AsyncMock()
-    mock_page.goto = AsyncMock()
-    mock_page.content = AsyncMock(return_value=html_content)
-    mock_page.query_selector = AsyncMock(
-        return_value=MagicMock(
-            fill=AsyncMock(),
-            press=AsyncMock(),
-        )
-    )
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=_mock_response(cert_api_response))
 
     @asynccontextmanager
-    async def mock_new_page(*args, **kwargs):
-        yield mock_page
+    async def mock_civic_client(**kwargs):
+        yield mock_client
 
-    monkeypatch.setattr("modules.bpjph.scraper.new_page", mock_new_page)
-    monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
+    monkeypatch.setattr("civic_stack.bpjph.scraper.civic_client", mock_civic_client)
 
     from civic_stack.bpjph.scraper import fetch
 
@@ -150,35 +187,75 @@ async def test_fetch_uses_normalizer(monkeypatch):
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is True
     assert resp.module == "bpjph"
+    assert resp.confidence == 1.0
+    assert resp.result["cert_no"] == "ID00110019882120240001"
+    assert resp.result["company"] == "PT INDOFOOD SUKSES MAKMUR TBK"
 
 
 @pytest.mark.asyncio
-async def test_search_uses_normalizer(monkeypatch):
+async def test_fetch_not_found(monkeypatch):
+    """fetch() returns not_found when API returns no records."""
     from contextlib import asynccontextmanager
-    from unittest.mock import AsyncMock, MagicMock
 
-    html_content = _load("search_results.html")
-
-    mock_page = AsyncMock()
-    mock_page.goto = AsyncMock()
-    mock_page.content = AsyncMock(return_value=html_content)
-    mock_page.query_selector = AsyncMock(
-        return_value=MagicMock(
-            fill=AsyncMock(),
-            press=AsyncMock(),
-        )
-    )
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=_mock_response({"data": []}))
 
     @asynccontextmanager
-    async def mock_new_page(*args, **kwargs):
-        yield mock_page
+    async def mock_civic_client(**kwargs):
+        yield mock_client
 
-    monkeypatch.setattr("modules.bpjph.scraper.new_page", mock_new_page)
-    monkeypatch.setattr("modules.bpjph.scraper.wait_for_results", AsyncMock(return_value=True))
+    monkeypatch.setattr("civic_stack.bpjph.scraper.civic_client", mock_civic_client)
+
+    from civic_stack.bpjph.scraper import fetch
+
+    resp = await fetch("NONEXISTENT-999")
+
+    assert resp.found is False
+    assert resp.status == RecordStatus.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_search_returns_multiple(monkeypatch, search_api_response):
+    """search() returns a list of CivicStackResponse for matches."""
+    from contextlib import asynccontextmanager
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=_mock_response(search_api_response))
+
+    @asynccontextmanager
+    async def mock_civic_client(**kwargs):
+        yield mock_client
+
+    monkeypatch.setattr("civic_stack.bpjph.scraper.civic_client", mock_civic_client)
 
     from civic_stack.bpjph.scraper import search
 
-    results = await search("mie instan")
+    results = await search("indomie")
 
     assert isinstance(results, list)
     assert len(results) == 2
+    for r in results:
+        assert r.found is True
+        assert r.module == "bpjph"
+
+
+@pytest.mark.asyncio
+async def test_fetch_handles_network_error(monkeypatch):
+    """fetch() gracefully handles network failures."""
+    from contextlib import asynccontextmanager
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=Exception("Connection timeout"))
+
+    @asynccontextmanager
+    async def mock_civic_client(**kwargs):
+        yield mock_client
+
+    monkeypatch.setattr("civic_stack.bpjph.scraper.civic_client", mock_civic_client)
+
+    from civic_stack.bpjph.scraper import fetch
+
+    resp = await fetch("ID00110019882120240001")
+
+    assert resp.found is False
+    assert resp.status == RecordStatus.NOT_FOUND

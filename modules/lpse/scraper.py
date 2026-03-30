@@ -1,17 +1,19 @@
 """
-LPSE scraper — aggregates procurement data across regional SPSE portals.
+LPSE scraper — aggregates procurement data across SPSE/INAPROC portals.
 
-MIGRATION NOTE (2026-03):
-The legacy lpse.lkpp.go.id domain is DNS-dead. LKPP has migrated to inaproc.id:
-  - Portal SPSE directory: https://spse.inaproc.id (Next.js, directory only)
-  - Individual ministry LPSE instances: CNAME → ars.inaproc.id
-  - inaproc.id root: Cloudflare Turnstile challenge (403 without browser)
-  - ars.inaproc.id: Pomerium-protected (requires auth)
+STATUS: ACTIVE (requires Indonesian proxy)
+🇮🇩 Requires Indonesian proxy — spse.inaproc.id is geo-blocked from international IPs.
+Set PROXY_URL env var to a SOCKS5/HTTP proxy in Indonesia.
 
-Individual SPSE portals (eproc4) may still work if not behind Cloudflare.
-The SPSE API format is unchanged: /eproc4/dt/tender, /eproc4/dt/rekanan.
+ACTIVE PORTALS (as of 2026-03-29):
+  - spse.inaproc.id: Main procurement portal (200 from ID, 403 from intl)
+  - data.inaproc.id: Streamlit dashboard (accessible via proxy)
+  - katalog.inaproc.id: Next.js e-katalog
 
-Requires Jakarta proxy for geo-blocked portals.
+DEAD PORTALS (legacy, migrated):
+  - lpse.lkpp.go.id, lpse.pu.go.id, lpse.kominfo.go.id → DNS dead (2026-02)
+  - lpse.kemenkeu.go.id, lpse.kemkes.go.id → CNAME ars.inaproc.id (2026-03)
+  - lpse.jakarta.go.id, lpse.kemenag.go.id → DNS dead (2026-03)
 """
 
 from __future__ import annotations
@@ -29,26 +31,47 @@ from .normalizer import normalize_tender, normalize_vendor
 
 logger = logging.getLogger(__name__)
 
-# Updated portal list (2026-03):
-# - lpse.lkpp.go.id: DNS dead → removed
-# - lpse.pu.go.id: DNS dead → removed
-# - lpse.kominfo.go.id: DNS dead → removed
-# - lpse.kemenkeu.go.id: CNAME ars.inaproc.id → CF challenge, unreliable
-# - lpse.kemkes.go.id: CNAME ars.inaproc.id → CF challenge, unreliable
-#
-# Working portals (as of 2026-03, verified via proxy):
-PORTALS: list[dict[str, str]] = [
-    {"name": "Jakarta", "base": "https://lpse.jakarta.go.id/eproc4"},
-    {"name": "Kemenkeu", "base": "https://lpse.kemenkeu.go.id/eproc4"},
-    {"name": "Kemenkes", "base": "https://lpse.kemkes.go.id/eproc4"},
-    {"name": "Kemenag", "base": "https://lpse.kemenag.go.id/eproc4"},
-]
+# ALL PORTALS DEAD as of 2026-03-18.
+# Kept empty — module will return degraded responses.
+PORTALS: list[dict[str, str]] = []
 
-# Deprecated portals (DNS dead or migrated)
+# All legacy portals — dead or inaccessible
 DEPRECATED_PORTALS = [
-    {"name": "LKPP", "base": "https://lpse.lkpp.go.id/eproc4", "reason": "DNS dead since 2026-02"},
-    {"name": "PU", "base": "https://lpse.pu.go.id/eproc4", "reason": "DNS dead"},
-    {"name": "Kominfo", "base": "https://lpse.kominfo.go.id/eproc4", "reason": "DNS dead"},
+    {
+        "name": "LKPP",
+        "base": "https://lpse.lkpp.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "PU",
+        "base": "https://lpse.pu.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "Kominfo",
+        "base": "https://lpse.kominfo.go.id/eproc4",
+        "reason": "DNS dead since 2026-02",
+    },
+    {
+        "name": "Jakarta",
+        "base": "https://lpse.jakarta.go.id/eproc4",
+        "reason": "DNS dead since 2026-03-18",
+    },
+    {
+        "name": "Kemenkeu",
+        "base": "https://lpse.kemenkeu.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, CF 403",
+    },
+    {
+        "name": "Kemenkes",
+        "base": "https://lpse.kemkes.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, CF 403",
+    },
+    {
+        "name": "Kemenag",
+        "base": "https://lpse.kemenag.go.id/eproc4",
+        "reason": "CNAME ars.inaproc.id, no response",
+    },
 ]
 
 # New unified portal (directory only, no direct tender API)
@@ -129,7 +152,11 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
             module=MODULE,
             query=query,
             source_url=source_url,
-            extra={"portal_errors": failures, "note": "LPSE portals migrating to inaproc.id"} if failures else {},
+            extra=(
+                {"portal_errors": failures, "note": "LPSE portals migrating to inaproc.id"}
+                if failures
+                else {}
+            ),
         )
 
     # deduplicate by NPWP

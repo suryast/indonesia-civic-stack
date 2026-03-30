@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP(
     name="indonesia-civic-stack",
     instructions=(
-        "Unified MCP server for indonesia-civic-stack — query 11 Indonesian government "
+        "Unified MCP server for indonesia-civic-stack — query 14 Indonesian government "
         "data portals. All tools return a CivicStackResponse envelope with fields: "
         "found (bool), status (ACTIVE|EXPIRED|SUSPENDED|REVOKED|NOT_FOUND|ERROR), "
         "result (dict), module (str), source_url (str). "
@@ -38,7 +38,7 @@ mcp = FastMCP(
 async def health_check(request):
     from starlette.responses import JSONResponse
 
-    return JSONResponse({"status": "ok", "server": "indonesia-civic-stack", "tools": 40})
+    return JSONResponse({"status": "ok", "server": "indonesia-civic-stack", "tools": 46})
 
 
 # --- BPOM (Food & Drug) ---
@@ -287,6 +287,79 @@ async def get_lpse_portals() -> dict:
     return r.model_dump(mode="json")
 
 
+# --- JDIH (BPK Legal Documents) ---
+
+
+@mcp.tool()
+async def search_jdih(keyword: str, category: int = 1) -> list[dict]:
+    """
+    Search BPK legal documents by keyword.
+    Category: 1=Peraturan BPK, 2=Keputusan BPK, 5=Monografi.
+    Returns regulation titles, numbers, and PDF links.
+    """
+    from civic_stack.jdih.scraper import search
+
+    results = await search(keyword, category=category)
+    return [r.model_dump(mode="json") for r in results]
+
+
+@mcp.tool()
+async def get_jdih(doc_id: str) -> dict:
+    """Look up a BPK legal document by document ID or regulation number."""
+    from civic_stack.jdih.scraper import fetch
+
+    r = await fetch(doc_id)
+    return r.model_dump(mode="json")
+
+
+# --- KSEI (Securities Statistics) ---
+
+
+@mcp.tool()
+async def search_ksei(keyword: str) -> list[dict]:
+    """
+    Search KSEI securities statistics and reports by keyword.
+    Returns investor statistics, market data, and download links.
+    """
+    from civic_stack.ksei.scraper import search
+
+    results = await search(keyword)
+    return [r.model_dump(mode="json") for r in results]
+
+
+@mcp.tool()
+async def get_ksei(report_id: str) -> dict:
+    """Look up a KSEI securities report by report ID or period."""
+    from civic_stack.ksei.scraper import fetch
+
+    r = await fetch(report_id)
+    return r.model_dump(mode="json")
+
+
+# --- DJPB (Budget Data) ---
+
+
+@mcp.tool()
+async def search_djpb(keyword: str) -> list[dict]:
+    """
+    Search DJPB budget data and fiscal reports by keyword.
+    Returns APBN budget execution data, treasury statistics, and download links.
+    """
+    from civic_stack.djpb.scraper import search
+
+    results = await search(keyword)
+    return [r.model_dump(mode="json") for r in results]
+
+
+@mcp.tool()
+async def get_djpb(report_id: str) -> dict:
+    """Look up a DJPB budget report by report ID or fiscal year."""
+    from civic_stack.djpb.scraper import fetch
+
+    r = await fetch(report_id)
+    return r.model_dump(mode="json")
+
+
 # --- KPU (Elections) ---
 
 
@@ -329,43 +402,9 @@ async def get_campaign_finance_kpu(candidate_id: str) -> dict:
 # --- LHKPN (Wealth Declarations) ---
 
 
-@mcp.tool()
-async def get_lhkpn(official_name: str) -> dict:
-    """
-    Get wealth declaration (LHKPN) for a public official from KPK.
-    ⚠️ DEGRADED: Portal behind auth since ~2026. May return errors.
-    """
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(official_name)
-    return r.model_dump(mode="json")
-
-
-@mcp.tool()
-async def search_lhkpn(keyword: str) -> list[dict]:
-    """Search LHKPN wealth declarations by official name or institution."""
-    from civic_stack.lhkpn.scraper import search
-
-    results = await search(keyword)
-    return [r.model_dump(mode="json") for r in results]
-
-
-@mcp.tool()
-async def compare_lhkpn(official_name: str) -> dict:
-    """Compare wealth declarations across reporting periods for an official."""
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(official_name)
-    return r.model_dump(mode="json")
-
-
-@mcp.tool()
-async def get_lhkpn_pdf(report_id: str) -> dict:
-    """Download a specific LHKPN report PDF by report ID."""
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(report_id)
-    return r.model_dump(mode="json")
+# --- LHKPN (DEPRECATED) ---
+# lhkpn tools removed in v1.0.0 — elhkpn.kpk.go.id is behind reCAPTCHA + login wall.
+# Module code kept in civic_stack/lhkpn/ for reference.
 
 
 # --- BPS (Statistics) ---
