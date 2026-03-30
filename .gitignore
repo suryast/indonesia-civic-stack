@@ -6,3 +6,4 @@ __pycache__/
 .mcpregistry_github_token
 .mcpregistry_registry_token
 dist/
+PLAN-v1.0.0.md
