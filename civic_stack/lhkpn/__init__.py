@@ -1,13 +1,12 @@
 """
 modules/lhkpn — KPK wealth declaration (LHKPN) scraper.
 
+⚠️ DEPRECATED (2026-03-30): elhkpn.kpk.go.id is behind reCAPTCHA + login wall.
+No public data path available. Module kept for reference but removed from MCP server.
+
 Source: elhkpn.kpk.go.id (Komisi Pemberantasan Korupsi)
 Method: REST API + pdfplumber / Claude Vision API for PDF extraction
 License: Apache-2.0
-
-Optional dependencies (pip install indonesia-civic-stack[pdf]):
-    pdfplumber  — text-layer PDF extraction
-    anthropic   — Claude Vision API fallback for scanned PDFs
 
 Public API:
     fetch(query, *, proxy_url=None) -> CivicStackResponse

@@ -1,9 +1,10 @@
 """
-modules/bpjph — BPJPH SiHalal certificate scraper.
+modules/bpjph — BPJPH halal certificate lookup via REST API.
 
-Source: sertifikasi.halal.go.id
-Method: Playwright (JS-rendered portal) + Camoufox fingerprint randomization
+Source: cmsbl.halal.go.id (primary), gateway.halal.go.id (fallback)
+Method: httpx REST API (no browser needed)
 License: Apache-2.0
+Proxy: 🌐 Works globally (intermittent 504s — has retry)
 
 Public API:
     fetch(cert_no, *, debug=False, proxy_url=None) -> CivicStackResponse

@@ -329,43 +329,9 @@ async def get_campaign_finance_kpu(candidate_id: str) -> dict:
 # --- LHKPN (Wealth Declarations) ---
 
 
-@mcp.tool()
-async def get_lhkpn(official_name: str) -> dict:
-    """
-    Get wealth declaration (LHKPN) for a public official from KPK.
-    ⚠️ DEGRADED: Portal behind auth since ~2026. May return errors.
-    """
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(official_name)
-    return r.model_dump(mode="json")
-
-
-@mcp.tool()
-async def search_lhkpn(keyword: str) -> list[dict]:
-    """Search LHKPN wealth declarations by official name or institution."""
-    from civic_stack.lhkpn.scraper import search
-
-    results = await search(keyword)
-    return [r.model_dump(mode="json") for r in results]
-
-
-@mcp.tool()
-async def compare_lhkpn(official_name: str) -> dict:
-    """Compare wealth declarations across reporting periods for an official."""
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(official_name)
-    return r.model_dump(mode="json")
-
-
-@mcp.tool()
-async def get_lhkpn_pdf(report_id: str) -> dict:
-    """Download a specific LHKPN report PDF by report ID."""
-    from civic_stack.lhkpn.scraper import fetch
-
-    r = await fetch(report_id)
-    return r.model_dump(mode="json")
+# --- LHKPN (DEPRECATED) ---
+# lhkpn tools removed in v1.0.0 — elhkpn.kpk.go.id is behind reCAPTCHA + login wall.
+# Module code kept in civic_stack/lhkpn/ for reference.
 
 
 # --- BPS (Statistics) ---

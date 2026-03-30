@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 # NOTE: api.ojk.go.id is DNS-dead (NXDOMAIN) as of March 2026.
 # investor.ojk.go.id is also DNS-dead.
 # Waspada list moved to sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative
-OJK_API_BASE = "https://api.ojk.go.id/v1"  # DEPRECATED — DNS dead
 OJK_PORTAL_BASE = "https://www.ojk.go.id"
 OJK_WASPADA_URL = "https://sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative"
 OJK_WASPADA_LIST_URL = "https://emiten.ojk.go.id/Satgas/AlertPortal/IndexAlertPortal"
@@ -58,26 +57,9 @@ async def fetch(
 
     Searches across all institution types. Returns the first matching record.
     """
-    url = f"{OJK_API_BASE}/lembaga/pencarian"
-    params = {"keyword": name_or_id, "limit": 1}
-
+    # api.ojk.go.id is DNS-dead since Feb 2026 — go straight to portal scraping
     try:
-        async with civic_client(proxy_url=proxy_url) as client:
-            resp = await fetch_with_retry(
-                client,
-                "GET",
-                url,
-                params=params,
-                rate_limiter=_rate_limiter,
-            )
-        data = resp.json()
-        institutions = data.get("data", data.get("result", []))
-
-        if not institutions:
-            # Fallback: scrape the portal search page
-            return await _scrape_portal_search(name_or_id, proxy_url=proxy_url, debug=debug)
-
-        return normalize_institution(institutions[0], source_url=url, debug=debug)
+        return await _scrape_portal_search(name_or_id, proxy_url=proxy_url, debug=debug)
 
     except Exception as exc:
         logger.exception("OJK fetch failed for '%s'", name_or_id)

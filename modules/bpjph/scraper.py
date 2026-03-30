@@ -1,35 +1,51 @@
 """
-BPJPH SiHalal scraper — sertifikasi.halal.go.id
+BPJPH Halal Certificate scraper — REST API-based.
 
-JS-rendered portal. Uses Playwright to:
-1. Navigate to the search page
-2. Fill the search form with cert number or product name
-3. Wait for JS-rendered results
-4. Parse the resulting HTML
+Source: cmsbl.halal.go.id (primary), gateway.halal.go.id (fallback)
+Method: httpx REST API (no browser/Playwright needed)
+License: Apache-2.0
 
-Includes a cross_ref_bpom() helper that runs a BPOM lookup for the
-same product to detect lapsed BPOM registrations alongside valid halal certs.
+Public API:
+    fetch(cert_no, *, debug=False, proxy_url=None) -> CivicStackResponse
+    search(keyword, *, proxy_url=None) -> list[CivicStackResponse]
+    cross_ref_bpom(product_name, *, proxy_url=None) -> dict
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from typing import Any
 
-from modules.bpjph.browser import new_page, wait_for_results
-from modules.bpjph.normalizer import normalize_cert_page, normalize_search_results
-from shared.schema import CivicStackResponse, error_response, not_found_response
+from civic_stack.shared.http import civic_client, fetch_with_retry, RateLimiter
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus, not_found_response
 
 logger = logging.getLogger(__name__)
 
-BPJPH_BASE = "https://sertifikasi.halal.go.id"
-BPJPH_SEARCH_URL = f"{BPJPH_BASE}/sertifikat/publik"
-
 MODULE = "bpjph"
 
-# CSS selectors for the SiHalal portal (React-rendered)
-_RESULTS_TABLE_SELECTOR = "table.MuiTable-root, table[class*='table'], .certificate-result"
-_DETAIL_SELECTOR = ".certificate-detail, .sertifikat-detail, [class*='detail']"
-_NO_RESULT_SELECTOR = ".no-data, [class*='empty'], .alert-warning"
+# API endpoints discovered from bpjph.halal.go.id frontend JS
+CMSBL_BASE = "https://cmsbl.halal.go.id"
+SEARCH_URL = f"{CMSBL_BASE}/api/search"
+GATEWAY_BASE = "https://gateway.halal.go.id"
+
+# Search types supported by cmsbl API
+SEARCH_TYPE_PRODUCT = "data_produk"
+SEARCH_TYPE_COMPANY = "data_penyelia"
+SEARCH_TYPE_CERT = "data_sertifikat"
+
+_STATUS_MAP: dict[str, RecordStatus] = {
+    "berlaku": RecordStatus.ACTIVE,
+    "aktif": RecordStatus.ACTIVE,
+    "valid": RecordStatus.ACTIVE,
+    "kadaluarsa": RecordStatus.EXPIRED,
+    "expired": RecordStatus.EXPIRED,
+    "tidak berlaku": RecordStatus.EXPIRED,
+    "dicabut": RecordStatus.REVOKED,
+    "revoked": RecordStatus.REVOKED,
+    "dibekukan": RecordStatus.SUSPENDED,
+    "suspended": RecordStatus.SUSPENDED,
+}
 
 
 async def fetch(
@@ -38,155 +54,195 @@ async def fetch(
     debug: bool = False,
     proxy_url: str | None = None,
 ) -> CivicStackResponse:
-    """
-    Look up a BPJPH halal certificate by certificate number.
+    """Fetch a halal certificate by certificate number."""
+    source_url = f"{SEARCH_URL}/{SEARCH_TYPE_CERT}?no_sertifikat={cert_no}"
 
-    Args:
-        cert_no: Certificate number, e.g. "BPJPH-00001-2023" or "ID-2023-000001".
-        debug: If True, include raw scraped data in response.
-        proxy_url: Optional proxy URL for IP rotation.
-    """
-    url = BPJPH_SEARCH_URL
+    async with civic_client(proxy_url=proxy_url) as client:
+        try:
+            resp = await client.get(
+                f"{SEARCH_URL}/{SEARCH_TYPE_CERT}",
+                params={"no_sertifikat": cert_no},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.error("BPJPH fetch failed for %s: %s", cert_no, e)
+            return not_found_response(MODULE, source_url)
 
-    try:
-        async with new_page(proxy_url=proxy_url) as page:
-            await page.goto(url, wait_until="networkidle")
+    records = _extract_records(data)
+    if not records:
+        return not_found_response(MODULE, source_url)
 
-            # Try to find and fill the certificate number search input
-            search_input = await _find_search_input(page)
-            if search_input is None:
-                return error_response(MODULE, url, detail="Could not locate search input on page")
+    # Find exact match
+    record = records[0]
+    for r in records:
+        if r.get("no_sertifikat", "").strip().upper() == cert_no.strip().upper():
+            record = r
+            break
 
-            await search_input.fill(cert_no)
-            await search_input.press("Enter")
+    result = _normalize_record(record)
+    status = _parse_status(record.get("status_sertifikat", ""))
+    confidence = 1.0 if record.get("no_sertifikat", "").strip().upper() == cert_no.strip().upper() else 0.9
 
-            found = await wait_for_results(page, _RESULTS_TABLE_SELECTOR)
-            if not found:
-                # Check for explicit no-results message
-                no_result = await page.query_selector(_NO_RESULT_SELECTOR)
-                if no_result:
-                    return not_found_response(MODULE, url)
-                return error_response(MODULE, url, detail="Page did not render results in time")
-
-            html = await page.content()
-
-        return normalize_cert_page(html, cert_no=cert_no, source_url=url, debug=debug)
-
-    except Exception as exc:
-        logger.exception("BPJPH fetch failed for cert %s", cert_no)
-        return error_response(MODULE, url, detail=str(exc))
+    return CivicStackResponse(
+        result=result,
+        found=True,
+        status=status,
+        confidence=confidence,
+        source_url=source_url,
+        fetched_at=datetime.utcnow(),
+        module=MODULE,
+        raw=record if debug else None,
+    )
 
 
 async def search(
     keyword: str,
-    filters: dict | None = None,  # noqa: ARG001
     *,
+    search_type: str = SEARCH_TYPE_PRODUCT,
     proxy_url: str | None = None,
 ) -> list[CivicStackResponse]:
-    """
-    Search SiHalal by product name or company name.
+    """Search halal certificates by product name, company, or cert number."""
+    param_key = _param_key_for_type(search_type)
+    source_url = f"{SEARCH_URL}/{search_type}?{param_key}={keyword}"
 
-    Returns up to 10 results. Never raises on not-found — returns empty list.
-    """
-    url = BPJPH_SEARCH_URL
+    async with civic_client(proxy_url=proxy_url) as client:
+        try:
+            resp = await client.get(
+                f"{SEARCH_URL}/{search_type}",
+                params={param_key: keyword},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.error("BPJPH search failed for %s: %s", keyword, e)
+            return [not_found_response(MODULE, source_url)]
 
-    try:
-        async with new_page(proxy_url=proxy_url) as page:
-            await page.goto(url, wait_until="networkidle")
+    records = _extract_records(data)
+    if not records:
+        return [not_found_response(MODULE, source_url)]
 
-            search_input = await _find_search_input(page)
-            if search_input is None:
-                return [error_response(MODULE, url, detail="Could not locate search input")]
-
-            await search_input.fill(keyword)
-            await search_input.press("Enter")
-
-            found = await wait_for_results(page, _RESULTS_TABLE_SELECTOR)
-            if not found:
-                return [not_found_response(MODULE, url)]
-
-            html = await page.content()
-
-        return normalize_search_results(html, source_url=url)
-
-    except Exception as exc:
-        logger.exception("BPJPH search failed for keyword '%s'", keyword)
-        return [error_response(MODULE, url, detail=str(exc))]
+    results = []
+    for record in records:
+        result = _normalize_record(record)
+        status = _parse_status(record.get("status_sertifikat", ""))
+        results.append(
+            CivicStackResponse(
+                result=result,
+                found=True,
+                status=status,
+                confidence=0.8,
+                source_url=source_url,
+                fetched_at=datetime.utcnow(),
+                module=MODULE,
+            )
+        )
+    return results
 
 
 async def cross_ref_bpom(
     product_name: str,
     *,
     proxy_url: str | None = None,
-) -> dict:
-    """
-    Cross-reference a product between BPJPH (halal cert) and BPOM (product registration).
+) -> dict[str, Any]:
+    """Cross-reference a product between BPJPH halal and BPOM databases."""
+    halal_results = await search(product_name, proxy_url=proxy_url)
 
-    Runs both lookups in parallel and returns a combined dict flagging any mismatch,
-    e.g. where BPOM registration is ACTIVE but halal cert is EXPIRED.
-
-    Returns:
-        {
-            "product_name": str,
-            "bpjph": CivicStackResponse (dict),
-            "bpom": CivicStackResponse (dict) | None,
-            "mismatch": bool,
-            "mismatch_detail": str | None,
-        }
-    """
-    import asyncio
-
-    from modules.bpom.scraper import search as bpom_search
-
-    bpjph_results, bpom_results = await asyncio.gather(
-        search(product_name, proxy_url=proxy_url),
-        bpom_search(product_name, proxy_url=proxy_url),
-    )
-
-    bpjph_resp = bpjph_results[0] if bpjph_results else None
-    bpom_resp = bpom_results[0] if bpom_results else None
-
-    mismatch = False
-    mismatch_detail = None
-
-    if bpjph_resp and bpom_resp:
-        bpjph_active = bpjph_resp.status == "ACTIVE"
-        bpom_active = bpom_resp.status == "ACTIVE"
-        if bpom_active and not bpjph_active:
-            mismatch = True
-            mismatch_detail = (
-                f"BPOM registration is {bpom_resp.status} but halal cert is {bpjph_resp.status}"
-            )
-        elif bpjph_active and not bpom_active:
-            mismatch = True
-            mismatch_detail = (
-                f"Halal cert is {bpjph_resp.status} but BPOM registration is {bpom_resp.status}"
-            )
+    try:
+        from civic_stack.bpom.scraper import search as bpom_search
+        bpom_results = await bpom_search(product_name, proxy_url=proxy_url)
+    except Exception:
+        bpom_results = []
 
     return {
-        "product_name": product_name,
-        "bpjph": bpjph_resp.model_dump(mode="json") if bpjph_resp else None,
-        "bpom": bpom_resp.model_dump(mode="json") if bpom_resp else None,
-        "mismatch": mismatch,
-        "mismatch_detail": mismatch_detail,
+        "product": product_name,
+        "halal_found": any(r.found for r in halal_results),
+        "bpom_found": any(r.found for r in bpom_results),
+        "halal_results": len([r for r in halal_results if r.found]),
+        "bpom_results": len([r for r in bpom_results if r.found]),
     }
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
 
 
-async def _find_search_input(page: object) -> object | None:
-    """Try several CSS selectors to locate the search input field."""
-    selectors = [
-        "input[placeholder*='nomor']",
-        "input[placeholder*='sertifikat']",
-        "input[placeholder*='cari']",
-        "input[placeholder*='search']",
-        "input[type='search']",
-        "input[type='text']:first-of-type",
-    ]
-    for sel in selectors:
-        el = await page.query_selector(sel)  # type: ignore[attr-defined]
-        if el:
-            return el
-    return None
+def _param_key_for_type(search_type: str) -> str:
+    """Map search type to the correct query parameter name."""
+    return {
+        SEARCH_TYPE_PRODUCT: "nama",
+        SEARCH_TYPE_COMPANY: "nama_penyelia",
+        SEARCH_TYPE_CERT: "no_sertifikat",
+    }.get(search_type, "nama")
+
+
+def _extract_records(data: Any) -> list[dict]:
+    """Extract records from API response (handles various response shapes)."""
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for key in ("data", "results", "records", "items"):
+            if key in data and isinstance(data[key], list):
+                return data[key]
+        # Some responses nest under data.data
+        if "data" in data and isinstance(data["data"], dict):
+            inner = data["data"]
+            for key in ("data", "results", "records"):
+                if key in inner and isinstance(inner[key], list):
+                    return inner[key]
+    return []
+
+
+def _normalize_record(record: dict) -> dict[str, Any]:
+    """Normalize a raw API record to our standard result shape."""
+    result: dict[str, Any] = {}
+
+    # Map common field names
+    field_map = {
+        "no_sertifikat": "cert_no",
+        "nomor_sertifikat": "cert_no",
+        "nama_perusahaan": "company",
+        "nama_pelaku_usaha": "company",
+        "nama_produk": "product_list",
+        "produk": "product_list",
+        "penerbit": "issuer",
+        "lembaga_pemeriksa": "inspection_body",
+        "tgl_terbit": "issue_date",
+        "tanggal_terbit": "issue_date",
+        "tgl_kadaluarsa": "expiry_date",
+        "tanggal_kadaluarsa": "expiry_date",
+        "masa_berlaku": "expiry_date",
+        "status_sertifikat": "status",
+        "status": "status",
+    }
+
+    for raw_key, norm_key in field_map.items():
+        val = record.get(raw_key)
+        if val and norm_key not in result:
+            result[norm_key] = val
+
+    # Set issuer default
+    if "issuer" not in result:
+        result["issuer"] = "BPJPH"
+
+    # Normalize product_list to a list
+    if "product_list" in result and isinstance(result["product_list"], str):
+        import re
+        products = re.split(r"[,\n;]+", result["product_list"])
+        result["product_list"] = [p.strip() for p in products if p.strip()]
+
+    # Normalize status to enum value
+    if "status" in result:
+        result["status"] = _parse_status(str(result["status"])).value
+
+    return result
+
+
+def _parse_status(status_str: str) -> RecordStatus:
+    """Parse Indonesian status string to RecordStatus enum."""
+    normalized = status_str.strip().lower()
+    for key, val in _STATUS_MAP.items():
+        if key in normalized:
+            return val
+    return RecordStatus.NOT_FOUND if not normalized else RecordStatus.ACTIVE
