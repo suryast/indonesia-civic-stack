@@ -403,8 +403,39 @@ async def get_campaign_finance_kpu(candidate_id: str) -> dict:
 
 
 # --- LHKPN (DEPRECATED) ---
-# lhkpn tools removed in v1.0.0 — elhkpn.kpk.go.id is behind reCAPTCHA + login wall.
-# Module code kept in civic_stack/lhkpn/ for reference.
+# --- LHKPN (Wealth Declarations) ---
+# Restored in v1.1.1 — reCAPTCHA v3 solved via Playwright headless browser.
+# Requires: pip install playwright && playwright install chromium
+
+
+@mcp.tool()
+async def get_lhkpn(official_name: str) -> dict:
+    """
+    Get wealth declaration (LHKPN) for a public official from KPK.
+    Uses Playwright to solve reCAPTCHA v3 on elhkpn.kpk.go.id.
+    Returns: name, position, ministry, total assets (IDR), declaration date.
+    """
+    from civic_stack.lhkpn.scraper import fetch
+
+    r = await fetch(official_name)
+    return r.model_dump(mode="json")
+
+
+@mcp.tool()
+async def search_lhkpn(keyword: str) -> list[dict]:
+    """Search LHKPN wealth declarations by official name or institution."""
+    from civic_stack.lhkpn.scraper import search
+
+    results = await search(keyword)
+    return [r.model_dump(mode="json") for r in results]
+
+
+@mcp.tool()
+async def get_lhkpn_pdf(report_id: str) -> dict:
+    """Download and extract a specific LHKPN report PDF by report ID."""
+    from civic_stack.lhkpn.scraper import get_pdf
+
+    return await get_pdf(report_id)
 
 
 # --- BPS (Statistics) ---

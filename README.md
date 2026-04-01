@@ -157,7 +157,7 @@ sequenceDiagram
 | [`jdih`](civic_stack/jdih/) | jdih.bpk.go.id | BPK legal documents & audit reports | 🇮🇩 | ✅ **New in v1.0.0** |
 | [`ksei`](civic_stack/ksei/) | ksei.co.id | Securities & investor statistics | 🇮🇩 | ✅ **New in v1.0.0** |
 | [`djpb`](civic_stack/djpb/) | djpb.kemenkeu.go.id | APBN budget execution data | 🇮🇩 | ✅ **New in v1.0.0** |
-| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | — | ⛔ Deprecated (reCAPTCHA wall) |
+| [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | — | ✅ Active — reCAPTCHA v3 solved via Playwright |
 
 🌐 = works globally &nbsp; 🇮🇩 = requires Indonesian proxy (set `PROXY_URL`)
 
@@ -180,7 +180,7 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 | jdih | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
 | ksei | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
 | djpb | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
-| lhkpn | ✅ | ✅ | ⛔ | ✅ | ⛔ Deprecated |
+| lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ Active (Playwright) |
 
 ---
 
@@ -266,7 +266,7 @@ GET /bpjph/check/BPJPH-12345
 GET /ahu/search?q=PT+Contoh+Indonesia
 GET /ojk/check?name=Bank+BCA
 GET /kpu/candidate/search?q=Joko
-GET /lhkpn/search?q=Anies          # ⚠️ DEGRADED — portal behind auth
+GET /lhkpn/search?q=Anies          # ✅ reCAPTCHA v3 solved via Playwright
 GET /bps/search?q=inflasi           # Requires BPS_API_KEY
 GET /bmkg/weather?city=jakarta
 GET /simbg/search?q=Jakarta+Selatan
@@ -378,7 +378,7 @@ cd proxy && npx wrangler deploy
 | api.ojk.go.id | ❌ DNS dead | NXDOMAIN since March 2026 |
 | infopemilu.kpu.go.id | ❌ 403 | CF-protected |
 | lpse.*.go.id | ❌ 403 | CF-protected |
-| elhkpn.kpk.go.id | ❌ 403 | reCAPTCHA v3 enforced on search |
+| elhkpn.kpk.go.id | ✅ 200 | reCAPTCHA v3 solved via Playwright headless browser |
 
 **For production with CF-protected portals**, use an Indonesian VPS with a SOCKS5/HTTP proxy and set `PROXY_MODE=connect`.
 
@@ -413,7 +413,7 @@ Indonesian government portals frequently change their URL structure without noti
 | BPOM | `/index.php/home/produk/1/{keyword}/...` | `/all-produk?q={keyword}` | ✅ Updated |
 | KPU | `/Pemilu/caleg/list` | `/Pemilu/Peserta_pemilu` | ✅ Updated |
 | BMKG | `/DataMKG/MEWS/Warning/cuacasignifikan.json` | `/DataMKG/TEWS/gempadirasakan.json` | ✅ Updated |
-| LHKPN | `/portal/user/check_search_announ` | reCAPTCHA v3 | 🔴 Degraded |
+| LHKPN | `/portal/user/check_search_announ` | reCAPTCHA v3 (Playwright) | 🟢 Active |
 
 Modules that fail for **60 days** are flagged `DEGRADED` and may be archived.
 
