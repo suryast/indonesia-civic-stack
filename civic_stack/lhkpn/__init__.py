@@ -1,8 +1,8 @@
 """
 modules/lhkpn — KPK wealth declaration (LHKPN) scraper.
 
-⚠️ DEPRECATED (2026-03-30): elhkpn.kpk.go.id is behind reCAPTCHA + login wall.
-No public data path available. Module kept for reference but removed from MCP server.
+✅ ACTIVE (2026-04-01): reCAPTCHA v3 solved via Playwright headless browser.
+Public e-Announcement search works. Requires: playwright + chromium.
 
 Source: elhkpn.kpk.go.id (Komisi Pemberantasan Korupsi)
 Method: REST API + pdfplumber / Claude Vision API for PDF extraction

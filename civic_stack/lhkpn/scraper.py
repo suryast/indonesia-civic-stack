@@ -2,18 +2,20 @@
 LHKPN scraper — KPK wealth declarations (Laporan Harta Kekayaan Penyelenggara Negara).
 
 Source: elhkpn.kpk.go.id
-Method: REST API for search + official listing; pdfplumber for PDF extraction;
-        Claude Vision API fallback for scanned/image-based PDFs.
-Auth:   Public search tier — no login required.
+Method: Playwright browser for reCAPTCHA v3 solving + HTML table parsing;
+        pdfplumber for PDF extraction; Claude Vision API fallback for scanned PDFs.
+Auth:   Public e-Announcement search — requires reCAPTCHA v3 token (solved via Playwright).
 
 Dependency notes:
+  - playwright is REQUIRED for search (pip install playwright && playwright install chromium)
   - pdfplumber + anthropic are OPTIONAL (extras: pip install indonesia-civic-stack[pdf])
-  - If unavailable, PDF-based methods raise ImportError with install instructions.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import re
 from io import BytesIO
 from typing import Any
 
@@ -31,26 +33,148 @@ from .normalizer import normalize_declaration, normalize_search_result
 
 logger = logging.getLogger(__name__)
 
-# elhkpn public e-Announcement search (on login page #announ section)
 _BASE = "https://elhkpn.kpk.go.id"
-# Public search: POST /portal/user/check_search_announ
-# Fields: CARI[NAMA] (name/NIK), CARI[TAHUN] (year), CARI[LEMBAGA] (institution)
-# Requires reCAPTCHA v3 token (server-side enforced) — module DEGRADED.
-# Old endpoint check_a_lhkpn -> 404 since ~2026.
-_SEARCH_URL = _BASE + "/portal/user/check_search_announ"  # POST — needs reCAPTCHA v3
-_DETAIL_URL = _BASE + "/portal/user/detail_laporan_harta"  # POST: {"id_laporan": "..."}
-_PDF_URL = _BASE + "/portal/user/preview_laporan_pdf"  # GET: ?id_laporan=...
+_LOGIN_URL = _BASE + "/portal/user/login#announ"
+_SEARCH_URL = _BASE + "/portal/user/check_search_announ"
+_DETAIL_URL = _BASE + "/portal/user/detail_laporan_harta"
+_PDF_URL = _BASE + "/portal/user/preview_laporan_pdf"
+_RECAPTCHA_SITE_KEY = "6LfANPQrAAAAAFAKhYMdri6OAuMOPZZorjsCqUGk"
 
 MODULE = "lhkpn"
 SOURCE_URL = _BASE + "/portal/user/login#announ"
 
-_limiter = RateLimiter(rate=0.25)  # 1 req / 4s — KPK portal is conservative
+_limiter = RateLimiter(rate=0.25)
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Playwright-based reCAPTCHA v3 solver + search
 # ---------------------------------------------------------------------------
 
+async def _playwright_search(
+    name: str,
+    year: str = "",
+    institution: str = "",
+) -> list[dict[str, Any]]:
+    """
+    Use Playwright to load the LHKPN portal, solve reCAPTCHA v3, submit
+    the announcement search form, and parse the results table.
+    
+    Table columns (14 cells per row, some hidden):
+      [0] hidden hash, [1] hidden ID, [2] hidden, [3] hidden year,
+      [4] hidden flag, [5] No., [6] Nama, [7] Lembaga, [8] Unit Kerja,
+      [9] Jabatan, [10] Tanggal Lapor, [11] Jenis Laporan,
+      [12] Total Harta Kekayaan, [13] Aksi (buttons)
+    """
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError as exc:
+        raise ImportError(
+            "playwright is required for LHKPN search. "
+            "Install with: pip install playwright && playwright install chromium"
+        ) from exc
+
+    results: list[dict[str, Any]] = []
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            ),
+            viewport={"width": 1280, "height": 800},
+        )
+        page = await context.new_page()
+
+        try:
+            await page.goto(
+                _LOGIN_URL, wait_until="domcontentloaded", timeout=30000,
+            )
+            await page.wait_for_function(
+                "typeof grecaptcha !== 'undefined' && typeof grecaptcha.execute === 'function'",
+                timeout=15000,
+            )
+
+            # Fill form
+            await page.fill("#CARI_NAMA", name)
+            if year:
+                await page.fill("#CARI_TAHUN", year)
+            if institution:
+                await page.fill("#CARI_LEMBAGA", institution)
+
+            # Solve reCAPTCHA v3
+            token = await page.evaluate(
+                f"""
+                () => new Promise((resolve, reject) => {{
+                    grecaptcha.execute('{_RECAPTCHA_SITE_KEY}', {{action: 'announcement'}})
+                        .then(token => resolve(token))
+                        .catch(err => reject(err.toString()));
+                }})
+                """
+            )
+            logger.debug("reCAPTCHA v3 token obtained (%d chars)", len(token))
+
+            # Set token and submit (form.submit() causes navigation, returns result page)
+            await page.evaluate(
+                f'document.getElementById("g-recaptcha-response-announ").value = "{token}"'
+            )
+            async with page.expect_navigation(timeout=20000):
+                await page.evaluate('document.getElementById("ajaxFormCari").submit()')
+
+            await asyncio.sleep(2)
+
+            # Parse result table rows
+            rows = await page.query_selector_all("table tbody tr")
+            for row in rows:
+                cells = await row.query_selector_all("td")
+                if len(cells) < 13:
+                    continue
+                texts = [await c.inner_text() for c in cells]
+                texts = [t.strip() for t in texts]
+
+                # Skip "Belum ada data" rows
+                if any("belum ada" in t.lower() for t in texts):
+                    continue
+
+                results.append({
+                    "report_hash": texts[0],
+                    "report_id": texts[1],
+                    "year": texts[3],
+                    "no": texts[5].rstrip("."),
+                    "nama": texts[6],
+                    "lembaga": texts[7],
+                    "unit_kerja": texts[8],
+                    "jabatan": texts[9],
+                    "tanggal_lapor": texts[10],
+                    "jenis_laporan": texts[11],
+                    "total_harta": texts[12],
+                })
+
+            # Extract download button IDs (base64 encoded report refs)
+            download_btns = await page.query_selector_all(".yesdownl[data-id]")
+            for i, btn in enumerate(download_btns):
+                data_id = await btn.get_attribute("data-id")
+                if data_id and i < len(results):
+                    results[i]["download_id"] = data_id
+
+        except Exception as exc:
+            logger.error("Playwright LHKPN search failed: %s", exc)
+        finally:
+            await browser.close()
+
+    return results
+
+
+def _parse_rupiah(text: str) -> int:
+    """Parse 'Rp.483.160.334' → 483160334"""
+    cleaned = re.sub(r"[^0-9]", "", text)
+    return int(cleaned) if cleaned else 0
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers (httpx-based, for detail/PDF)
+# ---------------------------------------------------------------------------
 
 async def _post_json(
     client: httpx.AsyncClient,
@@ -82,9 +206,8 @@ async def _download_pdf(client: httpx.AsyncClient, report_id: str) -> bytes | No
 
 
 def _extract_pdf_pdfplumber(pdf_bytes: bytes) -> dict[str, Any]:
-    """Extract structured data from a native/text-layer PDF using pdfplumber."""
     try:
-        import pdfplumber  # type: ignore[import]
+        import pdfplumber
     except ImportError as exc:
         raise ImportError(
             "pdfplumber is required for PDF extraction. "
@@ -105,13 +228,8 @@ def _extract_pdf_pdfplumber(pdf_bytes: bytes) -> dict[str, Any]:
 
 
 def _extract_pdf_claude_vision(pdf_bytes: bytes) -> dict[str, Any]:
-    """
-    Fallback: use Claude Vision API to extract data from scanned/image PDFs.
-
-    Requires the `anthropic` package and ANTHROPIC_API_KEY environment variable.
-    """
     try:
-        import anthropic  # type: ignore[import]
+        import anthropic
     except ImportError as exc:
         raise ImportError(
             "anthropic is required for Vision PDF extraction. "
@@ -176,7 +294,6 @@ def _extract_pdf_claude_vision(pdf_bytes: bytes) -> dict[str, Any]:
     import json
 
     raw_text = message.content[0].text.strip()
-    # Strip markdown code fences if present
     if raw_text.startswith("```"):
         raw_text = raw_text.split("```")[1]
         if raw_text.startswith("json"):
@@ -185,13 +302,6 @@ def _extract_pdf_claude_vision(pdf_bytes: bytes) -> dict[str, Any]:
 
 
 def extract_pdf(pdf_bytes: bytes) -> dict[str, Any]:
-    """
-    Extract LHKPN data from PDF bytes.
-
-    Strategy:
-      1. Try pdfplumber (fast, accurate for text-layer PDFs).
-      2. If extracted text is empty or very short, fall back to Claude Vision API.
-    """
     try:
         data = _extract_pdf_pdfplumber(pdf_bytes)
         if len(data.get("raw_text", "")) > 200:
@@ -210,57 +320,76 @@ def extract_pdf(pdf_bytes: bytes) -> dict[str, Any]:
 
 async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackResponse:
     """Look up a public official by name and return their latest LHKPN declaration."""
-    async with civic_client(proxy_url=proxy_url) as client:
-        search_data = await _post_json(client, _SEARCH_URL, {"nama": query})
-
-    if not search_data:
+    try:
+        results = await _playwright_search(name=query)
+    except ImportError:
         return error_response(
             module=MODULE,
             query=query,
             source_url=SOURCE_URL,
-            message="LHKPN portal unreachable",
+            message="playwright not installed — required for LHKPN reCAPTCHA",
+        )
+    except Exception as exc:
+        return error_response(
+            module=MODULE,
+            query=query,
+            source_url=SOURCE_URL,
+            message=f"LHKPN search failed: {exc}",
         )
 
-    officials = search_data.get("data") or []
-    if not officials:
+    if not results:
         return not_found_response(module=MODULE, query=query, source_url=SOURCE_URL)
 
-    best = officials[0]
-    report_id = str(best.get("id_laporan") or best.get("id") or "")
+    best = results[0]
 
-    # Fetch detail
-    detail_data: dict[str, Any] = {}
-    if report_id:
-        async with civic_client(proxy_url=proxy_url) as client:
-            raw_detail = await _post_json(client, _DETAIL_URL, {"id_laporan": report_id})
-        if raw_detail:
-            detail_data = raw_detail.get("data") or {}
+    normalized = {
+        "official_name": best.get("nama", ""),
+        "position": best.get("jabatan", ""),
+        "ministry": best.get("lembaga", ""),
+        "unit_kerja": best.get("unit_kerja", ""),
+        "declaration_date": best.get("tanggal_lapor", ""),
+        "declaration_type": best.get("jenis_laporan", ""),
+        "declaration_year": best.get("year", ""),
+        "total_assets_idr": _parse_rupiah(best.get("total_harta", "0")),
+        "report_id": best.get("report_id", ""),
+        "download_id": best.get("download_id", ""),
+    }
 
-    normalized = normalize_declaration({**best, **detail_data}, query=query)
     return CivicStackResponse(
         result=normalized,
         found=True,
         status=RecordStatus.ACTIVE,
-        confidence=normalized.pop("_confidence", 0.9),
+        confidence=0.9,
         source_url=SOURCE_URL,
         fetched_at=__import__("datetime").datetime.utcnow(),
         module=MODULE,
-        raw={"report_id": report_id},
+        raw={"table_row": best, "all_results_count": len(results)},
     )
 
 
 async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicStackResponse]:
     """Search officials by name, ministry, or position."""
-    async with civic_client(proxy_url=proxy_url) as client:
-        data = await _post_json(client, _SEARCH_URL, {"nama": keyword})
-
-    if not data:
+    try:
+        results = await _playwright_search(name=keyword)
+    except (ImportError, Exception) as exc:
+        logger.error("LHKPN search failed: %s", exc)
         return []
 
-    results: list[CivicStackResponse] = []
-    for item in (data.get("data") or [])[:20]:
-        rec = normalize_search_result(item)
-        results.append(
+    responses: list[CivicStackResponse] = []
+    for item in results[:20]:
+        rec = {
+            "official_name": item.get("nama", ""),
+            "position": item.get("jabatan", ""),
+            "ministry": item.get("lembaga", ""),
+            "unit_kerja": item.get("unit_kerja", ""),
+            "declaration_date": item.get("tanggal_lapor", ""),
+            "declaration_type": item.get("jenis_laporan", ""),
+            "declaration_year": item.get("year", ""),
+            "total_assets_idr": _parse_rupiah(item.get("total_harta", "0")),
+            "report_id": item.get("report_id", ""),
+            "download_id": item.get("download_id", ""),
+        }
+        responses.append(
             CivicStackResponse(
                 result=rec,
                 found=True,
@@ -271,7 +400,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                 module=MODULE,
             )
         )
-    return results
+    return responses
 
 
 async def get_pdf(report_id: str, *, proxy_url: str | None = None) -> dict[str, Any]:
@@ -294,7 +423,6 @@ async def compare_lhkpn(
 ) -> dict[str, Any]:
     """
     Compare two LHKPN declarations for the same official across different years.
-    Returns delta for total assets, liabilities, and net worth.
     """
     async with civic_client(proxy_url=proxy_url) as client:
         data_a = await _post_json(client, _DETAIL_URL, {"id_laporan": f"{official_id}_{year_a}"})
