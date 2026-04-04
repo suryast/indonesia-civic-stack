@@ -1,180 +1,213 @@
 """
-KSEI scraper — www.ksei.co.id (Securities Statistics)
+KSEI scraper — PT Kustodian Sentral Efek Indonesia (Securities Depository).
 
-🇮🇩 Requires Indonesian proxy — set PROXY_URL env var
+Source: web.ksei.co.id (old Rails app with securities data)
+Method: HTTP scraping — server-rendered HTML
+Auth:   None required
 
-KSEI (Kustodian Sentral Efek Indonesia) publishes monthly investor statistics,
-market data, and securities reports via HTML pages.
-This module uses httpx + BeautifulSoup to fetch and parse results.
-
-Rate limit: ~10 req/min observed. Enforced via RateLimiter.
+Key endpoints:
+  - Securities master: /services/registered-securities/shares
+  - Statistics PDFs: /publications/Data_Statistik_KSEI
+  - Holding data: /archive_download/holding_composition
 """
 
 from __future__ import annotations
 
 import logging
-from urllib.parse import quote
+import re
+from typing import Any
 
 from bs4 import BeautifulSoup
 
-from civic_stack.ksei.normalizer import normalize_search_row
 from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
-from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
+from civic_stack.shared.schema import (
+    CivicStackResponse,
+    RecordStatus,
+    error_response,
+    not_found_response,
+)
+
+from .normalizer import normalize_security, normalize_statistics_link
 
 logger = logging.getLogger(__name__)
 
-KSEI_BASE = "https://www.ksei.co.id"
-# Statistics are typically under /data or /statistics paths
-KSEI_STATS_URL = f"{KSEI_BASE}/data/statistics"
-
-# ~10 req/min = ~0.167 req/s; use 0.15 for safety margin
-_rate_limiter = RateLimiter(rate=0.15)
-
+_BASE = "https://web.ksei.co.id"
 MODULE = "ksei"
+SOURCE_URL = "https://web.ksei.co.id"
+
+_limiter = RateLimiter(rate=1.0)  # 1 req/s for HTML scraping
 
 
-async def fetch(
-    report_id: str,
+async def _fetch_securities_page(
     *,
-    debug: bool = False,
+    page: int = 1,
     proxy_url: str | None = None,
-) -> CivicStackResponse:
-    """
-    Look up a single KSEI report by report ID.
+) -> list[dict[str, Any]]:
+    """Fetch securities listing page and parse table rows."""
+    async with civic_client(proxy_url=proxy_url) as client:
+        await _limiter.acquire()
+        url = f"{_BASE}/services/registered-securities/shares"
+        params = {"setLocale": "id-ID", "page": str(page)}
 
-    Args:
-        report_id: Report identifier or title keyword
-        debug: If True, include raw scraped HTML in the response.
-        proxy_url: Optional proxy URL for IP rotation.
-
-    Returns:
-        CivicStackResponse with KSEI report details, or NOT_FOUND / ERROR.
-    """
-    # Try to find the report via search
-    results = await search(report_id, proxy_url=proxy_url)
-
-    if not results or not results[0].found:
-        return not_found_response(MODULE, f"{KSEI_STATS_URL}?q={quote(report_id)}")
-
-    # Return first match with debug flag applied
-    result = results[0]
-    if not debug:
-        result.raw = None
-    return result
-
-
-async def search(
-    keyword: str,
-    *,
-    proxy_url: str | None = None,
-) -> list[CivicStackResponse]:
-    """
-    Search KSEI statistics and reports by keyword.
-
-    Args:
-        keyword: Search term (report title, category, or period).
-        proxy_url: Optional proxy URL for IP rotation.
-
-    Returns:
-        List of CivicStackResponse objects (may be empty, never raises on not-found).
-    """
-    # Try the statistics page first
-    url = KSEI_STATS_URL
-
-    try:
-        async with civic_client(proxy_url=proxy_url) as client:
-            response = await fetch_with_retry(
+        try:
+            resp = await fetch_with_retry(
                 client,
                 "GET",
                 url,
-                rate_limiter=_rate_limiter,
+                params=params,
+                rate_limiter=_limiter,
             )
-        soup = BeautifulSoup(response.text, "html.parser")
-        rows = _extract_statistics(soup, keyword)
+            html = resp.text
+        except Exception as exc:
+            logger.warning("KSEI securities page fetch error: %s", exc)
+            return []
 
-        if not rows:
-            return [not_found_response(MODULE, url)]
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table")
+    if not table:
+        return []
 
-        return [normalize_search_row(row, source_url=url) for row in rows]
+    results: list[dict[str, Any]] = []
+    rows = table.find_all("tr")[1:]  # Skip header row
 
-    except Exception as exc:
-        logger.exception("KSEI search failed for keyword '%s'", keyword)
-        return [error_response(MODULE, url, detail=str(exc))]
+    for row in rows:
+        cells = row.find_all("td")
+        if len(cells) < 4:
+            continue
+
+        code = cells[0].get_text(strip=True)
+        name = cells[1].get_text(strip=True)
+        sec_type = cells[2].get_text(strip=True)
+        issuer = cells[3].get_text(strip=True)
+
+        results.append({
+            "security_code": code,
+            "security_name": name,
+            "security_type": sec_type,
+            "issuer": issuer,
+            "status": "ACTIVE",
+        })
+
+    return results
 
 
-def _extract_statistics(soup: BeautifulSoup, keyword: str) -> list[dict]:
-    """Extract statistics entries from KSEI pages, filtering by keyword."""
-    rows: list[dict] = []
+async def _fetch_statistics_page(*, proxy_url: str | None = None) -> list[dict[str, Any]]:
+    """Fetch statistics publications page and extract PDF links."""
+    async with civic_client(proxy_url=proxy_url) as client:
+        await _limiter.acquire()
+        url = f"{_BASE}/publications/Data_Statistik_KSEI"
+
+        try:
+            resp = await fetch_with_retry(
+                client,
+                "GET",
+                url,
+                rate_limiter=_limiter,
+            )
+            html = resp.text
+        except Exception as exc:
+            logger.warning("KSEI statistics page fetch error: %s", exc)
+            return []
+
+    soup = BeautifulSoup(html, "html.parser")
+    links = soup.find_all("a", href=re.compile(r"Statistik_Publik.*\.pdf"))
+
+    results: list[dict[str, Any]] = []
+    for link in links:
+        href = link.get("href", "")
+        if not href:
+            continue
+
+        # Extract month and year from filename
+        # Format: Statistik_Publik_January_2026.pdf or Statistik_Publik_Januari_2026.pdf
+        match = re.search(r"Statistik_Publik_(\w+)_(\d{4})\.pdf", href)
+        if match:
+            month = match.group(1)
+            year = match.group(2)
+        else:
+            month = None
+            year = None
+
+        full_url = href if href.startswith("http") else f"{_BASE}{href}"
+
+        results.append({
+            "period": f"{month} {year}" if month and year else None,
+            "month": month,
+            "year": year,
+            "download_url": full_url,
+        })
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+async def fetch(security_code: str, *, proxy_url: str | None = None) -> CivicStackResponse:
+    """Fetch a single security by code."""
+    # Fetch first page and search
+    securities = await _fetch_securities_page(page=1, proxy_url=proxy_url)
+
+    for sec in securities:
+        if sec.get("security_code") == security_code:
+            rec = normalize_security(sec)
+            return CivicStackResponse(
+                result=rec,
+                found=True,
+                status=RecordStatus.ACTIVE,
+                confidence=1.0,
+                source_url=f"{SOURCE_URL}/services/registered-securities/shares",
+                fetched_at=__import__("datetime").datetime.utcnow(),
+                module=MODULE,
+            )
+
+    return not_found_response(module=MODULE, query=security_code, source_url=SOURCE_URL)
+
+
+async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicStackResponse]:
+    """Search securities by keyword (code or name)."""
+    securities = await _fetch_securities_page(page=1, proxy_url=proxy_url)
+
     keyword_lower = keyword.lower()
+    results: list[CivicStackResponse] = []
 
-    # Look for tables with statistics data
-    tables = soup.find_all("table")
-    for table in tables:
-        headers: list[str] = []
-        header_row = table.find("tr")
-        if header_row:
-            for th in header_row.find_all(["th", "td"]):
-                headers.append(th.get_text(strip=True).lower())
+    for sec in securities:
+        code = (sec.get("security_code") or "").lower()
+        name = (sec.get("security_name") or "").lower()
 
-        for tr in table.find_all("tr")[1:]:  # skip header row
-            cells = tr.find_all("td")
-            if not cells:
-                continue
+        if keyword_lower in code or keyword_lower in name:
+            rec = normalize_security(sec)
+            confidence = 1.0 if keyword_lower == code else 0.9 if keyword_lower in code else 0.8
+            results.append(
+                CivicStackResponse(
+                    result=rec,
+                    found=True,
+                    status=RecordStatus.ACTIVE,
+                    confidence=confidence,
+                    source_url=f"{SOURCE_URL}/services/registered-securities/shares",
+                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    module=MODULE,
+                )
+            )
 
-            row: dict[str, str] = {}
-            row_text = ""
+    return results
 
-            for i, cell in enumerate(cells):
-                text = cell.get_text(strip=True)
-                row_text += text.lower() + " "
 
-                if i < len(headers):
-                    row[headers[i]] = text
-                else:
-                    row[f"column_{i}"] = text
+async def get_statistics_links(*, proxy_url: str | None = None) -> list[dict[str, Any]]:
+    """List available monthly statistics PDF URLs."""
+    stats = await _fetch_statistics_page(proxy_url=proxy_url)
+    return [normalize_statistics_link(s) for s in stats]
 
-                # Extract download links
-                link = cell.find("a", href=True)
-                if link:
-                    href = link["href"]
-                    if not href.startswith("http"):
-                        href = f"{KSEI_BASE}{href}"
-                    row["download_url"] = href
 
-            # Filter by keyword
-            if keyword_lower in row_text and row:
-                rows.append(row)
+async def get_latest_statistics_url(*, proxy_url: str | None = None) -> str | None:
+    """Get URL of the most recent statistics PDF."""
+    stats = await _fetch_statistics_page(proxy_url=proxy_url)
+    if not stats:
+        return None
 
-    # Alternative: Look for statistic cards/sections
-    if not rows:
-        stat_sections = soup.find_all(
-            ["div", "section"], {"class": lambda c: c and ("stat" in c or "data" in c)}
-        )
-        for section in stat_sections:
-            section_text = section.get_text(strip=True).lower()
-
-            if keyword_lower in section_text:
-                row: dict[str, str] = {}
-
-                # Extract title
-                title = section.find(["h2", "h3", "h4", "strong"])
-                if title:
-                    row["title"] = title.get_text(strip=True)
-
-                # Extract value/data
-                value = section.find(["span", "p"], {"class": lambda c: c and "value" in c})
-                if value:
-                    row["value"] = value.get_text(strip=True)
-
-                # Extract link
-                link = section.find("a", href=True)
-                if link:
-                    href = link["href"]
-                    if not href.startswith("http"):
-                        href = f"{KSEI_BASE}{href}"
-                    row["download_url"] = href
-
-                if row:
-                    rows.append(row)
-
-    return rows
+    # Sort by year then month (newest first)
+    # Simple heuristic: just take first one (assuming page lists newest first)
+    latest = stats[0] if stats else None
+    return latest.get("download_url") if latest else None

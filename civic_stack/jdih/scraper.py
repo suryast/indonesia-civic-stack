@@ -1,171 +1,257 @@
 """
-JDIH scraper — jdih.bpk.go.id (BPK Legal Documents)
+JDIH scraper — Jaringan Dokumentasi dan Informasi Hukum (Indonesian Legal Database).
 
-🇮🇩 Requires Indonesian proxy — set PROXY_URL env var
+Source: peraturan.go.id (national legal database)
+Method: Playwright scraping — site is JS-rendered, no public API
+Auth:   None required
 
-The portal provides access to legal documents (Peraturan, Keputusan, Monografi)
-from BPK (Badan Pemeriksa Keuangan) via a form-based HTML interface.
-This module uses httpx + BeautifulSoup to fetch and parse results.
-
-Rate limit: ~10 req/min observed. Enforced via RateLimiter.
+Regulation types:
+  - uu: Undang-Undang (Laws)
+  - pp: Peraturan Pemerintah (Government Regulations)
+  - perpres: Peraturan Presiden (Presidential Regulations)
+  - permen: Peraturan Menteri (Ministerial Regulations)
 """
 
 from __future__ import annotations
 
 import logging
-from urllib.parse import quote
+import re
+from typing import Any
 
-from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
 
-from civic_stack.jdih.normalizer import normalize_search_row
-from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
-from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
+from civic_stack.shared.http import RateLimiter
+from civic_stack.shared.schema import (
+    CivicStackResponse,
+    RecordStatus,
+    error_response,
+    not_found_response,
+)
+
+from .normalizer import normalize_regulation
 
 logger = logging.getLogger(__name__)
 
-JDIH_BASE = "https://jdih.bpk.go.id"
-JDIH_SEARCH_URL = f"{JDIH_BASE}/Dokumen/Search"
-
-# Category codes: 1=Peraturan BPK, 2=Keputusan BPK, 5=Monografi, etc.
-CATEGORY_MAP = {
-    "peraturan": 1,
-    "keputusan": 2,
-    "monografi": 5,
-}
-
-# ~10 req/min = ~0.167 req/s; use 0.15 for safety margin
-_rate_limiter = RateLimiter(rate=0.15)
-
+_BASE = "https://peraturan.go.id"
 MODULE = "jdih"
+SOURCE_URL = "https://peraturan.go.id"
+
+_limiter = RateLimiter(rate=0.5)  # Conservative: 0.5 req/s for scraping
 
 
-async def fetch(
-    doc_id: str,
+def _convert_proxy_url(proxy_url: str | None) -> str | None:
+    """Convert socks5h:// to socks5:// for Chromium compatibility."""
+    if not proxy_url:
+        return None
+    if proxy_url.startswith("socks5h://"):
+        return proxy_url.replace("socks5h://", "socks5://")
+    return proxy_url
+
+
+async def _scrape_regulation_detail(
+    regulation_id: str,
     *,
-    debug: bool = False,
     proxy_url: str | None = None,
-) -> CivicStackResponse:
-    """
-    Look up a single JDIH document by document ID or regulation number.
+) -> dict[str, Any] | None:
+    """Scrape single regulation detail page."""
+    await _limiter.acquire()
+    chromium_proxy = _convert_proxy_url(proxy_url)
 
-    Args:
-        doc_id: Document ID or regulation number (e.g. "Nomor 4 Tahun 2025")
-        debug: If True, include raw scraped HTML in the response.
-        proxy_url: Optional proxy URL for IP rotation.
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                proxy={"server": chromium_proxy} if chromium_proxy else None,
+            )
+            page = await browser.new_page()
+            await page.goto(f"{_BASE}/id/{regulation_id}", wait_until="networkidle", timeout=30000)
 
-    Returns:
-        CivicStackResponse with JDIH document details, or NOT_FOUND / ERROR.
-    """
-    # Try to find the document via search
-    results = await search(doc_id, proxy_url=proxy_url)
+            # Extract regulation details from page
+            title_el = await page.query_selector("h1.judul, h1")
+            title = await title_el.inner_text() if title_el else None
 
-    if not results or not results[0].found:
-        return not_found_response(MODULE, f"{JDIH_SEARCH_URL}?keyword={quote(doc_id)}")
+            about_el = await page.query_selector(".tentang, .about")
+            about = await about_el.inner_text() if about_el else None
 
-    # Return first match with debug flag applied
-    result = results[0]
-    if not debug:
-        result.raw = None
-    return result
+            status_el = await page.query_selector(".status")
+            status = await status_el.inner_text() if status_el else "ACTIVE"
+
+            # Extract number and year from regulation_id or title
+            number_match = re.search(r"no-(\d+)", regulation_id)
+            year_match = re.search(r"tahun-(\d{4})", regulation_id)
+            reg_type_match = re.match(r"([a-z]+)-", regulation_id)
+
+            await browser.close()
+
+            if not title:
+                return None
+
+            return {
+                "regulation_id": regulation_id,
+                "regulation_type": reg_type_match.group(1) if reg_type_match else "uu",
+                "number": number_match.group(1) if number_match else None,
+                "year": year_match.group(1) if year_match else None,
+                "title": title.strip() if title else None,
+                "status": status.strip().upper() if status else "ACTIVE",
+                "about": about.strip() if about else None,
+                "full_url": f"{_BASE}/id/{regulation_id}",
+            }
+
+    except Exception as exc:
+        logger.warning("JDIH scraping error for %s: %s", regulation_id, exc)
+        return None
+
+
+async def _scrape_regulation_list(
+    regulation_type: str = "uu",
+    *,
+    limit: int = 20,
+    proxy_url: str | None = None,
+) -> list[dict[str, Any]]:
+    """Scrape list of regulations from listing page."""
+    await _limiter.acquire()
+    chromium_proxy = _convert_proxy_url(proxy_url)
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                proxy={"server": chromium_proxy} if chromium_proxy else None,
+            )
+            page = await browser.new_page()
+            await page.goto(f"{_BASE}/{regulation_type}", wait_until="networkidle", timeout=30000)
+
+            # Extract regulation links
+            links = await page.query_selector_all("a[href*='/id/']")
+            results: list[dict[str, Any]] = []
+
+            for link in links[:limit]:
+                href = await link.get_attribute("href")
+                if not href or "/id/" not in href:
+                    continue
+
+                text = await link.inner_text()
+                regulation_id = href.split("/id/")[-1]
+
+                # Parse from link text (format: "UU No. 1 Tahun 2023 tentang ...")
+                number_match = re.search(r"No\.\s*(\d+)", text)
+                year_match = re.search(r"Tahun\s*(\d{4})", text)
+
+                results.append({
+                    "regulation_id": regulation_id,
+                    "regulation_type": regulation_type,
+                    "number": number_match.group(1) if number_match else None,
+                    "year": year_match.group(1) if year_match else None,
+                    "title": text.strip(),
+                    "status": "ACTIVE",
+                    "about": None,
+                    "full_url": f"{_BASE}{href}" if href.startswith("/") else href,
+                })
+
+                if len(results) >= limit:
+                    break
+
+            await browser.close()
+            return results
+
+    except Exception as exc:
+        logger.warning("JDIH list scraping error for %s: %s", regulation_type, exc)
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+async def fetch(regulation_id: str, *, proxy_url: str | None = None) -> CivicStackResponse:
+    """Fetch a single regulation by ID (e.g. 'uu-no-1-tahun-2023')."""
+    data = await _scrape_regulation_detail(regulation_id, proxy_url=proxy_url)
+
+    if not data:
+        return not_found_response(module=MODULE, query=regulation_id, source_url=SOURCE_URL)
+
+    rec = normalize_regulation(data)
+    return CivicStackResponse(
+        result=rec,
+        found=True,
+        status=RecordStatus.ACTIVE if data.get("status") == "ACTIVE" else RecordStatus.EXPIRED,
+        confidence=1.0,
+        source_url=data.get("full_url", SOURCE_URL),
+        fetched_at=__import__("datetime").datetime.utcnow(),
+        module=MODULE,
+    )
 
 
 async def search(
     keyword: str,
-    category: int = 1,
     *,
     proxy_url: str | None = None,
+    regulation_type: str = "uu",
 ) -> list[CivicStackResponse]:
-    """
-    Search JDIH legal documents by keyword.
+    """Search regulations by keyword. Returns recent matches."""
+    # For now, fetch recent and filter by keyword (no search API available)
+    regulations = await _scrape_regulation_list(
+        regulation_type=regulation_type,
+        limit=50,
+        proxy_url=proxy_url,
+    )
 
-    Args:
-        keyword: Search term (regulation title, number, or content keyword).
-        category: Document category (1=Peraturan, 2=Keputusan, 5=Monografi). Default: 1.
-        proxy_url: Optional proxy URL for IP rotation.
+    keyword_lower = keyword.lower()
+    results: list[CivicStackResponse] = []
 
-    Returns:
-        List of CivicStackResponse objects (may be empty, never raises on not-found).
-    """
-    url = f"{JDIH_SEARCH_URL}?cari={category}&keyword={quote(keyword)}"
+    for reg in regulations:
+        title = (reg.get("title") or "").lower()
+        about = (reg.get("about") or "").lower()
 
-    try:
-        async with civic_client(proxy_url=proxy_url) as client:
-            response = await fetch_with_retry(
-                client,
-                "GET",
-                url,
-                rate_limiter=_rate_limiter,
-            )
-        soup = BeautifulSoup(response.text, "html.parser")
-        rows = _extract_search_rows(soup)
-
-        if not rows:
-            return [not_found_response(MODULE, url)]
-
-        return [normalize_search_row(row, source_url=url) for row in rows]
-
-    except Exception as exc:
-        logger.exception("JDIH search failed for keyword '%s'", keyword)
-        return [error_response(MODULE, url, detail=str(exc))]
-
-
-def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
-    """Extract document entries from JDIH search results."""
-    rows: list[dict] = []
-
-    # JDIH results are typically in a table or list structure
-    # Look for common table patterns
-    table = soup.find("table", {"class": lambda c: c and ("table" in c or "result" in c)})
-    if table:
-        headers: list[str] = []
-        header_row = table.find("tr")
-        if header_row:
-            for th in header_row.find_all(["th", "td"]):
-                headers.append(th.get_text(strip=True).lower())
-
-        for tr in table.find_all("tr")[1:]:  # skip header row
-            cells = tr.find_all("td")
-            if not cells:
-                continue
-
-            row: dict[str, str] = {}
-            for i, cell in enumerate(cells):
-                if i < len(headers):
-                    row[headers[i]] = cell.get_text(strip=True)
-
-                # Extract PDF link if present
-                link = cell.find("a", href=True)
-                if link and link["href"].endswith(".pdf"):
-                    row["pdf_url"] = (
-                        link["href"]
-                        if link["href"].startswith("http")
-                        else f"{JDIH_BASE}{link['href']}"
-                    )
-
-            if row:
-                rows.append(row)
-
-    # Alternative: Look for result divs/cards
-    if not rows:
-        result_items = soup.find_all("div", {"class": lambda c: c and "result" in c})
-        for item in result_items:
-            row: dict[str, str] = {}
-
-            # Extract title
-            title = item.find(["h3", "h4", "strong"])
-            if title:
-                row["title"] = title.get_text(strip=True)
-
-            # Extract link
-            link = item.find("a", href=True)
-            if link:
-                row["pdf_url"] = (
-                    link["href"]
-                    if link["href"].startswith("http")
-                    else f"{JDIH_BASE}{link['href']}"
+        if keyword_lower in title or keyword_lower in about:
+            rec = normalize_regulation(reg)
+            confidence = 1.0 if keyword_lower in title else 0.8
+            results.append(
+                CivicStackResponse(
+                    result=rec,
+                    found=True,
+                    status=RecordStatus.ACTIVE
+                    if reg.get("status") == "ACTIVE"
+                    else RecordStatus.EXPIRED,
+                    confidence=confidence,
+                    source_url=reg.get("full_url", SOURCE_URL),
+                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    module=MODULE,
                 )
+            )
 
-            if row:
-                rows.append(row)
+    return results
 
-    return rows
+
+async def list_recent(
+    regulation_type: str = "uu",
+    *,
+    limit: int = 20,
+    proxy_url: str | None = None,
+) -> list[CivicStackResponse]:
+    """List recent regulations of a specific type."""
+    regulations = await _scrape_regulation_list(
+        regulation_type=regulation_type,
+        limit=limit,
+        proxy_url=proxy_url,
+    )
+
+    results: list[CivicStackResponse] = []
+    for reg in regulations:
+        rec = normalize_regulation(reg)
+        results.append(
+            CivicStackResponse(
+                result=rec,
+                found=True,
+                status=RecordStatus.ACTIVE
+                if reg.get("status") == "ACTIVE"
+                else RecordStatus.EXPIRED,
+                confidence=1.0,
+                source_url=reg.get("full_url", SOURCE_URL),
+                fetched_at=__import__("datetime").datetime.utcnow(),
+                module=MODULE,
+            )
+        )
+
+    return results

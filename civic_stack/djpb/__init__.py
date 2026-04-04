@@ -1,19 +1,18 @@
 """
-modules/djpb — Budget Data scraper.
+modules/djpb — Indonesian Treasury/Budget (DJPB) wrapper.
 
-🇮🇩 Requires Indonesian proxy — set PROXY_URL env var
-
-Source: djpb.kemenkeu.go.id
-Method: httpx + BeautifulSoup (static HTML)
-License: MIT
+Source: data-apbn.kemenkeu.go.id
+Method: REST JSON API
+License: Apache-2.0
 
 Public API:
-    fetch(report_id, *, debug=False, proxy_url=None) -> CivicStackResponse
+    fetch(theme_id, *, proxy_url=None) -> CivicStackResponse
     search(keyword, *, proxy_url=None) -> list[CivicStackResponse]
+    get_budget_summary(*, year=None, proxy_url=None) -> list[CivicStackResponse]
 """
 
 from __future__ import annotations
 
-from civic_stack.djpb.scraper import fetch, search
+from civic_stack.djpb.scraper import fetch, get_budget_summary, search
 
-__all__ = ["fetch", "search"]
+__all__ = ["fetch", "search", "get_budget_summary"]

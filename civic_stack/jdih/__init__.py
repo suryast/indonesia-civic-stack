@@ -1,19 +1,18 @@
 """
-modules/jdih — BPK Legal Documents scraper.
+modules/jdih — Indonesian Legal Database (JDIH) wrapper.
 
-🇮🇩 Requires Indonesian proxy — set PROXY_URL env var
-
-Source: jdih.bpk.go.id
-Method: httpx + BeautifulSoup (static HTML)
-License: MIT
+Source: peraturan.go.id
+Method: Playwright scraping (JS-rendered site, no API)
+License: Apache-2.0
 
 Public API:
-    fetch(doc_id, *, debug=False, proxy_url=None) -> CivicStackResponse
-    search(keyword, category=1, *, proxy_url=None) -> list[CivicStackResponse]
+    fetch(regulation_id, *, proxy_url=None) -> CivicStackResponse
+    search(keyword, *, proxy_url=None, regulation_type="uu") -> list[CivicStackResponse]
+    list_recent(regulation_type="uu", *, limit=20, proxy_url=None) -> list[CivicStackResponse]
 """
 
 from __future__ import annotations
 
-from civic_stack.jdih.scraper import fetch, search
+from civic_stack.jdih.scraper import fetch, list_recent, search
 
-__all__ = ["fetch", "search"]
+__all__ = ["fetch", "search", "list_recent"]
