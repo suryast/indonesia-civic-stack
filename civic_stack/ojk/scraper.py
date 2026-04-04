@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 # investor.ojk.go.id is also DNS-dead.
 # Waspada list moved to sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative
 OJK_PORTAL_BASE = "https://www.ojk.go.id"
-OJK_WASPADA_URL = "https://sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative"
-OJK_WASPADA_LIST_URL = "https://emiten.ojk.go.id/Satgas/AlertPortal/IndexAlertPortal"
+OJK_WASPADA_URL = "https://www.ojk.go.id/waspada-investasi/id/alert-portal/Pages/default.aspx"
+# emiten.ojk.go.id is WAF-blocked since April 2026; use the new portal
+OJK_WASPADA_LIST_URL = "https://www.ojk.go.id/waspada-investasi/id/alert-portal/Pages/default.aspx"
 
 MODULE = "ojk"
 _rate_limiter = RateLimiter(rate=0.5)  # OJK portal is slow — 30 req/min
