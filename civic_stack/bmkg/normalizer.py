@@ -54,6 +54,24 @@ def normalize_earthquake(raw: dict[str, Any]) -> dict[str, Any]:
         with contextlib.suppress(ValueError):
             out["depth_km"] = float(depth_str)
 
+    # Extract event_date from datetime_utc (ISO 8601)
+    if "datetime_utc" in out and not out.get("event_date"):
+        dt_str = str(out["datetime_utc"])
+        # Handle ISO 8601: "2026-04-04T11:21:11+00:00" → "2026-04-04"
+        if len(dt_str) >= 10:
+            out["event_date"] = dt_str[:10]
+
+    # Build a stable event_id from datetime + coordinates
+    if not out.get("event_id"):
+        dt_part = str(out.get("datetime_utc", "")).replace(":", "").replace("-", "").replace("T", "")[:14]
+        coord_part = str(out.get("coordinates", "")).replace(",", "_")
+        if dt_part:
+            out["event_id"] = f"bmkg-{dt_part}-{coord_part}"
+
+    # Map disaster_type (always earthquake for this normalizer)
+    if "disaster_type" not in out:
+        out["disaster_type"] = "Gempa Bumi"
+
     # Determine tsunami flag from potential text
     potential = str(out.get("tsunami_potential", "")).upper()
     out["tsunami_warning"] = "TSUNAMI" in potential and "TIDAK" not in potential
