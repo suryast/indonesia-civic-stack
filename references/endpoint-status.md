@@ -1,6 +1,6 @@
 # Endpoint Status — Living Document
 
-> Last verified: 2026-03-15
+> Last verified: 2026-04-04
 
 ## Active Endpoints
 
@@ -11,7 +11,10 @@
 | **BPS** | `webapi.bps.go.id/v1/api/list/model/statictable/...` | ✅ Active | Requires `BPS_API_KEY` (free registration) |
 | **OJK** | `emiten.ojk.go.id/Satgas/AlertPortal/IndexAlertPortal` | ✅ Active | 11,383 illegal entities, ID IP required |
 | **OJK** | `www.ojk.go.id/id/berita-dan-kegiatan/siaran-pers` | ✅ Active | Press releases, ID IP required |
-| **OJK** | `www.ojk.go.id/id/kanal/perbankan/data-dan-statistik/Pages/Direktori.aspx` | ✅ Active | Licensed institutions, ID IP required |
+| **OJK** | `www.ojk.go.id/id/kanal/perbankan/data-dan-statistik/Pages/Direktori.aspx` | ❌ Dead | Returns 404 since ~2026-03 |
+| **OJK** | `ojk.go.id/id/kanal/iknb/data-dan-statistik/direktori/asuransi/default.aspx` | ✅ Active | SharePoint directory → quarterly ASPX pages → Excel downloads. CF proxy required (geo-block). |
+| **OJK** | `ojk.go.id/id/kanal/iknb/data-dan-statistik/direktori/dana-pensiun/default.aspx` | ✅ Active | SharePoint directory → monthly ASPX pages → Excel downloads. CF proxy required. |
+| **OJK** | `ojk.go.id/id/kanal/iknb/data-dan-statistik/direktori/fintech/default.aspx` | ✅ Active | Fintech lending directory. CF proxy required. |
 | **AHU** | `ahu.go.id` | ✅ Active | JS-rendered (Playwright required), SEA+ IP |
 | **LHKPN** | `elhkpn.kpk.go.id/portal/user/login#announ` | ⚠️ Degraded | reCAPTCHA v3 on search, SEA+ IP |
 | **KPK** | `www.kpk.go.id/id/publikasi-data/statistik` | ✅ Active | Moved from `/id/statistik/penindakan` |
@@ -26,8 +29,10 @@
 | Endpoint | Died | Was | Replacement |
 |----------|------|-----|-------------|
 | `api.ojk.go.id` | ~2026-03 | REST API (`/v1/lembaga/pencarian`) | Portal pages on `www.ojk.go.id` |
+| `www.ojk.go.id/.../Direktori.aspx` | ~2026-03 | Perbankan directory page | No direct replacement — use IKNB sub-directories |
 | `investor.ojk.go.id` | ~2026-03 | `/InvestorAlert/getList` JSON API | `emiten.ojk.go.id/Satgas/AlertPortal/IndexAlertPortal` |
 | `sikapiuangmu.ojk.go.id/FrontEnd/Waspada/GetData` | ~2026-03 | DataTables JSON endpoint | Redirects to OJK SharePoint page |
+| `sikapiuangmu.ojk.go.id/FrontEnd/AlertPortal/Negative` | ~2026-04 | Negative alert portal | Returns 403 even via proxy (different host) |
 | `www.kpk.go.id/id/statistik/penindakan` | ~2026-03 | KPK prosecution stats | `/id/publikasi-data/statistik` |
 | `lpse.pu.go.id` | ~2026-03 | Ministry of Public Works LPSE | DNS dead |
 
