@@ -146,17 +146,17 @@ sequenceDiagram
 |--------|--------|------|:-----:|--------|
 | [`bpom`](civic_stack/bpom/) | cekbpom.pom.go.id | Food, drug, cosmetic registrations | 🌐 | ✅ Active |
 | [`bpjph`](civic_stack/bpjph/) | cmsbl.halal.go.id | Halal certificates (1.98M+ records) | 🌐 | ✅ Active — migrated to REST API (v1.0.0) |
-| [`ahu`](civic_stack/ahu/) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | 🌐 | ✅ Active |
-| [`ojk`](civic_stack/ojk/) | www.ojk.go.id + sikapiuangmu.ojk.go.id | Licensed financial institutions + Waspada list | 🇮🇩 | ✅ Active — dead endpoints removed (v1.0.0) |
-| [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | 🌐 | ✅ Active |
+| [`ahu`](civic_stack/ahu/) | ahu.go.id | Company registry — PT, CV, Yayasan, Koperasi | 🇮🇩 | ⚠️ Page restructured — search input changed (Apr 2026) |
+| [`ojk`](civic_stack/ojk/) | www.ojk.go.id/waspada-investasi | Licensed financial institutions + Waspada list | 🇮🇩 | ⚠️ Portal migrated to SharePoint (Apr 2026) — scraper needs rewrite |
+| [`oss_nib`](civic_stack/oss_nib/) | oss.go.id | Business identity (NIB) | 🇮🇩 | ⚠️ Page restructured — Playwright can't find inputs (Apr 2026) |
 | [`lpse`](civic_stack/lpse/) | spse.inaproc.id | Government procurement | 🇮🇩 | ✅ Active — un-deprecated (v1.0.0) |
 | [`kpu`](civic_stack/kpu/) | infopemilu.kpu.go.id | Election data — candidates, results, finance | 🌐 | ✅ Active |
 | [`bps`](civic_stack/bps/) | webapi.bps.go.id | Statistical datasets (1,000+) | 🌐 | ✅ Active (requires `BPS_API_KEY`) |
 | [`bmkg`](civic_stack/bmkg/) | data.bmkg.go.id | Weather, earthquake, and disaster data | 🌐 | ✅ Active |
 | [`simbg`](civic_stack/simbg/) | simbg.pu.go.id | Building permits (PBG) — multi-portal | 🌐 | ✅ Active |
-| [`jdih`](civic_stack/jdih/) | jdih.bpk.go.id | BPK legal documents & audit reports | 🇮🇩 | ✅ **New in v1.0.0** |
-| [`ksei`](civic_stack/ksei/) | ksei.co.id | Securities & investor statistics | 🇮🇩 | ✅ **New in v1.0.0** |
-| [`djpb`](civic_stack/djpb/) | djpb.kemenkeu.go.id | APBN budget execution data | 🇮🇩 | ✅ **New in v1.0.0** |
+| [`jdih`](civic_stack/jdih/) | peraturan.go.id | National legal database — UU, PP, Perpres, Permen | 🇮🇩 | ✅ **New** — Playwright scraping |
+| [`ksei`](civic_stack/ksei/) | web.ksei.co.id | Securities statistics (62 monthly PDFs) + registered securities | 🌐 | ✅ **New** — HTML scraping (no proxy needed) |
+| [`djpb`](civic_stack/djpb/) | data-apbn.kemenkeu.go.id | APBN budget themes — target/realization/achievement | 🇮🇩 | ✅ **New** — clean REST JSON API |
 | [`lhkpn`](civic_stack/lhkpn/) | elhkpn.kpk.go.id | Wealth declarations (officials) | — | ✅ Active — reCAPTCHA v3 solved via Playwright |
 
 🌐 = works globally &nbsp; 🇮🇩 = requires Indonesian proxy (set `PROXY_URL`)
@@ -169,17 +169,17 @@ Every module returns the same `CivicStackResponse` envelope — swap data source
 |--------|:-------:|:----------:|:---:|:-----:|:------------:|
 | bpom | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bpjph | ✅ | ✅ | ✅ | ✅ | ✅ REST API |
-| ahu | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ojk | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
-| oss_nib | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ahu | ✅ | ✅ | ✅ | ✅ | ⚠️ page restructured |
+| ojk | ✅ | ✅ | ✅ | ✅ | ⚠️ SharePoint migration |
+| oss_nib | ✅ | ✅ | ✅ | ✅ | ⚠️ page restructured |
 | lpse | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
 | kpu | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bps | ✅ | ✅ | ✅ | ✅ | ✅ |
 | bmkg | ✅ | ✅ | ✅ | ✅ | ✅ |
 | simbg | ✅ | ✅ | ✅ | ✅ | ✅ |
-| jdih | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
-| ksei | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
-| djpb | ✅ | ✅ | ✅ | ✅ | 🇮🇩 geo-blocked |
+| jdih | ✅ | ✅ | ❌ | ❌ | 🇮🇩 Playwright |
+| ksei | ✅ | ✅ | ❌ | ❌ | ✅ (no proxy needed) |
+| djpb | ✅ | ✅ | ❌ | ❌ | ✅ REST JSON API |
 | lhkpn | ✅ | ✅ | ✅ | ✅ | ✅ Active (Playwright) |
 
 ---
