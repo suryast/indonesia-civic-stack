@@ -85,7 +85,7 @@ jobs:
           enable-cache: true
       - run: uv sync --locked --extra dev --extra api --extra browser
       - run: uv run python scripts/export_openapi.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: openapi-spec
           path: docs/openapi.json
