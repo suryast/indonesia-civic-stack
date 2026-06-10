@@ -11,9 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml .
-COPY shared/ ./shared/
-COPY modules/bpjph/ ./modules/bpjph/
-COPY modules/__init__.py ./modules/__init__.py
+COPY civic_stack/ ./civic_stack/
 
 RUN pip install --no-cache-dir httpx "beautifulsoup4>=4.12" playwright fastapi uvicorn fastmcp pydantic
 
@@ -22,4 +20,4 @@ RUN playwright install chromium
 
 EXPOSE 8000
 
-CMD ["uvicorn", "modules.bpjph.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "civic_stack.bpjph.app:app", "--host", "0.0.0.0", "--port", "8000"]

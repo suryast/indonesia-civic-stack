@@ -26,7 +26,7 @@ from typing import Any
 # Ensure repo root is on the path when running as a script
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from shared.schema import CivicStackResponse, RecordStatus
+from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
 # Registry of available modules and their smoke-test queries.
 MODULE_REGISTRY: dict[str, dict[str, Any]] = {
@@ -116,7 +116,7 @@ async def test_module(module_name: str, config: dict[str, Any], live: bool) -> M
     result = ModuleResult(module=module_name)
 
     try:
-        mod = importlib.import_module(f"modules.{module_name}")
+        mod = importlib.import_module(f"civic_stack.{module_name}")
     except ImportError as exc:
         result.error = f"Import failed: {exc}"
         return result

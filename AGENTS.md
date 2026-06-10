@@ -10,11 +10,11 @@
 
 ```
 indonesia-civic-stack/
-├── shared/              # Core shared code (DO NOT break these)
-│   ├── schema.py        # CivicStackResponse — the universal envelope
-│   ├── http.py          # civic_client(), fetch_with_retry(), proxy support
-│   └── mcp.py           # CivicStackMCPBase — base class for MCP servers
-├── modules/             # One directory per government portal
+├── civic_stack/         # The installable package
+│   ├── shared/          # Core shared code (DO NOT break these)
+│   │   ├── schema.py    # CivicStackResponse — the universal envelope
+│   │   ├── http.py      # civic_client(), fetch_with_retry(), proxy support
+│   │   └── mcp.py       # CivicStackMCPBase — base class for MCP servers
 │   ├── bpom/            # Example module (Food & Drug registry)
 │   │   ├── scraper.py   # fetch() + search() — core logic
 │   │   ├── normalizer.py # Raw HTML/JSON → structured dict
@@ -23,7 +23,7 @@ indonesia-civic-stack/
 │   │   ├── app.py       # FastAPI app entry point
 │   │   ├── Dockerfile
 │   │   └── README.md
-│   └── ... (11 modules total)
+│   └── ... (one directory per government portal)
 ├── proxy/               # CF Worker proxy for geo-blocked portals
 ├── tests/               # VCR-based tests (no live portal calls in CI)
 └── app.py               # Unified FastAPI app (all modules)
@@ -82,7 +82,7 @@ return not_found_response("bpom", url)
 
 ## Critical Rules
 
-1. **Never break `shared/`** — all 11 modules depend on schema.py, http.py, mcp.py
+1. **Never break `civic_stack/shared/`** — all 11 modules depend on schema.py, http.py, mcp.py
 2. **Never hit live portals in tests** — use VCR cassettes (`tests/<module>/cassettes/`)
 3. **Always return CivicStackResponse** — never return raw dicts or raise on not-found
 4. **Rate limiting is mandatory** — every scraper must use `RateLimiter` from civic_stack.shared.http
@@ -95,7 +95,7 @@ return not_found_response("bpom", url)
 pytest -v                    # All tests (VCR replay, no live calls)
 pytest tests/bpom/ -v        # Single module
 ruff check .                 # Lint
-mypy shared/                 # Type check
+mypy civic_stack/            # Type check
 ```
 
 ## Adding a New Module

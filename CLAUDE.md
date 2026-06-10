@@ -8,7 +8,7 @@ The unified server (`server.py`) registers all tools from all 11 modules in one 
 ## Quick Context
 
 This is a Python SDK for Indonesian government data. 11 modules, each wrapping a gov portal.
-Shared layer in `shared/`. Tests use VCR (no live calls). All async, Pydantic v2, Python 3.11+.
+Shared layer in `civic_stack/shared/`. Tests use VCR (no live calls). All async, Pydantic v2, Python 3.11+.
 
 ## Before Writing Code
 
@@ -28,7 +28,7 @@ pytest tests/<module>/ -v
 ruff check . && ruff format --check .
 
 # Type check
-mypy shared/ civic_stack/
+mypy civic_stack/
 
 # Run unified MCP server (40 tools)
 python server.py
@@ -37,7 +37,7 @@ python server.py
 python -m civic_stack.bpom.server
 
 # Run single module REST API
-uvicorn modules.bpom.app:app --port 8001
+uvicorn civic_stack.bpom.app:app --port 8001
 
 # Run unified REST API
 uvicorn app:app --port 8000
@@ -54,7 +54,7 @@ python -c "import asyncio; from server import mcp; print(asyncio.run(mcp.list_to
 - Create raw `httpx.AsyncClient` — use `civic_client()`
 - Raise exceptions from `search()` — return `error_response()` envelope
 - Hit live portals in tests — record VCR cassettes
-- Modify `shared/schema.py` without checking all 11 modules
+- Modify `civic_stack/shared/schema.py` without checking all 11 modules
 - Remove proxy_url parameter from any function signature
 - Use `print()` — use `logger` from `logging`
 

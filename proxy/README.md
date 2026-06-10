@@ -23,7 +23,7 @@ curl "https://your-proxy.workers.dev/?url=https://data.bmkg.go.id/DataMKG/TEWS/a
 
 # With the SDK — set PROXY_URL and it auto-detects *.workers.dev as rewrite mode
 export PROXY_URL="https://your-proxy.workers.dev"
-python -c "from modules.bmkg.scraper import get_latest_earthquake; ..."
+python -c "from civic_stack.bmkg.scraper import get_latest_earthquake; ..."
 ```
 
 The SDK auto-detects `*.workers.dev` URLs as rewrite-mode proxies. All HTTP requests
