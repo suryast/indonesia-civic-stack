@@ -66,7 +66,8 @@ async def _get(
         await _limiter.acquire()
         resp = await client.get(url, params=full_params, timeout=15.0)
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("BPS API error %s: %s", endpoint, exc)
         return None

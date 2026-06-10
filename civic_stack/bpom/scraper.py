@@ -123,7 +123,7 @@ async def search(
 def _extract_search_rows(soup: BeautifulSoup) -> list[dict]:
     """Extract rows from a BPOM search results table."""
     rows: list[dict] = []
-    table = soup.find("table", {"class": lambda c: c and "table" in c})
+    table = soup.find("table", {"class": lambda c: bool(c and "table" in c)})
     if not table:
         return rows
 

@@ -103,3 +103,7 @@ warn_unused_configs = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[[tool.mypy.overrides]]
+module = ["pdfplumber.*", "anthropic.*", "camoufox.*"]
+ignore_missing_imports = true

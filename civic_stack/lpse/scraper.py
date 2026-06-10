@@ -116,7 +116,8 @@ async def _search_portal(
             logger.warning("Portal %s returned 403 (CF challenge?)", portal["name"])
             return None
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("Portal %s unreachable: %s", portal["name"], exc)
         return None

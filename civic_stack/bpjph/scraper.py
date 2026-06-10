@@ -187,13 +187,13 @@ def _extract_records(data: Any) -> list[dict]:
     if isinstance(data, dict):
         for key in ("data", "results", "records", "items"):
             if key in data and isinstance(data[key], list):
-                return data[key]
+                return list(data[key])
         # Some responses nest under data.data
         if "data" in data and isinstance(data["data"], dict):
             inner = data["data"]
             for key in ("data", "results", "records"):
                 if key in inner and isinstance(inner[key], list):
-                    return inner[key]
+                    return list(inner[key])
     return []
 
 

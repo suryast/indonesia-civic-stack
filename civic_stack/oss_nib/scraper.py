@@ -11,10 +11,14 @@ The portal is generally more stable than AHU/BPJPH for IP blocking.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from civic_stack.bpjph.browser import new_page, wait_for_results
 from civic_stack.oss_nib.normalizer import normalize_nib_page, normalize_search_results
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
+
+if TYPE_CHECKING:
+    from playwright.async_api import ElementHandle, Page
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +111,7 @@ async def search(
         return [error_response(MODULE, url, detail=str(exc))]
 
 
-async def _find_search_input(page: object) -> object | None:
+async def _find_search_input(page: Page) -> ElementHandle | None:
     for sel in [
         "input[placeholder*='NIB']",
         "input[placeholder*='nama']",
@@ -115,7 +119,7 @@ async def _find_search_input(page: object) -> object | None:
         "input[type='search']",
         "input[type='text']:first-of-type",
     ]:
-        el = await page.query_selector(sel)  # type: ignore[attr-defined]
+        el = await page.query_selector(sel)
         if el:
             return el
     return None

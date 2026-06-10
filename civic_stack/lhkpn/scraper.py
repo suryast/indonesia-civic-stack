@@ -192,7 +192,8 @@ async def _post_json(
         await _limiter.acquire()
         resp = await client.post(url, json=payload, timeout=20.0)
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("LHKPN request failed %s: %s", url, exc)
         return None
@@ -305,7 +306,8 @@ def _extract_pdf_claude_vision(pdf_bytes: bytes) -> dict[str, Any]:
         raw_text = raw_text.split("```")[1]
         if raw_text.startswith("json"):
             raw_text = raw_text[4:]
-    return json.loads(raw_text)
+    parsed: dict[str, Any] = json.loads(raw_text)
+    return parsed
 
 
 def extract_pdf(pdf_bytes: bytes) -> dict[str, Any]:

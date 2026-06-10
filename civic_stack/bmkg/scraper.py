@@ -84,7 +84,8 @@ async def _get_json(
         await _limiter.acquire()
         resp = await client.get(url, params=params, timeout=15.0)
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("BMKG request failed %s: %s", url, exc)
         return None

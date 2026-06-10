@@ -116,7 +116,7 @@ async def _fetch_statistics_page(*, proxy_url: str | None = None) -> list[dict[s
 
     results: list[dict[str, Any]] = []
     for link in links:
-        href = link.get("href", "")
+        href = str(link.get("href") or "")
         if not href:
             continue
 
