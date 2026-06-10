@@ -1,83 +1,74 @@
 """
-Tests for the JDIH module — monkeypatched HTTP responses (no live API calls).
+Tests for the JDIH module — monkeypatched Playwright scrape layer.
+
+The scraper drives peraturan.go.id with Playwright (JS-rendered, no API);
+tests stub _scrape_regulation_list()/_scrape_regulation_detail() and
+exercise the public fetch()/search()/list_recent() semantics on top.
 """
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
 import pytest
 
-from civic_stack.jdih.scraper import fetch, search
+from civic_stack.jdih.scraper import fetch, list_recent, search
 from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
-# Mock HTML response for a found document
-FOUND_HTML = """
-<html>
-<body>
-<table class="table">
-<tr><th>Judul</th><th>Nomor</th><th>Tahun</th><th>Link</th></tr>
-<tr>
-    <td>Peraturan BPK tentang Audit APBN</td>
-    <td>Nomor 4 Tahun 2025</td>
-    <td>2025</td>
-    <td><a href="/doc/peraturan-4-2025.pdf">Download PDF</a></td>
-</tr>
-</table>
-</body>
-</html>
-"""
+REGULATIONS = [
+    {
+        "regulation_id": "uu-no-1-tahun-2023",
+        "regulation_type": "uu",
+        "number": "1",
+        "year": "2023",
+        "title": "UU No. 1 Tahun 2023 tentang Kitab Undang-Undang Hukum Pidana",
+        "status": "ACTIVE",
+        "about": None,
+        "full_url": "https://peraturan.go.id/id/uu-no-1-tahun-2023",
+    },
+    {
+        "regulation_id": "uu-no-27-tahun-2022",
+        "regulation_type": "uu",
+        "number": "27",
+        "year": "2022",
+        "title": "UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi",
+        "status": "ACTIVE",
+        "about": None,
+        "full_url": "https://peraturan.go.id/id/uu-no-27-tahun-2022",
+    },
+]
 
-# Mock HTML response for not found
-NOT_FOUND_HTML = """
-<html>
-<body>
-<p>Tidak ada hasil yang ditemukan</p>
-</body>
-</html>
-"""
+DETAIL = {
+    "regulation_id": "uu-no-1-tahun-2023",
+    "regulation_type": "uu",
+    "number": "1",
+    "year": "2023",
+    "title": "Kitab Undang-Undang Hukum Pidana",
+    "status": "ACTIVE",
+    "about": "Pembaruan hukum pidana nasional",
+    "full_url": "https://peraturan.go.id/id/uu-no-1-tahun-2023",
+}
 
-# Mock HTML response for search results
-SEARCH_RESULTS_HTML = """
-<html>
-<body>
-<table class="table">
-<tr><th>Judul</th><th>Nomor</th><th>Tahun</th><th>Link</th></tr>
-<tr>
-    <td>Peraturan BPK tentang Audit APBN</td>
-    <td>Nomor 4 Tahun 2025</td>
-    <td>2025</td>
-    <td><a href="/doc/peraturan-4-2025.pdf">Download PDF</a></td>
-</tr>
-<tr>
-    <td>Keputusan BPK tentang Audit Daerah</td>
-    <td>Nomor 5 Tahun 2025</td>
-    <td>2025</td>
-    <td><a href="/doc/keputusan-5-2025.pdf">Download PDF</a></td>
-</tr>
-</table>
-</body>
-</html>
-"""
+
+@pytest.fixture
+def mock_scrape(monkeypatch):
+    async def _mock_list(regulation_type="uu", *, limit=20, proxy_url=None):
+        return REGULATIONS[:limit]
+
+    async def _mock_detail(regulation_id, *, proxy_url=None):
+        if regulation_id == DETAIL["regulation_id"]:
+            return DETAIL
+        return None
+
+    monkeypatch.setattr("civic_stack.jdih.scraper._scrape_regulation_list", _mock_list)
+    monkeypatch.setattr("civic_stack.jdih.scraper._scrape_regulation_detail", _mock_detail)
 
 
 @pytest.mark.asyncio
-async def test_search_found(monkeypatch):
-    """Test search returns results when documents are found."""
-
-    # Mock the fetch_with_retry function
-    mock_response = AsyncMock()
-    mock_response.text = SEARCH_RESULTS_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.jdih.scraper.fetch_with_retry", mock_fetch)
-
-    results = await search("audit", category=1)
+async def test_search_found(mock_scrape):
+    """search() filters the scraped listing by keyword in title."""
+    results = await search("hukum pidana")
 
     assert isinstance(results, list)
-    assert len(results) == 2
+    assert len(results) == 1
     assert all(isinstance(r, CivicStackResponse) for r in results)
 
     first = results[0]
@@ -85,63 +76,37 @@ async def test_search_found(monkeypatch):
     assert first.module == "jdih"
     assert first.status == RecordStatus.ACTIVE
     assert first.result is not None
-    assert "title" in first.result or "judul" in first.result
+    assert first.result["regulation_id"] == "uu-no-1-tahun-2023"
+    assert first.confidence == 1.0
 
 
 @pytest.mark.asyncio
-async def test_search_not_found(monkeypatch):
-    """Test search returns NOT_FOUND when no documents match."""
-
-    mock_response = AsyncMock()
-    mock_response.text = NOT_FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.jdih.scraper.fetch_with_retry", mock_fetch)
-
-    results = await search("nonexistent")
+async def test_search_not_found(mock_scrape):
+    """search() returns an empty list when no titles match."""
+    results = await search("nonexistent keyword")
 
     assert isinstance(results, list)
-    assert len(results) == 1
-    assert results[0].found is False
-    assert results[0].status == RecordStatus.NOT_FOUND
+    assert results == []
 
 
 @pytest.mark.asyncio
-async def test_fetch_found(monkeypatch):
-    """Test fetch returns document when found via search."""
-
-    mock_response = AsyncMock()
-    mock_response.text = FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.jdih.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Nomor 4 Tahun 2025")
+async def test_fetch_found(mock_scrape):
+    """fetch() returns the regulation detail by ID."""
+    resp = await fetch("uu-no-1-tahun-2023")
 
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is True
     assert resp.module == "jdih"
     assert resp.status == RecordStatus.ACTIVE
     assert resp.result is not None
+    assert resp.result["about"] == "Pembaruan hukum pidana nasional"
+    assert resp.source_url == DETAIL["full_url"]
 
 
 @pytest.mark.asyncio
-async def test_fetch_not_found(monkeypatch):
-    """Test fetch returns NOT_FOUND when document doesn't exist."""
-
-    mock_response = AsyncMock()
-    mock_response.text = NOT_FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.jdih.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Nomor 999 Tahun 1999")
+async def test_fetch_not_found(mock_scrape):
+    """fetch() returns a NOT_FOUND envelope for an unknown regulation ID."""
+    resp = await fetch("uu-no-999-tahun-1999")
 
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is False
@@ -149,18 +114,19 @@ async def test_fetch_not_found(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_response_json_serializable(monkeypatch):
+async def test_list_recent(mock_scrape):
+    """list_recent() wraps every scraped regulation in an envelope."""
+    results = await list_recent("uu", limit=20)
+
+    assert len(results) == 2
+    assert all(r.found for r in results)
+    assert results[1].result["regulation_id"] == "uu-no-27-tahun-2022"
+
+
+@pytest.mark.asyncio
+async def test_response_json_serializable(mock_scrape):
     """CivicStackResponse must be JSON-serialisable for MCP tool returns."""
-
-    mock_response = AsyncMock()
-    mock_response.text = FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.jdih.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Nomor 4 Tahun 2025")
+    resp = await fetch("uu-no-1-tahun-2023")
 
     data = resp.model_dump(mode="json")
     assert isinstance(data["fetched_at"], str)

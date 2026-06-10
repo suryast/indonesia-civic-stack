@@ -1,34 +1,47 @@
 """
-Tests for the KSEI module — monkeypatched HTTP responses (no live API calls).
+Tests for the KSEI module — monkeypatched HTTP responses (no live calls).
+
+The scraper fetches server-rendered HTML from web.ksei.co.id via
+fetch_with_retry(); tests stub that boundary with realistic HTML so the
+BeautifulSoup parsing paths are exercised too.
 """
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
 import pytest
 
-from civic_stack.ksei.scraper import fetch, search
+from civic_stack.ksei.scraper import (
+    fetch,
+    get_latest_statistics_url,
+    get_statistics_links,
+    search,
+)
 from civic_stack.shared.schema import CivicStackResponse, RecordStatus
 
-# Mock HTML response for statistics page with data
-FOUND_HTML = """
+# Securities listing table: code | name | type | issuer (≥4 cells per row)
+SECURITIES_HTML = """
 <html>
 <body>
 <table class="table">
-<tr><th>Periode</th><th>Jumlah Investor</th><th>Download</th></tr>
+<tr><th>Kode</th><th>Nama Efek</th><th>Jenis</th><th>Penerbit</th></tr>
 <tr>
-    <td>Januari 2025</td>
-    <td>12,500,000</td>
-    <td><a href="/stats/jan-2025.pdf">Download</a></td>
+    <td>BBCA</td>
+    <td>Bank Central Asia Tbk</td>
+    <td>Saham</td>
+    <td>PT Bank Central Asia Tbk</td>
+</tr>
+<tr>
+    <td>BBRI</td>
+    <td>Bank Rakyat Indonesia (Persero) Tbk</td>
+    <td>Saham</td>
+    <td>PT Bank Rakyat Indonesia (Persero) Tbk</td>
 </tr>
 </table>
 </body>
 </html>
 """
 
-# Mock HTML response for not found
-NOT_FOUND_HTML = """
+EMPTY_HTML = """
 <html>
 <body>
 <p>Data tidak tersedia</p>
@@ -36,44 +49,34 @@ NOT_FOUND_HTML = """
 </html>
 """
 
-# Mock HTML response for search results
-SEARCH_RESULTS_HTML = """
+STATISTICS_HTML = """
 <html>
 <body>
-<table class="table">
-<tr><th>Periode</th><th>Kategori</th><th>Nilai</th><th>Download</th></tr>
-<tr>
-    <td>Januari 2025</td>
-    <td>Statistik Investor</td>
-    <td>12,500,000</td>
-    <td><a href="/stats/investor-jan-2025.pdf">Download</a></td>
-</tr>
-<tr>
-    <td>Februari 2025</td>
-    <td>Statistik Investor</td>
-    <td>12,750,000</td>
-    <td><a href="/stats/investor-feb-2025.pdf">Download</a></td>
-</tr>
-</table>
+<a href="/Download/Statistik_Publik_Mei_2026.pdf">Statistik Publik Mei 2026</a>
+<a href="/Download/Statistik_Publik_April_2026.pdf">Statistik Publik April 2026</a>
 </body>
 </html>
 """
 
 
+class _MockResponse:
+    def __init__(self, text: str):
+        self.text = text
+
+
+def _mock_fetch(monkeypatch, html: str) -> None:
+    async def _fetch(*args, **kwargs):
+        return _MockResponse(html)
+
+    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", _fetch)
+
+
 @pytest.mark.asyncio
 async def test_search_found(monkeypatch):
-    """Test search returns results when statistics are found."""
+    """search() matches keyword against security code and name."""
+    _mock_fetch(monkeypatch, SECURITIES_HTML)
 
-    # Mock the fetch_with_retry function
-    mock_response = AsyncMock()
-    mock_response.text = SEARCH_RESULTS_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", mock_fetch)
-
-    results = await search("investor")
+    results = await search("bank")
 
     assert isinstance(results, list)
     assert len(results) == 2
@@ -84,62 +87,54 @@ async def test_search_found(monkeypatch):
     assert first.module == "ksei"
     assert first.status == RecordStatus.ACTIVE
     assert first.result is not None
+    assert first.result["security_code"] == "BBCA"
+    assert first.result["issuer"] == "PT Bank Central Asia Tbk"
+
+
+@pytest.mark.asyncio
+async def test_search_by_code(monkeypatch):
+    """An exact code match gets confidence 1.0."""
+    _mock_fetch(monkeypatch, SECURITIES_HTML)
+
+    results = await search("bbri")
+
+    assert len(results) == 1
+    assert results[0].result["security_code"] == "BBRI"
+    assert results[0].confidence == 1.0
 
 
 @pytest.mark.asyncio
 async def test_search_not_found(monkeypatch):
-    """Test search returns NOT_FOUND when no data matches."""
-
-    mock_response = AsyncMock()
-    mock_response.text = NOT_FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", mock_fetch)
+    """search() returns an empty list when nothing matches."""
+    _mock_fetch(monkeypatch, SECURITIES_HTML)
 
     results = await search("nonexistent")
 
     assert isinstance(results, list)
-    assert len(results) == 1
-    assert results[0].found is False
-    assert results[0].status == RecordStatus.NOT_FOUND
+    assert results == []
 
 
 @pytest.mark.asyncio
 async def test_fetch_found(monkeypatch):
-    """Test fetch returns report when found via search."""
+    """fetch() returns the security matching the code."""
+    _mock_fetch(monkeypatch, SECURITIES_HTML)
 
-    mock_response = AsyncMock()
-    mock_response.text = FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Januari 2025")
+    resp = await fetch("BBCA")
 
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is True
     assert resp.module == "ksei"
     assert resp.status == RecordStatus.ACTIVE
     assert resp.result is not None
+    assert resp.result["security_name"] == "Bank Central Asia Tbk"
 
 
 @pytest.mark.asyncio
 async def test_fetch_not_found(monkeypatch):
-    """Test fetch returns NOT_FOUND when report doesn't exist."""
+    """fetch() returns a NOT_FOUND envelope for an unknown code."""
+    _mock_fetch(monkeypatch, EMPTY_HTML)
 
-    mock_response = AsyncMock()
-    mock_response.text = NOT_FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Nonexistent Report 1999")
+    resp = await fetch("ZZZZ")
 
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is False
@@ -147,18 +142,33 @@ async def test_fetch_not_found(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_statistics_links(monkeypatch):
+    """get_statistics_links() parses monthly PDF links with period info."""
+    _mock_fetch(monkeypatch, STATISTICS_HTML)
+
+    links = await get_statistics_links()
+
+    assert len(links) == 2
+    assert links[0]["statistics_period"] == "Mei 2026"
+    assert links[0]["download_url"].endswith("Statistik_Publik_Mei_2026.pdf")
+
+
+@pytest.mark.asyncio
+async def test_latest_statistics_url(monkeypatch):
+    """get_latest_statistics_url() returns the first (newest) PDF link."""
+    _mock_fetch(monkeypatch, STATISTICS_HTML)
+
+    url = await get_latest_statistics_url()
+
+    assert url == "https://web.ksei.co.id/Download/Statistik_Publik_Mei_2026.pdf"
+
+
+@pytest.mark.asyncio
 async def test_response_json_serializable(monkeypatch):
     """CivicStackResponse must be JSON-serialisable for MCP tool returns."""
+    _mock_fetch(monkeypatch, SECURITIES_HTML)
 
-    mock_response = AsyncMock()
-    mock_response.text = FOUND_HTML
-
-    async def mock_fetch(*args, **kwargs):
-        return mock_response
-
-    monkeypatch.setattr("civic_stack.ksei.scraper.fetch_with_retry", mock_fetch)
-
-    resp = await fetch("Januari 2025")
+    resp = await fetch("BBCA")
 
     data = resp.model_dump(mode="json")
     assert isinstance(data["fetched_at"], str)
