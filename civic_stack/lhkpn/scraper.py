@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Any
 
@@ -29,7 +30,7 @@ from civic_stack.shared.schema import (
     not_found_response,
 )
 
-from .normalizer import normalize_declaration, normalize_search_result
+from .normalizer import normalize_declaration
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ _limiter = RateLimiter(rate=0.25)
 # Playwright-based reCAPTCHA v3 solver + search
 # ---------------------------------------------------------------------------
 
+
 async def _playwright_search(
     name: str,
     year: str = "",
@@ -58,7 +60,7 @@ async def _playwright_search(
     """
     Use Playwright to load the LHKPN portal, solve reCAPTCHA v3, submit
     the announcement search form, and parse the results table.
-    
+
     Table columns (14 cells per row, some hidden):
       [0] hidden hash, [1] hidden ID, [2] hidden, [3] hidden year,
       [4] hidden flag, [5] No., [6] Nama, [7] Lembaga, [8] Unit Kerja,
@@ -89,7 +91,9 @@ async def _playwright_search(
 
         try:
             await page.goto(
-                _LOGIN_URL, wait_until="domcontentloaded", timeout=30000,
+                _LOGIN_URL,
+                wait_until="domcontentloaded",
+                timeout=30000,
             )
             await page.wait_for_function(
                 "typeof grecaptcha !== 'undefined' && typeof grecaptcha.execute === 'function'",
@@ -137,19 +141,21 @@ async def _playwright_search(
                 if any("belum ada" in t.lower() for t in texts):
                     continue
 
-                results.append({
-                    "report_hash": texts[0],
-                    "report_id": texts[1],
-                    "year": texts[3],
-                    "no": texts[5].rstrip("."),
-                    "nama": texts[6],
-                    "lembaga": texts[7],
-                    "unit_kerja": texts[8],
-                    "jabatan": texts[9],
-                    "tanggal_lapor": texts[10],
-                    "jenis_laporan": texts[11],
-                    "total_harta": texts[12],
-                })
+                results.append(
+                    {
+                        "report_hash": texts[0],
+                        "report_id": texts[1],
+                        "year": texts[3],
+                        "no": texts[5].rstrip("."),
+                        "nama": texts[6],
+                        "lembaga": texts[7],
+                        "unit_kerja": texts[8],
+                        "jabatan": texts[9],
+                        "tanggal_lapor": texts[10],
+                        "jenis_laporan": texts[11],
+                        "total_harta": texts[12],
+                    }
+                )
 
             # Extract download button IDs (base64 encoded report refs)
             download_btns = await page.query_selector_all(".yesdownl[data-id]")
@@ -176,6 +182,7 @@ def _parse_rupiah(text: str) -> int:
 # Internal helpers (httpx-based, for detail/PDF)
 # ---------------------------------------------------------------------------
 
+
 async def _post_json(
     client: httpx.AsyncClient,
     url: str,
@@ -185,7 +192,8 @@ async def _post_json(
         await _limiter.acquire()
         resp = await client.post(url, json=payload, timeout=20.0)
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("LHKPN request failed %s: %s", url, exc)
         return None
@@ -298,7 +306,8 @@ def _extract_pdf_claude_vision(pdf_bytes: bytes) -> dict[str, Any]:
         raw_text = raw_text.split("```")[1]
         if raw_text.startswith("json"):
             raw_text = raw_text[4:]
-    return json.loads(raw_text)
+    parsed: dict[str, Any] = json.loads(raw_text)
+    return parsed
 
 
 def extract_pdf(pdf_bytes: bytes) -> dict[str, Any]:
@@ -361,7 +370,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=0.9,
         source_url=SOURCE_URL,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw={"table_row": best, "all_results_count": len(results)},
     )
@@ -396,7 +405,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                 status=RecordStatus.ACTIVE,
                 confidence=0.8,
                 source_url=SOURCE_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

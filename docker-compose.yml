@@ -25,7 +25,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/bpom/Dockerfile
+      dockerfile: civic_stack/bpom/Dockerfile
     ports:
       - "8001:8000"
     environment:
@@ -36,7 +36,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/bpjph/Dockerfile
+      dockerfile: civic_stack/bpjph/Dockerfile
     ports:
       - "8002:8000"
     environment:
@@ -47,7 +47,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/ahu/Dockerfile
+      dockerfile: civic_stack/ahu/Dockerfile
     ports:
       - "8003:8000"
     environment:
@@ -60,7 +60,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/kpu/Dockerfile
+      dockerfile: civic_stack/kpu/Dockerfile
     ports:
       - "8004:8000"
     environment:
@@ -71,7 +71,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/ojk/Dockerfile
+      dockerfile: civic_stack/ojk/Dockerfile
     ports:
       - "8005:8000"
     environment:
@@ -82,7 +82,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/oss-nib/Dockerfile
+      dockerfile: civic_stack/oss_nib/Dockerfile
     ports:
       - "8006:8000"
     environment:
@@ -93,7 +93,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/lpse/Dockerfile
+      dockerfile: civic_stack/lpse/Dockerfile
     ports:
       - "8007:8000"
     environment:
@@ -106,7 +106,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/lhkpn/Dockerfile
+      dockerfile: civic_stack/lhkpn/Dockerfile
     ports:
       - "8008:8000"
     environment:
@@ -118,7 +118,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/bps/Dockerfile
+      dockerfile: civic_stack/bps/Dockerfile
     ports:
       - "8009:8000"
     environment:
@@ -130,7 +130,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/bmkg/Dockerfile
+      dockerfile: civic_stack/bmkg/Dockerfile
     ports:
       - "8010:8000"
     environment:
@@ -141,7 +141,7 @@ services:
     <<: *module-defaults
     build:
       context: .
-      dockerfile: modules/simbg/Dockerfile
+      dockerfile: civic_stack/simbg/Dockerfile
     ports:
       - "8011:8000"
     environment:

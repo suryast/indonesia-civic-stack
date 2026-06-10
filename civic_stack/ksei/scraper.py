@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import UTC, datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -23,7 +24,6 @@ from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
 from civic_stack.shared.schema import (
     CivicStackResponse,
     RecordStatus,
-    error_response,
     not_found_response,
 )
 
@@ -80,13 +80,15 @@ async def _fetch_securities_page(
         sec_type = cells[2].get_text(strip=True)
         issuer = cells[3].get_text(strip=True)
 
-        results.append({
-            "security_code": code,
-            "security_name": name,
-            "security_type": sec_type,
-            "issuer": issuer,
-            "status": "ACTIVE",
-        })
+        results.append(
+            {
+                "security_code": code,
+                "security_name": name,
+                "security_type": sec_type,
+                "issuer": issuer,
+                "status": "ACTIVE",
+            }
+        )
 
     return results
 
@@ -114,7 +116,7 @@ async def _fetch_statistics_page(*, proxy_url: str | None = None) -> list[dict[s
 
     results: list[dict[str, Any]] = []
     for link in links:
-        href = link.get("href", "")
+        href = str(link.get("href") or "")
         if not href:
             continue
 
@@ -130,12 +132,14 @@ async def _fetch_statistics_page(*, proxy_url: str | None = None) -> list[dict[s
 
         full_url = href if href.startswith("http") else f"{_BASE}{href}"
 
-        results.append({
-            "period": f"{month} {year}" if month and year else None,
-            "month": month,
-            "year": year,
-            "download_url": full_url,
-        })
+        results.append(
+            {
+                "period": f"{month} {year}" if month and year else None,
+                "month": month,
+                "year": year,
+                "download_url": full_url,
+            }
+        )
 
     return results
 
@@ -159,7 +163,7 @@ async def fetch(security_code: str, *, proxy_url: str | None = None) -> CivicSta
                 status=RecordStatus.ACTIVE,
                 confidence=1.0,
                 source_url=f"{SOURCE_URL}/services/registered-securities/shares",
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
 
@@ -187,7 +191,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=f"{SOURCE_URL}/services/registered-securities/shares",
-                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    fetched_at=datetime.now(UTC),
                     module=MODULE,
                 )
             )

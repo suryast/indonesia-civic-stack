@@ -86,7 +86,8 @@ async def run_smoke_test(case: dict, checker: HalalKahChecker) -> tuple[bool, st
 
     return (
         True,
-        f"halal_status={result.halal_status}, bpom_status={result.bpom_status}, mismatch={result.has_mismatch}",
+        f"halal_status={result.halal_status}, bpom_status={result.bpom_status}, "
+        f"mismatch={result.has_mismatch}",
     )
 
 

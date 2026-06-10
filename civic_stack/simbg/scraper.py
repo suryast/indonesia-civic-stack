@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -142,7 +143,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=confidence,
         source_url=SOURCE_URL,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw={"portals_queried": len(PILOT_PORTALS), "national_results": len(national_results)},
     )
@@ -180,7 +181,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                 status=RecordStatus.ACTIVE,
                 confidence=confidence,
                 source_url=SOURCE_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

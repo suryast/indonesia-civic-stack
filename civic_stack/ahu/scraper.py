@@ -13,10 +13,14 @@ Safe rate: ~3 req/min. Lower than BPJPH due to CF Bot Management sensitivity.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from civic_stack.ahu.browser import ahu_page, wait_for_ahu_results
 from civic_stack.ahu.normalizer import normalize_company_page, normalize_search_results
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
+
+if TYPE_CHECKING:
+    from playwright.async_api import ElementHandle, Page
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +140,7 @@ async def search(
 # ── Private helpers ───────────────────────────────────────────────────────────
 
 
-async def _find_search_input(page: object) -> object | None:
+async def _find_search_input(page: Page) -> ElementHandle | None:
     """Try several selectors to find the AHU search input."""
     selectors = [
         "input[placeholder*='nama']",
@@ -149,16 +153,16 @@ async def _find_search_input(page: object) -> object | None:
         ".search-input input",
     ]
     for sel in selectors:
-        el = await page.query_selector(sel)  # type: ignore[attr-defined]
+        el = await page.query_selector(sel)
         if el:
             return el
     return None
 
 
-async def _click_first_result(page: object) -> None:
+async def _click_first_result(page: Page) -> None:
     """Click the first row in the results table to navigate to detail page."""
     try:
-        first_row = await page.query_selector("table tbody tr:first-child")  # type: ignore[attr-defined]
+        first_row = await page.query_selector("table tbody tr:first-child")
         if first_row:
             await first_row.click()
     except Exception:

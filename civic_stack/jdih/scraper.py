@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import UTC, datetime
 from typing import Any
 
 from playwright.async_api import async_playwright
@@ -24,7 +25,6 @@ from civic_stack.shared.http import RateLimiter
 from civic_stack.shared.schema import (
     CivicStackResponse,
     RecordStatus,
-    error_response,
     not_found_response,
 )
 
@@ -137,16 +137,18 @@ async def _scrape_regulation_list(
                 number_match = re.search(r"No\.\s*(\d+)", text)
                 year_match = re.search(r"Tahun\s*(\d{4})", text)
 
-                results.append({
-                    "regulation_id": regulation_id,
-                    "regulation_type": regulation_type,
-                    "number": number_match.group(1) if number_match else None,
-                    "year": year_match.group(1) if year_match else None,
-                    "title": text.strip(),
-                    "status": "ACTIVE",
-                    "about": None,
-                    "full_url": f"{_BASE}{href}" if href.startswith("/") else href,
-                })
+                results.append(
+                    {
+                        "regulation_id": regulation_id,
+                        "regulation_type": regulation_type,
+                        "number": number_match.group(1) if number_match else None,
+                        "year": year_match.group(1) if year_match else None,
+                        "title": text.strip(),
+                        "status": "ACTIVE",
+                        "about": None,
+                        "full_url": f"{_BASE}{href}" if href.startswith("/") else href,
+                    }
+                )
 
                 if len(results) >= limit:
                     break
@@ -178,7 +180,7 @@ async def fetch(regulation_id: str, *, proxy_url: str | None = None) -> CivicSta
         status=RecordStatus.ACTIVE if data.get("status") == "ACTIVE" else RecordStatus.EXPIRED,
         confidence=1.0,
         source_url=data.get("full_url", SOURCE_URL),
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 
@@ -216,7 +218,7 @@ async def search(
                     else RecordStatus.EXPIRED,
                     confidence=confidence,
                     source_url=reg.get("full_url", SOURCE_URL),
-                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    fetched_at=datetime.now(UTC),
                     module=MODULE,
                 )
             )
@@ -249,7 +251,7 @@ async def list_recent(
                 else RecordStatus.EXPIRED,
                 confidence=1.0,
                 source_url=reg.get("full_url", SOURCE_URL),
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

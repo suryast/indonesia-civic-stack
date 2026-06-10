@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from civic_stack.bpjph import cross_ref_bpom
@@ -118,7 +118,8 @@ class HalalKahChecker:
                 if bpjph_active != bpom_active:
                     cross_ref["mismatch"] = True
                     cross_ref["mismatch_detail"] = (
-                        f"Halal cert is {resp.status} but BPOM registration is {bpom_results[0].status}"
+                        f"Halal cert is {resp.status} "
+                        f"but BPOM registration is {bpom_results[0].status}"
                     )
 
         return self._build_result(product_name or cert_no, cross_ref)
@@ -187,7 +188,7 @@ class HalalKahChecker:
             bpom_reg_no=bpom_result.get("registration_no"),
             bpom_expiry=bpom_result.get("expiry_date"),
             company=bpjph_result.get("company") or bpom_result.get("company"),
-            fetched_at=datetime.utcnow().isoformat(),
+            fetched_at=datetime.now(UTC).isoformat(),
             confidence=min(
                 bpjph.get("confidence", 0.0) or 0.0,
                 bpom.get("confidence", 0.0) or 0.0,

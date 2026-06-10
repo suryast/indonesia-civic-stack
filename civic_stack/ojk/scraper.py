@@ -14,12 +14,16 @@ Strategy:
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 
 from civic_stack.ojk.normalizer import normalize_institution, normalize_search_row
 from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
+
+if TYPE_CHECKING:
+    from playwright.async_api import ProxySettings
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +172,7 @@ async def check_waspada_list(*, proxy_url: str | None = None) -> list[dict]:
         return records
 
     # Chromium doesn't support socks5h:// — convert to socks5://
-    proxy_config = None
+    proxy_config: ProxySettings | None = None
     if proxy_url:
         proxy_server = proxy_url.replace("socks5h://", "socks5://")
         proxy_config = {"server": proxy_server}
@@ -252,7 +256,7 @@ async def _scrape_portal_search(
 
 def _extract_table_rows(soup: BeautifulSoup) -> list[dict]:
     rows: list[dict] = []
-    table = soup.find("table", {"class": lambda c: c and "table" in c})
+    table = soup.find("table", {"class": lambda c: bool(c and "table" in c)})
     if not table:
         return rows
     headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]

@@ -291,24 +291,25 @@ async def get_lpse_portals() -> dict:
 
 
 @mcp.tool()
-async def search_jdih(keyword: str, category: int = 1) -> list[dict]:
+async def search_jdih(keyword: str, regulation_type: str = "uu") -> list[dict]:
     """
-    Search BPK legal documents by keyword.
-    Category: 1=Peraturan BPK, 2=Keputusan BPK, 5=Monografi.
-    Returns regulation titles, numbers, and PDF links.
+    Search Indonesian regulations (peraturan.go.id) by keyword.
+    Regulation types: uu (Laws), pp (Government Regulations),
+    perpres (Presidential Regulations), permen (Ministerial Regulations).
+    Returns regulation titles, numbers, and links.
     """
     from civic_stack.jdih.scraper import search
 
-    results = await search(keyword, category=category)
+    results = await search(keyword, regulation_type=regulation_type)
     return [r.model_dump(mode="json") for r in results]
 
 
 @mcp.tool()
-async def get_jdih(doc_id: str) -> dict:
-    """Look up a BPK legal document by document ID or regulation number."""
+async def get_jdih(regulation_id: str) -> dict:
+    """Look up a regulation by ID, e.g. 'uu-no-1-tahun-2023'."""
     from civic_stack.jdih.scraper import fetch
 
-    r = await fetch(doc_id)
+    r = await fetch(regulation_id)
     return r.model_dump(mode="json")
 
 
@@ -466,35 +467,34 @@ async def get_bps_indicator(indicator_id: str, region_code: str = "0000") -> dic
 
 
 @mcp.tool()
-async def list_bps_regions() -> dict:
+async def list_bps_regions() -> list[dict]:
     """List BPS region codes (provinces, kabupaten/kota)."""
     from civic_stack.bps.scraper import list_regions
 
-    r = await list_regions()
-    return r.model_dump(mode="json")
+    return await list_regions()
 
 
 # --- BMKG (Weather & Earthquakes) ---
 
 
 @mcp.tool()
-async def get_bmkg_alerts() -> dict:
+async def get_bmkg_alerts() -> list[dict]:
     """Get current BMKG weather alerts and significant weather warnings."""
     from civic_stack.bmkg.scraper import get_alerts
 
-    r = await get_alerts()
-    return r.model_dump(mode="json")
+    results = await get_alerts()
+    return [r.model_dump(mode="json") for r in results]
 
 
 @mcp.tool()
-async def get_weather_forecast(province: str = "DKIJakarta") -> dict:
+async def get_weather_forecast(city: str = "Jakarta") -> dict:
     """
-    Get BMKG weather forecast for an Indonesian province.
-    Province names: DKIJakarta, JawaBarat, JawaTimur, Bali, etc. (no spaces).
+    Get BMKG weather forecast for an Indonesian city/area, e.g.
+    Jakarta, Bandung, Surabaya, Denpasar.
     """
-    from civic_stack.bmkg.scraper import get_forecast
+    from civic_stack.bmkg.scraper import get_weather_forecast as bmkg_forecast
 
-    r = await get_forecast(province)
+    r = await bmkg_forecast(city)
     return r.model_dump(mode="json")
 
 

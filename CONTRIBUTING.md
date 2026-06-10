@@ -77,7 +77,7 @@ MCP tools, and example responses.
 1. Fork the repo and create a branch: `feat/module-<name>` or `fix/<module>-<description>`.
 2. Implement the full module contract (all 5 items above).
 3. Run the test suite locally: `pytest tests/<name>/` — all tests must pass.
-4. Run lint: `ruff check . && mypy shared/ civic_stack/<name>/`.
+4. Run lint: `ruff check . && mypy civic_stack/<name>/`.
 5. Open a PR against `main`. Fill in the PR checklist (auto-populated from the template).
 6. Maintainer review SLA: **2 weeks** from PR open.
 
@@ -89,7 +89,7 @@ Portals change. When a module breaks:
 
 1. A `DEGRADED` label is added to the module in the registry (README table).
 2. A GitHub Issue is opened with the `degraded` label — community fixes welcome.
-3. If the module is not fixed within **60 days**, it is archived to `modules/_archived/`.
+3. If the module is not fixed within **60 days**, it is archived to `civic_stack/_archived/`.
 
 If you are fixing a degraded module, reference the issue number in your PR.
 
@@ -121,7 +121,7 @@ This repo uses per-module licensing (see `LICENSES.md`). When adding a new modul
 ```bash
 ruff check .          # linting
 ruff format .         # formatting
-mypy shared/ modules/ # type checking
+mypy civic_stack/     # type checking
 ```
 
 Line length: 100. Python 3.11+. Pydantic v2. Async-first (`httpx.AsyncClient`, `asyncio`).

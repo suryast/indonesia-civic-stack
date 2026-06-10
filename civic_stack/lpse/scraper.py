@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -115,7 +116,8 @@ async def _search_portal(
             logger.warning("Portal %s returned 403 (CF challenge?)", portal["name"])
             return None
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("Portal %s unreachable: %s", portal["name"], exc)
         return None
@@ -177,7 +179,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=confidence,
         source_url=source_url,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw={"portals_queried": len(PORTALS), "portals_succeeded": len(successes)},
     )
@@ -214,7 +216,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=source_url,
-                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    fetched_at=datetime.now(UTC),
                     module=MODULE,
                 )
             )
@@ -253,7 +255,7 @@ async def search_tenders(keyword: str, *, proxy_url: str | None = None) -> list[
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=source_url,
-                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    fetched_at=datetime.now(UTC),
                     module=MODULE,
                 )
             )

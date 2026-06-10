@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -65,7 +66,8 @@ async def _get(
         await _limiter.acquire()
         resp = await client.get(url, params=full_params, timeout=15.0)
         resp.raise_for_status()
-        return resp.json()
+        data: dict[str, Any] = resp.json()
+        return data
     except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as exc:
         logger.warning("BPS API error %s: %s", endpoint, exc)
         return None
@@ -95,7 +97,7 @@ async def fetch(query: str, *, proxy_url: str | None = None) -> CivicStackRespon
         status=RecordStatus.ACTIVE,
         confidence=best.pop("_confidence", 0.8),
         source_url=SOURCE_URL,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 
@@ -133,7 +135,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                 status=RecordStatus.ACTIVE,
                 confidence=confidence,
                 source_url=SOURCE_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )
@@ -188,7 +190,7 @@ async def get_indicator(
         status=RecordStatus.ACTIVE,
         confidence=1.0,
         source_url=SOURCE_URL,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 

@@ -15,11 +15,14 @@ import logging
 import random
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from playwright.async_api import ProxySettings, ViewportSize
 
 logger = logging.getLogger(__name__)
 
-_VIEWPORTS = [
+_VIEWPORTS: list[ViewportSize] = [
     {"width": 1366, "height": 768},
     {"width": 1440, "height": 900},
     {"width": 1920, "height": 1080},
@@ -63,7 +66,7 @@ async def ahu_page(
     user_agent = random.choice(_USER_AGENTS)
     # Chromium doesn't support socks5h:// — convert to socks5://
     proxy_server = proxy_url.replace("socks5h://", "socks5://") if proxy_url else None
-    proxy = {"server": proxy_server} if proxy_server else None
+    proxy: ProxySettings | None = {"server": proxy_server} if proxy_server else None
 
     try:
         from camoufox.async_api import AsyncCamoufox  # type: ignore[import]

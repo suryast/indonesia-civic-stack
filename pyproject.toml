@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling<1.27"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -59,9 +59,9 @@ all = [
 ]
 dev = [
     "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "vcrpy>=6.0",
-    "ruff>=0.4",
+    "pytest-asyncio>=1.0",
+    "vcrpy>=7.0",
+    "ruff>=0.8",
     "mypy>=1.10",
 ]
 
@@ -83,7 +83,7 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "UP", "DTZ"]
 
 [tool.ruff.lint.per-file-ignores]
 "civic_stack/ahu/browser.py" = ["E501"]  # user agent strings
@@ -103,3 +103,7 @@ warn_unused_configs = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[[tool.mypy.overrides]]
+module = ["pdfplumber.*", "anthropic.*", "camoufox.*"]
+ignore_missing_imports = true
