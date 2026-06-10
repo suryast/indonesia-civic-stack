@@ -63,7 +63,8 @@ def normalize_earthquake(raw: dict[str, Any]) -> dict[str, Any]:
 
     # Build a stable event_id from datetime + coordinates
     if not out.get("event_id"):
-        dt_part = str(out.get("datetime_utc", "")).replace(":", "").replace("-", "").replace("T", "")[:14]
+        dt_raw = str(out.get("datetime_utc", ""))
+        dt_part = dt_raw.replace(":", "").replace("-", "").replace("T", "")[:14]
         coord_part = str(out.get("coordinates", "")).replace(",", "_")
         if dt_part:
             out["event_id"] = f"bmkg-{dt_part}-{coord_part}"

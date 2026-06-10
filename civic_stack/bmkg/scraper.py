@@ -14,6 +14,7 @@ Endpoints used:
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -124,7 +125,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                         status=RecordStatus.ACTIVE,
                         confidence=0.8,
                         source_url=SOURCE_URL,
-                        fetched_at=__import__("datetime").datetime.utcnow(),
+                        fetched_at=datetime.now(UTC),
                         module=MODULE,
                     )
                 )
@@ -140,7 +141,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                         status=RecordStatus.ACTIVE,
                         confidence=1.0,
                         source_url=SOURCE_URL,
-                        fetched_at=__import__("datetime").datetime.utcnow(),
+                        fetched_at=datetime.now(UTC),
                         module=MODULE,
                     )
                 )
@@ -179,7 +180,7 @@ async def get_weather_forecast(city: str, *, proxy_url: str | None = None) -> Ci
         status=RecordStatus.ACTIVE,
         confidence=1.0,
         source_url=source_url,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 
@@ -208,7 +209,7 @@ async def get_latest_earthquake(*, proxy_url: str | None = None) -> CivicStackRe
         status=RecordStatus.ACTIVE,
         confidence=1.0,
         source_url=_EARTHQUAKE_URL,
-        fetched_at=__import__("datetime").datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
     )
 
@@ -239,7 +240,7 @@ async def get_earthquake_history(
                 status=RecordStatus.ACTIVE,
                 confidence=1.0,
                 source_url=_EQ_HISTORY_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )
@@ -267,7 +268,7 @@ async def get_alerts(region: str = "", *, proxy_url: str | None = None) -> list[
                 status=RecordStatus.ACTIVE,
                 confidence=1.0,
                 source_url=_ALERT_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

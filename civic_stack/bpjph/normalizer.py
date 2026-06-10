@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -73,7 +73,7 @@ def normalize_cert_page(
         status=status,
         confidence=_confidence(raw, cert_no),
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         last_updated=expiry,
         module=MODULE,
         raw=raw if debug else None,
@@ -98,7 +98,7 @@ def normalize_search_results(html: str, *, source_url: str) -> list[CivicStackRe
                 status=status,
                 confidence=0.8,
                 source_url=source_url,
-                fetched_at=datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )
@@ -219,7 +219,7 @@ def _parse_date(date_str: str | None) -> datetime | None:
 
     for fmt in _DATE_FORMATS:
         try:
-            return datetime.strptime(s.title() if "%B" in fmt else s, fmt)
+            return datetime.strptime(s.title() if "%B" in fmt else s, fmt)  # noqa: DTZ007 — portal dates are WIB-local, naive
         except ValueError:
             continue
     return None

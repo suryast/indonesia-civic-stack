@@ -13,13 +13,13 @@ Key endpoints:
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from civic_stack.shared.http import RateLimiter, civic_client, fetch_with_retry
 from civic_stack.shared.schema import (
     CivicStackResponse,
     RecordStatus,
-    error_response,
     not_found_response,
 )
 
@@ -72,7 +72,7 @@ async def fetch(theme_id: str, *, proxy_url: str | None = None) -> CivicStackRes
                 status=RecordStatus.ACTIVE,
                 confidence=1.0,
                 source_url=SOURCE_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
 
@@ -106,7 +106,7 @@ async def search(keyword: str, *, proxy_url: str | None = None) -> list[CivicSta
                     status=RecordStatus.ACTIVE,
                     confidence=confidence,
                     source_url=SOURCE_URL,
-                    fetched_at=__import__("datetime").datetime.utcnow(),
+                    fetched_at=datetime.now(UTC),
                     module=MODULE,
                 )
             )
@@ -139,7 +139,7 @@ async def get_budget_summary(
                 status=RecordStatus.ACTIVE,
                 confidence=1.0,
                 source_url=SOURCE_URL,
-                fetched_at=__import__("datetime").datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )

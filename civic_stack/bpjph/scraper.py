@@ -14,7 +14,7 @@ Public API:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from civic_stack.shared.http import civic_client
@@ -93,7 +93,7 @@ async def fetch(
         status=status,
         confidence=confidence,
         source_url=source_url,
-        fetched_at=datetime.utcnow(),
+        fetched_at=datetime.now(UTC),
         module=MODULE,
         raw=record if debug else None,
     )
@@ -137,7 +137,7 @@ async def search(
                 status=status,
                 confidence=0.8,
                 source_url=source_url,
-                fetched_at=datetime.utcnow(),
+                fetched_at=datetime.now(UTC),
                 module=MODULE,
             )
         )
