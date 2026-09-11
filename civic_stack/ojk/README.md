@@ -36,14 +36,14 @@
 
 ```python
 {
-    "institution_name": str,           # e.g. "PT AKULAKU FINANCE INDONESIA"
-    "license_no": str,                 # e.g. "KEP-249/NB.11/2018"
-    "institution_type": str,           # e.g. "fintech-pendanaan", "bank-umum"
-    "license_status": str,             # ACTIVE | EXPIRED | REVOKED | SUSPENDED
-    "regulated_products": list[str],   # Products/services the institution is licensed for
-    "domicile": str | None,            # City/region
-    "website": str | None,             # Institution website
-    "on_waspada_list": bool,           # True if on investment alert list
+    "institution_name": str,  # e.g. "PT AKULAKU FINANCE INDONESIA"
+    "license_no": str,  # e.g. "KEP-249/NB.11/2018"
+    "institution_type": str,  # e.g. "fintech-pendanaan", "bank-umum"
+    "license_status": str,  # ACTIVE | EXPIRED | REVOKED | SUSPENDED
+    "regulated_products": list[str],  # Products/services the institution is licensed for
+    "domicile": str | None,  # City/region
+    "website": str | None,  # Institution website
+    "on_waspada_list": bool,  # True if on investment alert list
 }
 ```
 

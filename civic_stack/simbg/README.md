@@ -52,26 +52,26 @@ This module queries the national SIMBG API plus 5 pilot regional portals in para
 
 ```python
 {
-    "permit_number": str,              # PBG/IMB number
-    "permit_type": str | None,         # e.g. "PBG", "IMB Baru", "IMB Pemugaran"
-    "owner_name": str | None,          # Property owner name
-    "address": str,                    # Building address
-    "kelurahan": str | None,           # Kelurahan/desa
-    "kecamatan": str | None,           # Kecamatan/district
-    "city": str | None,                # City/regency
-    "province": str | None,            # Province
-    "floor_area_m2": float | None,     # Total floor area in square meters
-    "floor_count": float | None,       # Number of floors
-    "building_function": str | None,   # e.g. "Hunian", "Perdagangan", "Perkantoran"
-    "permit_status": str | None,       # e.g. "Aktif", "Berlaku", "Dicabut"
-    "issue_date": str | None,          # Permit issue date
-    "valid_until": str | None,         # Permit expiry date
-    "issuing_authority": str | None,   # Issuing agency name
-    "coordinates": str | None,         # Lat,Lon string if available
-    "latitude": str | None,            # Latitude
-    "longitude": str | None,           # Longitude
-    "portal_errors": list[str],        # Names of portals that failed (if any)
-    "total_results": int,              # Total permits found (deduplicated)
+    "permit_number": str,  # PBG/IMB number
+    "permit_type": str | None,  # e.g. "PBG", "IMB Baru", "IMB Pemugaran"
+    "owner_name": str | None,  # Property owner name
+    "address": str,  # Building address
+    "kelurahan": str | None,  # Kelurahan/desa
+    "kecamatan": str | None,  # Kecamatan/district
+    "city": str | None,  # City/regency
+    "province": str | None,  # Province
+    "floor_area_m2": float | None,  # Total floor area in square meters
+    "floor_count": float | None,  # Number of floors
+    "building_function": str | None,  # e.g. "Hunian", "Perdagangan", "Perkantoran"
+    "permit_status": str | None,  # e.g. "Aktif", "Berlaku", "Dicabut"
+    "issue_date": str | None,  # Permit issue date
+    "valid_until": str | None,  # Permit expiry date
+    "issuing_authority": str | None,  # Issuing agency name
+    "coordinates": str | None,  # Lat,Lon string if available
+    "latitude": str | None,  # Latitude
+    "longitude": str | None,  # Longitude
+    "portal_errors": list[str],  # Names of portals that failed (if any)
+    "total_results": int,  # Total permits found (deduplicated)
 }
 ```
 

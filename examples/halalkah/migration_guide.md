@@ -13,6 +13,7 @@ are unchanged — only the data layer is swapped.
 import httpx
 from bs4 import BeautifulSoup
 
+
 async def check_halal_status(product_name: str) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.get(
@@ -87,6 +88,7 @@ result = await old_halal_scraper.check(product_name)
 
 # New
 from examples.halalkah.halal_check import HalalKahChecker
+
 checker = HalalKahChecker(proxy_url=settings.CIVIC_PROXY_URL)
 result = await checker.verify_product(product_name)
 ```

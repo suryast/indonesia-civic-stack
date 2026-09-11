@@ -36,16 +36,16 @@
 
 ```python
 {
-    "registration_no": str,        # e.g. "BPOM MD 123456789012"
-    "product_name": str,           # Full product name in uppercase
-    "brand_name": str | None,      # Trade name / Nama Dagang
-    "category": str | None,        # e.g. "Pangan Olahan", "Obat Bebas"
-    "company": str,                # Registrant company name
-    "company_address": str | None, # Registrant address
-    "company_npwp": str | None,    # NPWP if available
-    "registration_status": str,    # ACTIVE | EXPIRED | REVOKED | SUSPENDED
-    "expiry_date": str | None,     # ISO 8601, e.g. "2027-12-31T00:00:00"
-    "valid_from": str | None,      # ISO 8601
+    "registration_no": str,  # e.g. "BPOM MD 123456789012"
+    "product_name": str,  # Full product name in uppercase
+    "brand_name": str | None,  # Trade name / Nama Dagang
+    "category": str | None,  # e.g. "Pangan Olahan", "Obat Bebas"
+    "company": str,  # Registrant company name
+    "company_address": str | None,  # Registrant address
+    "company_npwp": str | None,  # NPWP if available
+    "registration_status": str,  # ACTIVE | EXPIRED | REVOKED | SUSPENDED
+    "expiry_date": str | None,  # ISO 8601, e.g. "2027-12-31T00:00:00"
+    "valid_from": str | None,  # ISO 8601
 }
 ```
 

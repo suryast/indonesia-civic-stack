@@ -36,28 +36,28 @@
 
 ```python
 {
-    "official_name": str,                      # Full name of public official
-    "position": str | None,                    # Current position/jabatan
-    "ministry": str | None,                    # Instansi/ministry
-    "work_unit": str | None,                   # Satuan kerja
-    "declaration_year": int | None,            # Year of declaration
-    "submission_date": str | None,             # Date submitted
-    "declaration_period": str | None,          # Reporting period
-    "report_type": str | None,                 # Jenis laporan (annual/periodic)
-    "report_number": str | None,               # Official report number
-    "report_id": str,                          # Internal KPK report ID
-    "total_assets_idr": int | None,            # Total harta in IDR
-    "total_liabilities_idr": int | None,       # Total hutang in IDR
-    "net_assets_idr": int | None,              # Harta bersih (assets - liabilities)
+    "official_name": str,  # Full name of public official
+    "position": str | None,  # Current position/jabatan
+    "ministry": str | None,  # Instansi/ministry
+    "work_unit": str | None,  # Satuan kerja
+    "declaration_year": int | None,  # Year of declaration
+    "submission_date": str | None,  # Date submitted
+    "declaration_period": str | None,  # Reporting period
+    "report_type": str | None,  # Jenis laporan (annual/periodic)
+    "report_number": str | None,  # Official report number
+    "report_id": str,  # Internal KPK report ID
+    "total_assets_idr": int | None,  # Total harta in IDR
+    "total_liabilities_idr": int | None,  # Total hutang in IDR
+    "net_assets_idr": int | None,  # Harta bersih (assets - liabilities)
     "asset_breakdown": {
         "immovable_property_idr": int | None,  # Harta tidak bergerak (land, buildings)
-        "movable_property_idr": int | None,    # Harta bergerak (vehicles, goods)
-        "securities_idr": int | None,          # Surat berharga (stocks, bonds)
-        "cash_idr": int | None,                # Kas & setara kas
-        "other_assets_idr": int | None,        # Harta lainnya
+        "movable_property_idr": int | None,  # Harta bergerak (vehicles, goods)
+        "securities_idr": int | None,  # Surat berharga (stocks, bonds)
+        "cash_idr": int | None,  # Kas & setara kas
+        "other_assets_idr": int | None,  # Harta lainnya
     },
-    "income_from_position_idr": int | None,    # Penghasilan dari jabatan
-    "other_income_idr": int | None,            # Penghasilan lainnya
+    "income_from_position_idr": int | None,  # Penghasilan dari jabatan
+    "other_income_idr": int | None,  # Penghasilan lainnya
 }
 ```
 

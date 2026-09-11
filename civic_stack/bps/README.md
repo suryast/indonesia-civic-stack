@@ -40,11 +40,11 @@
 
 ```python
 {
-    "subject_id": str,               # BPS subject ID
-    "subject_name": str,             # Subject name in Indonesian
-    "category_id": str | None,       # Category ID
-    "category_name": str | None,     # Category name
-    "records_unavailable": int | None, # Number of unavailable records
+    "subject_id": str,  # BPS subject ID
+    "subject_name": str,  # Subject name in Indonesian
+    "category_id": str | None,  # Category ID
+    "category_name": str | None,  # Category name
+    "records_unavailable": int | None,  # Number of unavailable records
 }
 ```
 
@@ -52,14 +52,14 @@
 
 ```python
 {
-    "indicator_id": str,             # BPS variable/indicator ID
-    "region_code": str,              # Wilayah code (0000 = national)
-    "table_id": str | None,          # Internal table ID
-    "title": str | None,             # Indicator title
-    "note": str | None,              # Explanatory notes
-    "last_updated": str | None,      # ISO 8601 timestamp
-    "record_count": int | None,      # Number of data points
-    "time_series": list[dict],       # [{"period": "2020", "value": 123.45}, ...]
+    "indicator_id": str,  # BPS variable/indicator ID
+    "region_code": str,  # Wilayah code (0000 = national)
+    "table_id": str | None,  # Internal table ID
+    "title": str | None,  # Indicator title
+    "note": str | None,  # Explanatory notes
+    "last_updated": str | None,  # ISO 8601 timestamp
+    "record_count": int | None,  # Number of data points
+    "time_series": list[dict],  # [{"period": "2020", "value": 123.45}, ...]
 }
 ```
 
@@ -67,9 +67,9 @@
 
 ```python
 {
-    "region_code": str,              # BPS wilayah code
-    "region_name": str,              # Region name
-    "level": str | None,             # Administrative level
+    "region_code": str,  # BPS wilayah code
+    "region_name": str,  # Region name
+    "level": str | None,  # Administrative level
 }
 ```
 
