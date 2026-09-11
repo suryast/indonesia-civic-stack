@@ -38,22 +38,22 @@
 
 ```python
 {
-    "city": str,                       # Requested city name
-    "province": str,                   # BMKG province code
-    "area": str,                       # Area description from BMKG
-    "forecast": list[dict],            # Forecast entries (capped at 50)
+    "city": str,  # Requested city name
+    "province": str,  # BMKG province code
+    "area": str,  # Area description from BMKG
+    "forecast": list[dict],  # Forecast entries (capped at 50)
 }
 ```
 
 Each forecast entry:
 ```python
 {
-    "parameter": str,                  # e.g. "t" (temperature), "hu" (humidity), "weather"
-    "description": str,                # Human-readable parameter name
-    "day": str,                        # Forecast day (e.g. "1", "2", "3")
-    "hour": str,                       # Forecast hour
-    "value": str,                      # Forecast value
-    "unit": str,                       # Unit (e.g. "C", "%")
+    "parameter": str,  # e.g. "t" (temperature), "hu" (humidity), "weather"
+    "description": str,  # Human-readable parameter name
+    "day": str,  # Forecast day (e.g. "1", "2", "3")
+    "hour": str,  # Forecast hour
+    "value": str,  # Forecast value
+    "unit": str,  # Unit (e.g. "C", "%")
 }
 ```
 
@@ -61,19 +61,19 @@ Each forecast entry:
 
 ```python
 {
-    "date": str,                       # Date (DD-MMM-YYYY or similar)
-    "time": str,                       # Time (HH:MM:SS WIB)
-    "datetime_utc": str | None,        # ISO 8601 UTC timestamp if available
-    "coordinates": str | None,         # Lat,Lon string
-    "latitude": str,                   # Latitude
-    "longitude": str,                  # Longitude
-    "magnitude": float,                # Richter magnitude
-    "depth_km": float,                 # Depth in kilometers
-    "region": str,                     # Affected region description
-    "tsunami_potential": str | None,   # Raw tsunami potential text
-    "tsunami_warning": bool,           # True if tsunami warning issued
-    "felt_reports": str | None,        # Dirasakan (felt reports)
-    "shakemap_url": str | None,        # URL to shakemap image
+    "date": str,  # Date (DD-MMM-YYYY or similar)
+    "time": str,  # Time (HH:MM:SS WIB)
+    "datetime_utc": str | None,  # ISO 8601 UTC timestamp if available
+    "coordinates": str | None,  # Lat,Lon string
+    "latitude": str,  # Latitude
+    "longitude": str,  # Longitude
+    "magnitude": float,  # Richter magnitude
+    "depth_km": float,  # Depth in kilometers
+    "region": str,  # Affected region description
+    "tsunami_potential": str | None,  # Raw tsunami potential text
+    "tsunami_warning": bool,  # True if tsunami warning issued
+    "felt_reports": str | None,  # Dirasakan (felt reports)
+    "shakemap_url": str | None,  # URL to shakemap image
 }
 ```
 
@@ -81,13 +81,13 @@ Each forecast entry:
 
 ```python
 {
-    "alert_id": str,                   # Internal alert ID
-    "alert_type": str,                 # e.g. "Cuaca Ekstrem", "Gelombang Tinggi"
-    "region": str,                     # Affected region
-    "description": str,                # Alert description
-    "date": str,                       # Alert date
-    "time": str,                       # Alert time
-    "severity_level": str | None,      # Severity level if available
+    "alert_id": str,  # Internal alert ID
+    "alert_type": str,  # e.g. "Cuaca Ekstrem", "Gelombang Tinggi"
+    "region": str,  # Affected region
+    "description": str,  # Alert description
+    "date": str,  # Alert date
+    "time": str,  # Alert time
+    "severity_level": str | None,  # Severity level if available
 }
 ```
 

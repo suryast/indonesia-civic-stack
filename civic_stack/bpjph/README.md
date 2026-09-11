@@ -45,14 +45,14 @@ If camoufox is not installed, the module falls back to standard Playwright.
 
 ```python
 {
-    "cert_no": str,             # e.g. "ID00110019882120240001"
-    "company": str,             # Registrant company name
+    "cert_no": str,  # e.g. "ID00110019882120240001"
+    "company": str,  # Registrant company name
     "product_list": list[str],  # List of certified products
-    "issuer": str,              # "BPJPH" or "MUI" (pre-2023 certs)
-    "inspection_body": str,     # e.g. "LPPOM MUI"
-    "issue_date": str | None,   # ISO 8601
+    "issuer": str,  # "BPJPH" or "MUI" (pre-2023 certs)
+    "inspection_body": str,  # e.g. "LPPOM MUI"
+    "issue_date": str | None,  # ISO 8601
     "expiry_date": str | None,  # ISO 8601
-    "status": str,              # ACTIVE | EXPIRED | REVOKED | SUSPENDED
+    "status": str,  # ACTIVE | EXPIRED | REVOKED | SUSPENDED
 }
 ```
 

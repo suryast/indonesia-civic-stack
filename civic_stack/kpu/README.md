@@ -38,17 +38,17 @@
 
 ```python
 {
-    "candidate_id": str,          # KPU candidate ID or nomor urut
-    "name": str,                  # Full candidate name
-    "party": str | None,          # Party name or abbreviation
-    "party_no": int | None,       # Party number
+    "candidate_id": str,  # KPU candidate ID or nomor urut
+    "name": str,  # Full candidate name
+    "party": str | None,  # Party name or abbreviation
+    "party_no": int | None,  # Party number
     "election_type": str | None,  # "presiden" | "dpr" | "dpd" | "dprd_prov" | "dprd_kab"
-    "region": str | None,         # Dapil (electoral district)
-    "position": str | None,       # Jabatan / position
-    "gender": str | None,         # "L" | "P"
-    "photo_url": str | None,      # Candidate photo URL
-    "vote_count": int | None,     # Total votes received (if available)
-    "elected": bool | None,       # True if candidate won
+    "region": str | None,  # Dapil (electoral district)
+    "position": str | None,  # Jabatan / position
+    "gender": str | None,  # "L" | "P"
+    "photo_url": str | None,  # Candidate photo URL
+    "vote_count": int | None,  # Total votes received (if available)
+    "elected": bool | None,  # True if candidate won
 }
 ```
 
@@ -56,13 +56,13 @@
 
 ```python
 {
-    "region_code": str,                # Province/regency code ("0" for national)
-    "election_type": str,              # "ppwp" | "pdpr" | "dpd" | "pdprd_prov" | "pdprd_kab"
-    "total_votes": int | None,         # Total valid votes counted
-    "results_by_party": dict,          # Party code → vote count mapping
-    "tps_reported": int | None,        # Number of TPS reported
-    "tps_total": int | None,           # Total TPS in region
-    "last_updated": str | None,        # ISO 8601 timestamp
+    "region_code": str,  # Province/regency code ("0" for national)
+    "election_type": str,  # "ppwp" | "pdpr" | "dpd" | "pdprd_prov" | "pdprd_kab"
+    "total_votes": int | None,  # Total valid votes counted
+    "results_by_party": dict,  # Party code → vote count mapping
+    "tps_reported": int | None,  # Number of TPS reported
+    "tps_total": int | None,  # Total TPS in region
+    "last_updated": str | None,  # ISO 8601 timestamp
 }
 ```
 
@@ -70,13 +70,13 @@
 
 ```python
 {
-    "candidate_id": str,               # KPU candidate ID
-    "candidate_name": str,             # Candidate name
+    "candidate_id": str,  # KPU candidate ID
+    "candidate_name": str,  # Candidate name
     "initial_balance_idr": float | None,  # Saldo awal in IDR
-    "total_income_idr": float | None,     # Total penerimaan in IDR
-    "total_expenditure_idr": float | None, # Total pengeluaran in IDR
-    "reporting_period": str | None,    # Periode laporan
-    "report_status": str | None,       # Status laporan
+    "total_income_idr": float | None,  # Total penerimaan in IDR
+    "total_expenditure_idr": float | None,  # Total pengeluaran in IDR
+    "reporting_period": str | None,  # Periode laporan
+    "report_status": str | None,  # Status laporan
 }
 ```
 

@@ -36,14 +36,14 @@
 
 ```python
 {
-    "nib": str,                   # 13-digit Nomor Induk Berusaha
-    "company_name": str,          # Registered business name
+    "nib": str,  # 13-digit Nomor Induk Berusaha
+    "company_name": str,  # Registered business name
     "business_type": str | None,  # Business classification description
-    "kbli_code": str | None,      # Klasifikasi Baku Lapangan Usaha Indonesia code
-    "risk_level": str | None,     # "rendah" | "menengah rendah" | "menengah tinggi" | "tinggi"
-    "license_status": str,        # ACTIVE | EXPIRED | REVOKED | SUSPENDED
-    "domicile": str | None,       # City/province
-    "issue_date": str | None,     # ISO 8601 date when NIB was issued
+    "kbli_code": str | None,  # Klasifikasi Baku Lapangan Usaha Indonesia code
+    "risk_level": str | None,  # "rendah" | "menengah rendah" | "menengah tinggi" | "tinggi"
+    "license_status": str,  # ACTIVE | EXPIRED | REVOKED | SUSPENDED
+    "domicile": str | None,  # City/province
+    "issue_date": str | None,  # ISO 8601 date when NIB was issued
 }
 ```
 

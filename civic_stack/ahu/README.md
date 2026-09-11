@@ -66,19 +66,19 @@ python -m camoufox fetch
 
 ```python
 {
-    "company_name": str,           # Full company name in uppercase
-    "registration_no": str,        # AHU registration number
-    "deed_date": str | None,       # ISO 8601 deed/registration date
-    "legal_form": str,             # "Perseroan Terbatas (PT)" | "CV" | "Yayasan" | etc.
-    "legal_status": str,           # ACTIVE | REVOKED | SUSPENDED | EXPIRED
-    "domicile": str | None,        # City/province
+    "company_name": str,  # Full company name in uppercase
+    "registration_no": str,  # AHU registration number
+    "deed_date": str | None,  # ISO 8601 deed/registration date
+    "legal_form": str,  # "Perseroan Terbatas (PT)" | "CV" | "Yayasan" | etc.
+    "legal_status": str,  # ACTIVE | REVOKED | SUSPENDED | EXPIRED
+    "domicile": str | None,  # City/province
     "business_activities": str | None,
     "authorized_capital": str | None,
     "paid_up_capital": str | None,
-    "directors": [                  # Direksi
+    "directors": [  # Direksi
         {"nama": str, "jabatan": str, "npwp": str | None}
     ],
-    "commissioners": [              # Dewan Komisaris
+    "commissioners": [  # Dewan Komisaris
         {"nama": str, "jabatan": str}
     ],
 }

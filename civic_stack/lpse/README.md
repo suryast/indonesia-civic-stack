@@ -54,20 +54,20 @@ This module queries 5 major LPSE portals in parallel and returns merged/deduplic
 
 ```python
 {
-    "vendor_id": str,                 # Internal SPSE vendor code
-    "vendor_name": str,               # Registered company name
-    "npwp": str | None,               # NPWP formatted as XX.XXX.XXX.X-XXX.XXX
-    "address": str | None,            # Full address
-    "city": str | None,               # City
-    "province": str | None,           # Province
-    "phone": str | None,              # Contact phone
-    "email": str | None,              # Contact email
-    "is_active": bool,                # True if vendor is active
-    "business_type": str | None,      # Jenis usaha
-    "qualification": str | None,      # Vendor qualification level
-    "business_field": str | None,     # Bidang usaha
-    "portal_errors": list[str],       # Names of portals that failed (if any)
-    "total_results": int,             # Total records found (deduplicated by NPWP)
+    "vendor_id": str,  # Internal SPSE vendor code
+    "vendor_name": str,  # Registered company name
+    "npwp": str | None,  # NPWP formatted as XX.XXX.XXX.X-XXX.XXX
+    "address": str | None,  # Full address
+    "city": str | None,  # City
+    "province": str | None,  # Province
+    "phone": str | None,  # Contact phone
+    "email": str | None,  # Contact email
+    "is_active": bool,  # True if vendor is active
+    "business_type": str | None,  # Jenis usaha
+    "qualification": str | None,  # Vendor qualification level
+    "business_field": str | None,  # Bidang usaha
+    "portal_errors": list[str],  # Names of portals that failed (if any)
+    "total_results": int,  # Total records found (deduplicated by NPWP)
 }
 ```
 
@@ -75,20 +75,20 @@ This module queries 5 major LPSE portals in parallel and returns merged/deduplic
 
 ```python
 {
-    "tender_id": str,                 # Unique tender code
-    "tender_name": str,               # Tender package name
-    "procuring_entity": str,          # Satker (procuring entity) name
-    "entity_code": str | None,        # Satker code
-    "tender_stage": str | None,       # Current tender stage
-    "procurement_method": str | None, # e.g. "Tender Cepat", "Pemilihan Langsung"
-    "ceiling_value": float | None,    # Pagu (budget ceiling) in IDR
-    "hps_value": float | None,        # HPS (owner's estimate) in IDR
-    "created_date": str | None,       # Tender creation date
-    "closing_date": str | None,       # Tender closing date
-    "tender_status": str | None,      # Current status
-    "funding_source": str | None,     # e.g. "APBN", "APBD"
-    "tender_url": str | None,         # Direct link to tender detail page
-    "portal_errors": list[str],       # Names of portals that failed (if any)
+    "tender_id": str,  # Unique tender code
+    "tender_name": str,  # Tender package name
+    "procuring_entity": str,  # Satker (procuring entity) name
+    "entity_code": str | None,  # Satker code
+    "tender_stage": str | None,  # Current tender stage
+    "procurement_method": str | None,  # e.g. "Tender Cepat", "Pemilihan Langsung"
+    "ceiling_value": float | None,  # Pagu (budget ceiling) in IDR
+    "hps_value": float | None,  # HPS (owner's estimate) in IDR
+    "created_date": str | None,  # Tender creation date
+    "closing_date": str | None,  # Tender closing date
+    "tender_status": str | None,  # Current status
+    "funding_source": str | None,  # e.g. "APBN", "APBD"
+    "tender_url": str | None,  # Direct link to tender detail page
+    "portal_errors": list[str],  # Names of portals that failed (if any)
 }
 ```
 
