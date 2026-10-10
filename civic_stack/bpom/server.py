@@ -2,10 +2,10 @@
 BPOM MCP server — exposes check_bpom, search_bpom, get_bpom_status.
 
 Usage (stdio, local):
-    python -m modules.bpom.server
+    python -m civic_stack.bpom.server
 
 Usage (HTTP, Railway):
-    python -m modules.bpom.server --transport http
+    python -m civic_stack.bpom.server --transport http
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """
 Unified MCP server for indonesia-civic-stack.
 
-Registers all 40 tools from all 11 modules in a single MCP server.
+Registers tools from all supported modules in a single MCP server.
 This is the recommended way to use civic-stack with Claude Code.
 
 Usage (stdio, for Claude Code / claude mcp add):
@@ -14,7 +14,9 @@ Usage (HTTP, for remote agents):
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
+from typing import Literal
 
 from fastmcp import FastMCP
 
@@ -38,7 +40,9 @@ mcp = FastMCP(
 async def health_check(request):
     from starlette.responses import JSONResponse
 
-    return JSONResponse({"status": "ok", "server": "indonesia-civic-stack", "tools": 46})
+    return JSONResponse(
+        {"status": "ok", "server": "indonesia-civic-stack", "tools": len(await mcp.list_tools())}
+    )
 
 
 # --- BPOM (Food & Drug) ---
@@ -554,31 +558,23 @@ def create_mcp_server() -> FastMCP:
     return mcp
 
 
-def main():
-    import os
+def run_mcp_server(*, transport: Literal["stdio", "http"], host: str, port: int) -> None:
+    """Run with HTTP binding options only for the HTTP transport."""
+    tools = asyncio.run(mcp.list_tools())
+    logger.info("Starting unified civic-stack MCP server (%d tools)", len(tools))
+    if transport == "stdio":
+        mcp.run(transport="stdio")
+    else:
+        mcp.run(transport="http", host=host, port=port)
+
+
+def main() -> None:
+    from civic_stack.cli import _add_mcp_arguments
 
     parser = argparse.ArgumentParser(description="indonesia-civic-stack unified MCP server")
-    parser.add_argument(
-        "--transport",
-        choices=["stdio", "http"],
-        default="stdio",
-        help="Transport mode (default: stdio for Claude Code)",
-    )
-    parser.add_argument(
-        "--host",
-        default=os.environ.get("HOST", "0.0.0.0"),
-        help="Host to bind to (default: 0.0.0.0)",
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=int(os.environ.get("PORT", "8000")),
-        help="Port to bind to (default: 8000, or PORT env var)",
-    )
+    _add_mcp_arguments(parser)
     args = parser.parse_args()
-
-    logger.info("Starting unified civic-stack MCP server (%d tools)", 40)
-    mcp.run(transport=args.transport, host=args.host, port=args.port)
+    run_mcp_server(transport=args.transport, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":

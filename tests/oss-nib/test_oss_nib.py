@@ -86,8 +86,10 @@ async def test_fetch_monkeypatched(monkeypatch):
         page.wait_for_load_state = AsyncMock()
         yield page
 
-    monkeypatch.setattr("modules.oss_nib.scraper.new_page", mock_new_page)
-    monkeypatch.setattr("modules.oss_nib.scraper.wait_for_results", AsyncMock(return_value=True))
+    monkeypatch.setattr("civic_stack.oss_nib.scraper.new_page", mock_new_page)
+    monkeypatch.setattr(
+        "civic_stack.oss_nib.scraper.wait_for_results", AsyncMock(return_value=True)
+    )
 
     from civic_stack.oss_nib.scraper import fetch
 

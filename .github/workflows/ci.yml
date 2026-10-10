@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - run: uv sync --locked --extra dev --extra mcp --extra browser
+      - run: uv sync --locked --extra dev --extra mcp --extra api --extra browser
       - name: Run tests (VCR replay, skip browser-dependent modules)
         run: |
           uv run pytest tests/ -v --tb=short \
@@ -65,12 +65,39 @@ jobs:
           enable-cache: true
       - run: uv sync --locked --extra dev --extra browser
       - run: uv run playwright install chromium --with-deps
-      - name: Run browser module tests (lhkpn needs Chromium for reCAPTCHA)
+      - name: Run offline browser-module regression tests
         run: |
           uv run pytest tests/ahu tests/bpjph tests/oss-nib tests/lhkpn -v --tb=short
         env:
           VCR_RECORD_MODE: none
-        continue-on-error: true  # Browser tests may fail due to geo-blocking
+
+
+  release-package:
+    name: Build package & validate Agent Skill
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv build
+      - name: Smoke-test core-only wheel installation
+        run: |
+          uv venv "$RUNNER_TEMP/civic-core"
+          uv pip install --python "$RUNNER_TEMP/civic-core/bin/python" dist/*.whl
+          "$RUNNER_TEMP/civic-core/bin/python" -I -c 'import civic_stack; from civic_stack import bpom; assert callable(bpom.search)'
+          "$RUNNER_TEMP/civic-core/bin/civic-stack" --version
+      - name: Validate portable skill (pinned upstream reference validator)
+        run: |
+          mkdir -p "$RUNNER_TEMP/skill-validation/indonesia-civic-stack"
+          cp SKILL.md LICENSE "$RUNNER_TEMP/skill-validation/indonesia-civic-stack/"
+          cp -R references "$RUNNER_TEMP/skill-validation/indonesia-civic-stack/"
+          uvx --from "git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref" \
+            skills-ref validate "$RUNNER_TEMP/skill-validation/indonesia-civic-stack"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/*
 
   openapi:
     name: Export OpenAPI spec

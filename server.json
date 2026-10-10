@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.suryast/indonesia-civic-stack",
-  "description": "40 MCP tools for 11 Indonesian government portals — BPOM, BPJPH, AHU, OJK, BMKG+",
+  "description": "45 MCP tools for 14 Indonesian government data portals — SDK and stdio MCP server",
   "repository": {
     "url": "https://github.com/suryast/indonesia-civic-stack",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "1.2.0",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "indonesia-civic-stack",
-      "version": "0.1.1",
+      "version": "1.2.0",
       "transport": {
         "type": "stdio"
       },

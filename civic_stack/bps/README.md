@@ -87,7 +87,7 @@
 
 ```bash
 export BPS_API_KEY=your_key_here
-claude mcp add bps -- python -m modules.bps.server
+claude mcp add bps -- python -m civic_stack.bps.server
 ```
 
 ---

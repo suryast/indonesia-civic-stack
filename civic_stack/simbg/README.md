@@ -88,7 +88,7 @@ This module queries the national SIMBG API plus 5 pilot regional portals in para
 ### claude mcp add
 
 ```bash
-claude mcp add simbg -- python -m modules.simbg.server
+claude mcp add simbg -- python -m civic_stack.simbg.server
 ```
 
 ---

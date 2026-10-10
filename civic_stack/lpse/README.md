@@ -106,7 +106,7 @@ This module queries 5 major LPSE portals in parallel and returns merged/deduplic
 ### claude mcp add
 
 ```bash
-claude mcp add lpse -- python -m modules.lpse.server
+claude mcp add lpse -- python -m civic_stack.lpse.server
 ```
 
 ---

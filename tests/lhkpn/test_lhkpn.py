@@ -1,22 +1,17 @@
-"""Tests for the LHKPN module — VCR cassettes + normalizer unit tests."""
+"""Tests for the LHKPN module — mocked browser boundary + normalizer unit tests."""
 
 from __future__ import annotations
 
-import pytest
-import vcr
+import sys
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
+from civic_stack.lhkpn import scraper
 from civic_stack.lhkpn.normalizer import normalize_declaration, normalize_search_result
 from civic_stack.lhkpn.scraper import fetch, search
 from civic_stack.shared.schema import CivicStackResponse, RecordStatus
-
-CASSETTE_DIR = "tests/lhkpn/cassettes"
-vcr_config = vcr.VCR(
-    cassette_library_dir=CASSETTE_DIR,
-    record_mode="none",
-    match_on=["uri", "method"],
-    decode_compressed_response=True,
-)
-
 
 # ---------------------------------------------------------------------------
 # Normalizer unit tests
@@ -91,15 +86,48 @@ def test_confidence_partial_match():
     assert result["_confidence"] >= 0.5
 
 
-# ---------------------------------------------------------------------------
-# Scraper tests — VCR replays
-# ---------------------------------------------------------------------------
+# VCR cannot intercept Playwright; fixtures represent browser table rows.
+@pytest.fixture(autouse=True)
+def no_live_browser(monkeypatch):
+    monkeypatch.setitem(
+        sys.modules,
+        "playwright.async_api",
+        SimpleNamespace(
+            async_playwright=MagicMock(
+                side_effect=AssertionError("Live Playwright forbidden in unit tests")
+            )
+        ),
+    )
+
+
+@pytest.fixture
+def browser_search(monkeypatch):
+    mocked = AsyncMock(return_value=[])
+    monkeypatch.setattr(scraper, "_playwright_search", mocked)
+    return mocked
+
+
+@pytest.fixture
+def table_row():
+    return {
+        "nama": "BUDI GUNAWAN",
+        "jabatan": "Kepala BIN",
+        "lembaga": "BIN",
+        "unit_kerja": "Pusat",
+        "tanggal_lapor": "31/12/2023",
+        "year": "2023",
+        "jenis_laporan": "Periodik",
+        "total_harta": "Rp.45.000.000.000",
+        "report_id": "fixture-report",
+        "download_id": "fixture-download",
+    }
 
 
 @pytest.mark.asyncio
-async def test_fetch_official_found():
-    with vcr_config.use_cassette("official_found.yaml"):
-        resp = await fetch("Budi Gunawan")
+async def test_fetch_official_found(browser_search, table_row):
+    browser_search.return_value = [table_row]
+    resp = await fetch("Budi Gunawan")
+    browser_search.assert_awaited_once_with(name="Budi Gunawan")
     assert isinstance(resp, CivicStackResponse)
     assert resp.found is True
     assert resp.status == RecordStatus.ACTIVE
@@ -107,32 +135,71 @@ async def test_fetch_official_found():
     assert resp.result["official_name"] == "BUDI GUNAWAN"
     assert resp.result["position"] == "Kepala BIN"
     assert resp.result["total_assets_idr"] == 45000000000
-    assert resp.result["net_assets_idr"] == 40000000000
-    assert "asset_breakdown" in resp.result
-    assert resp.result["asset_breakdown"]["immovable_property_idr"] == 30000000000
+    assert resp.result["report_id"] == "fixture-report"
+    assert resp.result["declaration_year"] == "2023"
+    assert resp.raw["table_row"] == table_row
 
 
 @pytest.mark.asyncio
-async def test_fetch_official_not_found():
-    with vcr_config.use_cassette("official_not_found.yaml"):
-        resp = await fetch("Pejabat Tidak Ada")
+async def test_fetch_official_not_found(browser_search):
+    resp = await fetch("Pejabat Tidak Ada")
     assert resp.found is False
     assert resp.status == RecordStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
-async def test_search_returns_multiple():
-    with vcr_config.use_cassette("search_multi.yaml"):
-        results = await search("Menteri Keuangan")
+async def test_search_returns_multiple(browser_search, table_row):
+    names = ["SRI MULYANI INDRAWATI", "FIXTURE OFFICIAL TWO", "FIXTURE OFFICIAL THREE"]
+    browser_search.return_value = [dict(table_row, nama=name) for name in names]
+    results = await search("Menteri Keuangan")
+    browser_search.assert_awaited_once_with(name="Menteri Keuangan")
     assert len(results) == 3
-    assert all(r.module == "lhkpn" for r in results)
-    assert results[0].result["official_name"] == "SRI MULYANI INDRAWATI"
+    assert all(r.module == "lhkpn" and r.found for r in results)
+    assert [r.result["official_name"] for r in results] == names
 
 
 @pytest.mark.asyncio
-async def test_response_json_serializable():
-    with vcr_config.use_cassette("official_found.yaml"):
-        resp = await fetch("Budi Gunawan")
-    data = resp.model_dump(mode="json")
+async def test_response_json_serializable(browser_search, table_row):
+    browser_search.return_value = [table_row]
+    data = (await fetch("Budi Gunawan")).model_dump(mode="json")
     assert data["module"] == "lhkpn"
     assert isinstance(data["fetched_at"], str)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("error", [ImportError("missing browser"), RuntimeError("browser failed")])
+async def test_fetch_browser_failure_returns_error(browser_search, error):
+    browser_search.side_effect = error
+    resp = await fetch("Fixture Official")
+    assert resp.found is False
+    assert resp.status == RecordStatus.ERROR
+    assert resp.result["detail"]
+
+
+@pytest.mark.asyncio
+async def test_search_browser_failure_is_empty(browser_search):
+    browser_search.side_effect = RuntimeError("browser failed")
+    assert await search("Fixture Official") == []
+
+
+@pytest.mark.asyncio
+async def test_browser_navigation_failure_is_error(monkeypatch):
+    page = AsyncMock()
+    page.goto.side_effect = RuntimeError("offline navigation failure")
+    context = AsyncMock()
+    context.new_page.return_value = page
+    browser = AsyncMock()
+    browser.new_context.return_value = context
+    playwright = MagicMock()
+    playwright.chromium.launch = AsyncMock(return_value=browser)
+    manager = AsyncMock()
+    manager.__aenter__.return_value = playwright
+    monkeypatch.setitem(
+        sys.modules,
+        "playwright.async_api",
+        SimpleNamespace(async_playwright=MagicMock(return_value=manager)),
+    )
+    resp = await fetch("Fixture Official")
+    assert resp.status == RecordStatus.ERROR
+    assert "offline navigation failure" in resp.result["detail"]
+    browser.close.assert_awaited_once()

@@ -8,25 +8,15 @@ Usage:
     earthquake = await bmkg.get_latest_earthquake()
 """
 
-__version__ = "0.1.0"
+from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
+from types import ModuleType
 
-# Lazy imports — modules are only loaded when accessed
-from civic_stack import (  # noqa: F401
-    ahu,
-    bmkg,
-    bpjph,
-    bpom,
-    bps,
-    djpb,
-    jdih,
-    kpu,
-    ksei,
-    lhkpn,
-    lpse,
-    ojk,
-    oss_nib,
-    simbg,
-)
+try:
+    __version__ = version("indonesia-civic-stack")
+except PackageNotFoundError:
+    # Uninstalled source checkouts have no authoritative distribution version.
+    __version__ = "0+unknown"
 
 __all__ = [
     "__version__",
@@ -45,3 +35,12 @@ __all__ = [
     "oss_nib",
     "simbg",
 ]
+
+
+def __getattr__(name: str) -> ModuleType:
+    """Load only the requested SDK module, keeping browser extras optional."""
+    if name not in __all__ or name == "__version__":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(f"{__name__}.{name}")
+    globals()[name] = module
+    return module

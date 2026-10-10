@@ -1,6 +1,26 @@
 # Changelog
 
-## Unreleased (2026-04-04)
+## 1.2.0 (2026-10-10)
+
+### Changed
+- Migrate `SKILL.md` to portable Agent Skills frontmatter, with complete-package installation and source/status-aware usage guidance.
+- Reconcile documented inventory with the implementation: 14 SDK modules and 45 unified MCP tools.
+- Refactor CLI/server transport dispatch and version reporting; derive health tool counts from the registered MCP inventory.
+- Synchronize package, runtime, skill and MCP registry manifest release versions.
+
+### Fixed
+- Prevent the default LHKPN regression tests from making live browser requests; exercise browser results and failures with deterministic mocks.
+- Repair the OSS NIB monkeypatch target after the `modules` to `civic_stack` package migration.
+- Make SDK modules genuinely lazy so a core-only installation does not require Playwright; verify the built wheel separately from the development environment.
+- Consolidate the repository REST entry point onto the packaged app and synchronize its OpenAPI version.
+- Correct unsupported authentication, rate-limit and SSRF-protection claims; deployments still require their own access controls.
+- Enforce offline browser regression failures in CI instead of accepting them silently.
+
+### Verification scope
+- Offline fixtures and transport/package checks do not certify current government portal availability.
+- Historical observations below retain their original dates; they are not new liveness checks.
+
+## Changes since 1.1.0 (recorded 2026-04-04)
 
 ### Added
 - **jdih** — National legal database (peraturan.go.id). Playwright-based scraping for UU, PP, Perpres, Permen. Requires Indonesian proxy.

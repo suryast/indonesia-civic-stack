@@ -48,7 +48,7 @@ export default {
 Then pass your Worker URL as `proxy_url`:
 
 ```python
-from modules.ahu import fetch
+from civic_stack.ahu import fetch
 
 resp = await fetch("PT Contoh Indonesia", proxy_url="https://your-worker.workers.dev")
 ```
@@ -98,7 +98,7 @@ python -m camoufox fetch
 ### claude mcp add
 
 ```bash
-claude mcp add ahu -- python -m modules.ahu.server
+claude mcp add ahu -- python -m civic_stack.ahu.server
 ```
 
 ---

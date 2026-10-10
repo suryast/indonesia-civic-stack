@@ -105,7 +105,7 @@ Each forecast entry:
 ### claude mcp add
 
 ```bash
-claude mcp add bmkg -- python -m modules.bmkg.server
+claude mcp add bmkg -- python -m civic_stack.bmkg.server
 ```
 
 ---

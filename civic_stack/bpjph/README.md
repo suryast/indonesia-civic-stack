@@ -74,7 +74,7 @@ If camoufox is not installed, the module falls back to standard Playwright.
 ### claude mcp add
 
 ```bash
-claude mcp add bpjph -- python -m modules.bpjph.server
+claude mcp add bpjph -- python -m civic_stack.bpjph.server
 ```
 
 ---

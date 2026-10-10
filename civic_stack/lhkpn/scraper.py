@@ -166,6 +166,8 @@ async def _playwright_search(
 
         except Exception as exc:
             logger.error("Playwright LHKPN search failed: %s", exc)
+            # Acquisition failure is not evidence that an official is absent.
+            raise
         finally:
             await browser.close()
 

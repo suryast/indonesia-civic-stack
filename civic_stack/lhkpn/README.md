@@ -77,7 +77,7 @@
 ### claude mcp add
 
 ```bash
-claude mcp add lhkpn -- python -m modules.lhkpn.server
+claude mcp add lhkpn -- python -m civic_stack.lhkpn.server
 ```
 
 ---

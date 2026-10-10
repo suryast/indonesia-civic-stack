@@ -66,7 +66,7 @@
 ### claude mcp add
 
 ```bash
-claude mcp add oss_nib -- python -m modules.oss_nib.server
+claude mcp add oss_nib -- python -m civic_stack.oss_nib.server
 ```
 
 ---

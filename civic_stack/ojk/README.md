@@ -71,7 +71,7 @@
 ### claude mcp add
 
 ```bash
-claude mcp add ojk -- python -m modules.ojk.server
+claude mcp add ojk -- python -m civic_stack.ojk.server
 ```
 
 ---

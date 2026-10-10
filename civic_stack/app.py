@@ -3,7 +3,7 @@ Unified FastAPI application — mounts all module routers.
 
 This is the single-process entry point for local development and Railway
 deployment when running all modules together. In production, each module
-can also be deployed independently via its own modules/<name>/app.py.
+can also be deployed independently via its own civic_stack/<name>/app.py.
 
 Usage:
     uvicorn app:app --reload
@@ -15,6 +15,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from civic_stack import __version__
 from civic_stack.ahu.router import router as ahu_router
 from civic_stack.bmkg.router import router as bmkg_router
 from civic_stack.bpjph.router import router as bpjph_router
@@ -34,7 +35,7 @@ app = FastAPI(
         "Phase 1: BPOM, BPJPH, AHU. Phase 2: KPU, OJK, OSS-NIB, LPSE. "
         "Phase 3: LHKPN, BPS, BMKG, SIMBG."
     ),
-    version="0.3.0",
+    version=__version__,
     contact={
         "name": "indonesia-civic-stack contributors",
         "url": "https://github.com/suryast/indonesia-civic-stack",
@@ -85,7 +86,7 @@ async def root() -> JSONResponse:
     return JSONResponse(
         {
             "name": "indonesia-civic-stack",
-            "version": "0.3.0",
+            "version": __version__,
             "phase": 3,
             "modules": _ALL_MODULES,
             "docs": "/docs",

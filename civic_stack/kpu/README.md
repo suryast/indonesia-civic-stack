@@ -94,7 +94,7 @@
 ### claude mcp add
 
 ```bash
-claude mcp add kpu -- python -m modules.kpu.server
+claude mcp add kpu -- python -m civic_stack.kpu.server
 ```
 
 ---

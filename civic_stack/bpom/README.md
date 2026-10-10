@@ -70,7 +70,7 @@
 ### claude mcp add
 
 ```bash
-claude mcp add bpom -- python -m modules.bpom.server
+claude mcp add bpom -- python -m civic_stack.bpom.server
 ```
 
 ---
