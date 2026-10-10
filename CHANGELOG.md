@@ -15,6 +15,7 @@
 - Consolidate the repository REST entry point onto the packaged app and synchronize its OpenAPI version.
 - Correct unsupported authentication, rate-limit and SSRF-protection claims; deployments still require their own access controls.
 - Enforce offline browser regression failures in CI instead of accepting them silently.
+- Refresh vulnerable locked AnyIO, PyJWT, cryptography, MCP, Starlette, urllib3, SoupSieve, Pydantic Settings and VCR.py dependencies, and add an installed-dependency audit to CI.
 
 ### Verification scope
 - Offline fixtures and transport/package checks do not certify current government portal availability.

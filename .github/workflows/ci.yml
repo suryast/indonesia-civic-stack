@@ -29,6 +29,8 @@ jobs:
       - run: uv run ruff check civic_stack/ tests/ scripts/ examples/ app.py server.py
       - run: uv run ruff format --check civic_stack/ tests/ scripts/ examples/ app.py server.py
       - run: uv run mypy civic_stack/
+      - name: Audit installed locked dependencies
+        run: uvx pip-audit --path "$(uv run python -c 'import sysconfig; print(sysconfig.get_path("purelib"))')" --progress-spinner off
 
   test:
     name: Tests (py${{ matrix.python-version }})
