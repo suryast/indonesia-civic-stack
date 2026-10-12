@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from civic_stack.bpjph.scraper import cross_ref_bpom, fetch, search
+from civic_stack.shared.api import proxy_url_param
 from civic_stack.shared.schema import CivicStackResponse
 
 router = APIRouter(prefix="/bpjph", tags=["bpjph"])
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/bpjph", tags=["bpjph"])
 async def check_halal_cert(
     cert_no: str,
     debug: bool = Query(False),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Fetch a single BPJPH halal certificate record by certificate number."""
     return await fetch(cert_no, debug=debug, proxy_url=proxy_url)
@@ -31,7 +32,7 @@ async def check_halal_cert(
 )
 async def lookup_halal_by_product(
     q: str = Query(..., description="Product name or company name"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> list[CivicStackResponse]:
     """Search SiHalal by product name or company name."""
     return await search(q, proxy_url=proxy_url)
@@ -44,7 +45,7 @@ async def lookup_halal_by_product(
 )
 async def get_halal_status(
     cert_no: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Return status and expiry of a halal certificate."""
     resp = await fetch(cert_no, proxy_url=proxy_url)
@@ -67,7 +68,7 @@ async def get_halal_status(
 )
 async def cross_reference(
     product_name: str = Query(..., description="Product name to cross-reference"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> dict:
     """
     Look up a product in both BPJPH (halal cert) and BPOM (product registration)

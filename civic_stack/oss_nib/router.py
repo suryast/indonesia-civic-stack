@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from civic_stack.oss_nib.scraper import fetch, search
+from civic_stack.shared.api import proxy_url_param
 from civic_stack.shared.schema import CivicStackResponse
 
 router = APIRouter(prefix="/oss-nib", tags=["oss-nib"])
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/oss-nib", tags=["oss-nib"])
 async def lookup_nib(
     query: str,
     debug: bool = Query(False),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Fetch an OSS-NIB business record by NIB number (13-digit) or company name."""
     return await fetch(query, debug=debug, proxy_url=proxy_url)
@@ -29,7 +30,7 @@ async def lookup_nib(
 )
 async def search_nib(
     q: str = Query(..., description="Company name keyword"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> list[CivicStackResponse]:
     """Search OSS-RBA by company name. Returns up to 10 results."""
     return await search(q, proxy_url=proxy_url)
@@ -40,7 +41,7 @@ async def search_nib(
 )
 async def verify_nib(
     nib_number: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Verify a 13-digit NIB number and return its basic status."""
     resp = await fetch(nib_number, proxy_url=proxy_url)

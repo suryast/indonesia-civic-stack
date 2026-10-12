@@ -4,9 +4,10 @@ BPOM FastAPI router — mounts at /bpom.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from civic_stack.bpom.scraper import fetch, search
+from civic_stack.shared.api import proxy_url_param
 from civic_stack.shared.schema import CivicStackResponse
 
 router = APIRouter(prefix="/bpom", tags=["bpom"])
@@ -24,7 +25,7 @@ class CheckResponse(CivicStackResponse):
 async def check_bpom(
     registration_no: str,
     debug: bool = Query(False, description="Include raw scraped data in response"),
-    proxy_url: str | None = Query(None, description="Optional proxy URL for IP rotation"),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """
     Fetch a single BPOM product registration record.
@@ -42,7 +43,7 @@ async def check_bpom(
 )
 async def search_bpom(
     q: str = Query(..., description="Product name or partial name to search"),
-    proxy_url: str | None = Query(None, description="Optional proxy URL for IP rotation"),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> list[CivicStackResponse]:
     """
     Search the BPOM registry by product name. Returns up to 10 results.
@@ -57,7 +58,7 @@ async def search_bpom(
 )
 async def get_bpom_status(
     registration_no: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """
     Returns the status and expiry of a BPOM registration without full detail.

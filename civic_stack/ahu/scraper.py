@@ -2,7 +2,7 @@
 AHU company registry scraper — ahu.go.id (Kemenkumham)
 
 JS-rendered portal requiring Playwright. Datacenter IPs are actively blocked;
-route through Cloudflare Workers or a residential proxy pool via proxy_url.
+route through a residential/ID proxy via proxy_url or the PROXY_URL env var.
 
 Risk: AHU uses Cloudflare Bot Management. Camoufox fingerprint randomization
 is mandatory; do not run without it in production.
@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from civic_stack.ahu.browser import ahu_page, wait_for_ahu_results
 from civic_stack.ahu.normalizer import normalize_company_page, normalize_search_results
+from civic_stack.shared.http import browser_proxy_url
 from civic_stack.shared.schema import CivicStackResponse, error_response, not_found_response
 
 if TYPE_CHECKING:
@@ -53,15 +54,15 @@ async def fetch(
         CivicStackResponse with company details, or NOT_FOUND / ERROR.
 
     Warning:
-        AHU blocks datacenter IPs. Always supply proxy_url in production.
+        AHU blocks datacenter IPs. Supply proxy_url or set PROXY_URL in production.
         See modules/ahu/README.md for Cloudflare Worker setup.
     """
     url = AHU_COMPANY_SEARCH_URL
 
-    if not proxy_url:
+    if not browser_proxy_url(proxy_url):
         logger.warning(
-            "AHU scraper called without proxy_url — datacenter IPs will be blocked. "
-            "Supply a Cloudflare Worker URL via proxy_url."
+            "AHU scraper called without a proxy — datacenter IPs will be blocked. "
+            "Supply proxy_url or set PROXY_URL."
         )
 
     try:
@@ -110,8 +111,8 @@ async def search(
     """
     url = AHU_COMPANY_SEARCH_URL
 
-    if not proxy_url:
-        logger.warning("AHU search called without proxy_url — datacenter IPs will be blocked.")
+    if not browser_proxy_url(proxy_url):
+        logger.warning("AHU search called without a proxy — datacenter IPs will be blocked.")
 
     try:
         async with ahu_page(proxy_url=proxy_url) as page:

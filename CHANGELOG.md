@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Security
+- Stop trusting caller-supplied `proxy_url` values. The AHU, BPJPH, BPOM, OJK and OSS-NIB REST routers and the standalone AHU/OSS-NIB MCP servers passed any `proxy_url` straight to the HTTP client or browser. A `*.workers.dev` value routed BPOM, BPJPH and OJK lookups (including `check_waspada`) through a caller-controlled URL-rewriting proxy that could return fabricated registration, halal or fraud-list results; other values made the server connect to arbitrary proxy hosts. Caller-supplied proxies must now exactly match `PROXY_URL` or an entry in the new `CIVIC_ALLOWED_PROXIES` (comma-separated full URLs): REST returns HTTP 400 and MCP tools return an `ERROR` envelope otherwise. SDK functions still accept `proxy_url` from library callers unchanged. Reported by Syed Anas Mohiuddin ([@SyedAnas01](https://github.com/SyedAnas01)).
+
+### Changed
+- AHU and OSS-NIB browser lookups fall back to `PROXY_URL` when it is a CONNECT proxy, so deployments can configure their proxy server-side.
+
 ## 1.2.0 (2026-10-10)
 
 ### Changed

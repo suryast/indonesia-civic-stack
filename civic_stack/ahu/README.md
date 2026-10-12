@@ -95,6 +95,9 @@ python -m camoufox fetch
 | `verify_company_status` | `(company_id: str, proxy_url?: str) -> dict` | Legal status + deed date |
 | `search_companies_ahu` | `(keyword: str, proxy_url?: str) -> list[dict]` | Multi-result search |
 
+`proxy_url` is only accepted if it matches `PROXY_URL` or an entry in `CIVIC_ALLOWED_PROXIES`;
+otherwise the tool returns an `ERROR` envelope. Prefer setting `PROXY_URL` on the server.
+
 ### claude mcp add
 
 ```bash

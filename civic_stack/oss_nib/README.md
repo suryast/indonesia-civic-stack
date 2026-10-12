@@ -63,6 +63,9 @@
 | `verify_nib` | `(nib_number: str, proxy_url: str?) -> dict` | Verify NIB number and return status (lighter) |
 | `search_oss_businesses` | `(keyword: str, proxy_url: str?) -> list[dict]` | Multi-result company name search |
 
+`proxy_url` is only accepted if it matches `PROXY_URL` or an entry in `CIVIC_ALLOWED_PROXIES`;
+otherwise the tool returns an `ERROR` envelope. Prefer setting `PROXY_URL` on the server.
+
 ### claude mcp add
 
 ```bash

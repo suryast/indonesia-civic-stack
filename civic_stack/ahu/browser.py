@@ -5,7 +5,7 @@ AHU uses Cloudflare Bot Management which is more aggressive than the CF on
 other portals. Camoufox is strongly recommended. Additional mitigations:
 - Random human-like delays between actions
 - Realistic mouse movement simulation
-- Cloudflare Worker proxy routing (supply via proxy_url)
+- Proxy routing via proxy_url, else PROXY_URL (CONNECT mode)
 """
 
 from __future__ import annotations
@@ -16,6 +16,8 @@ import random
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
+
+from civic_stack.shared.http import browser_proxy_url
 
 if TYPE_CHECKING:
     from playwright.async_api import ProxySettings, ViewportSize
@@ -64,6 +66,7 @@ async def ahu_page(
     """
     viewport = random.choice(_VIEWPORTS)
     user_agent = random.choice(_USER_AGENTS)
+    proxy_url = browser_proxy_url(proxy_url)
     # Chromium doesn't support socks5h:// — convert to socks5://
     proxy_server = proxy_url.replace("socks5h://", "socks5://") if proxy_url else None
     proxy: ProxySettings | None = {"server": proxy_server} if proxy_server else None

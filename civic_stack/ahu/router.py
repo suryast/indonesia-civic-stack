@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from civic_stack.ahu.scraper import fetch, search
+from civic_stack.shared.api import proxy_url_param
 from civic_stack.shared.schema import CivicStackResponse
 
 router = APIRouter(prefix="/ahu", tags=["ahu"])
@@ -18,12 +19,12 @@ router = APIRouter(prefix="/ahu", tags=["ahu"])
 async def lookup_company_ahu(
     query: str,
     debug: bool = Query(False),
-    proxy_url: str | None = Query(None, description="Cloudflare Worker or residential proxy URL"),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """
     Fetch a company record from ahu.go.id by name or registration number.
 
-    **Note:** AHU blocks datacenter IPs. Provide `proxy_url` in production.
+    **Note:** AHU blocks datacenter IPs. Configure `PROXY_URL` on the server in production.
     """
     return await fetch(query, debug=debug, proxy_url=proxy_url)
 
@@ -35,7 +36,7 @@ async def lookup_company_ahu(
 )
 async def get_company_directors(
     company_id: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Fetch company detail and return with directors/commissioners in result."""
     resp = await fetch(company_id, proxy_url=proxy_url)
@@ -65,7 +66,7 @@ async def get_company_directors(
 )
 async def verify_company_status(
     company_id: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Return legal status, registration number, and deed date for a company."""
     resp = await fetch(company_id, proxy_url=proxy_url)
@@ -96,7 +97,7 @@ async def verify_company_status(
 )
 async def search_companies(
     q: str = Query(..., description="Company name keyword"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> list[CivicStackResponse]:
     """Search the AHU registry by company name keyword. Returns up to 10 results."""
     return await search(q, proxy_url=proxy_url)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 
 from civic_stack.oss_nib.scraper import fetch, search
+from civic_stack.shared.http import trusted_proxy_url
 from civic_stack.shared.mcp import CivicStackMCPBase
 
 
@@ -24,7 +25,9 @@ class OssNibMCPServer(CivicStackMCPBase):
             Example: lookup_nib("PT Gojek Indonesia")
             """
             try:
-                return (await fetch(company_name, proxy_url=proxy_url)).model_dump(mode="json")
+                return (
+                    await fetch(company_name, proxy_url=trusted_proxy_url(proxy_url))
+                ).model_dump(mode="json")
             except Exception as exc:
                 return self.serialize_error(exc)
 
@@ -39,7 +42,7 @@ class OssNibMCPServer(CivicStackMCPBase):
             Example: verify_nib("1234567890123")
             """
             try:
-                resp = await fetch(nib_number, proxy_url=proxy_url)
+                resp = await fetch(nib_number, proxy_url=trusted_proxy_url(proxy_url))
                 return {
                     "nib": nib_number,
                     "status": resp.status,
@@ -65,7 +68,7 @@ class OssNibMCPServer(CivicStackMCPBase):
             Example: search_oss_businesses("Gojek")
             """
             try:
-                results = await search(keyword, proxy_url=proxy_url)
+                results = await search(keyword, proxy_url=trusted_proxy_url(proxy_url))
                 return [r.model_dump(mode="json") for r in results]
             except Exception as exc:
                 return [self.serialize_error(exc)]
