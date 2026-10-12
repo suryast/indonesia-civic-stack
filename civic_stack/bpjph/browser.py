@@ -12,6 +12,8 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+from civic_stack.shared.http import browser_proxy_url
+
 if TYPE_CHECKING:
     from playwright.async_api import ProxySettings, ViewportSize
 
@@ -43,13 +45,14 @@ async def new_page(
     Tries camoufox first (better anti-detection); falls back to standard Playwright.
 
     Args:
-        proxy_url: Optional proxy URL (e.g. Cloudflare Worker endpoint).
+        proxy_url: Optional proxy URL. Defaults to PROXY_URL when it is a CONNECT proxy.
         headless: Whether to run headless. Set False for local debugging.
     """
     import random
 
     viewport = random.choice(_VIEWPORTS)
     user_agent = random.choice(_USER_AGENTS)
+    proxy_url = browser_proxy_url(proxy_url)
     # Chromium/Playwright doesn't support socks5h:// — convert to socks5://
     _proxy_url = proxy_url.replace("socks5h://", "socks5://") if proxy_url else None
     proxy: ProxySettings | None = {"server": _proxy_url} if _proxy_url else None

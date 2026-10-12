@@ -122,6 +122,7 @@ mypy civic_stack/            # Type check
 |----------|----------|-------------|
 | `PROXY_URL` | For non-ID deploys | Proxy URL (auto-detects *.workers.dev as rewrite mode) |
 | `PROXY_MODE` | No | Override: `connect` or `rewrite` |
+| `CIVIC_ALLOWED_PROXIES` | No | Comma-separated full proxy URLs REST/MCP callers may pass as `proxy_url` (plus `PROXY_URL`) |
 | `BPS_API_KEY` | For BPS module | Free key from webapi.bps.go.id |
 | `CIVIC_API_KEY` | For REST API auth | Set to enable API key checking |
 | `CIVIC_RATE_LIMIT` | No | Requests per minute (default: 60) |

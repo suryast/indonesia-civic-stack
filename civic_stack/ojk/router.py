@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from civic_stack.ojk.scraper import check_waspada, fetch, search
+from civic_stack.shared.api import proxy_url_param
 from civic_stack.shared.schema import CivicStackResponse
 
 router = APIRouter(prefix="/ojk", tags=["ojk"])
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/ojk", tags=["ojk"])
 async def check_ojk_license(
     name_or_id: str,
     debug: bool = Query(False),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Fetch a single OJK institution record by name or license number."""
     return await fetch(name_or_id, debug=debug, proxy_url=proxy_url)
@@ -34,7 +35,7 @@ async def search_ojk_institutions(
         description="bank_umum|bpr|fintech_p2p|fintech_payment|asuransi|dana_pensiun|manajer_investasi|sekuritas",
     ),
     status: str | None = Query(None, description="aktif|dicabut|dibekukan"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> list[CivicStackResponse]:
     """Search OJK registry by keyword with optional type and status filters."""
     filters: dict = {}
@@ -50,7 +51,7 @@ async def search_ojk_institutions(
 )
 async def get_ojk_status(
     name_or_id: str,
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """Return license status only (lighter than /check)."""
     resp = await fetch(name_or_id, proxy_url=proxy_url)
@@ -77,7 +78,7 @@ async def get_ojk_status(
 )
 async def waspada_check(
     q: str = Query(..., description="Entity name to check against investment alert list"),
-    proxy_url: str | None = Query(None),
+    proxy_url: str | None = Depends(proxy_url_param),
 ) -> CivicStackResponse:
     """
     Check if an entity is on OJK's Waspada Investasi list

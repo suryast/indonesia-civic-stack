@@ -175,8 +175,10 @@ with proof of absence. Confidence is a scraper heuristic, not a legal guarantee.
 
 `PROXY_URL` is resolved by `civic_client()` for HTTP paths, with `PROXY_MODE`
 controlling environment-based connect/rewrite selection. SOCKS transport also
-needs `pip install "httpx[socks]"`. Browser paths are separate: JDIH receives
-its explicit proxy argument, while LHKPN search currently does not forward its
-`proxy_url` argument to the browser. A Worker rewrite proxy is not generally a
+needs `pip install "httpx[socks]"`. Browser paths are separate: AHU and OSS-NIB
+fall back to `PROXY_URL` only in CONNECT mode, JDIH receives its explicit proxy
+argument, and LHKPN search currently does not forward its `proxy_url` argument
+to the browser. REST and MCP callers can only select a proxy listed in
+`PROXY_URL` or `CIVIC_ALLOWED_PROXIES`. A Worker rewrite proxy is not generally a
 Chromium proxy. Diagnose current behavior before assuming any geographic cause;
 historical reference reports and offline tests do not establish present liveness.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 
 from civic_stack.ahu.scraper import fetch, search
+from civic_stack.shared.http import trusted_proxy_url
 from civic_stack.shared.mcp import CivicStackMCPBase
 
 
@@ -21,13 +22,14 @@ class AhuMCPServer(CivicStackMCPBase):
             Returns full company detail including legal form, status, directors,
             commissioners, deed date, and domicile.
 
-            IMPORTANT: AHU blocks datacenter IPs. Supply proxy_url if running
-            from a cloud environment. See module README for Cloudflare Worker setup.
+            IMPORTANT: AHU blocks datacenter IPs. The server operator must set
+            PROXY_URL when running from a cloud environment. A proxy_url argument is
+            only accepted if it matches PROXY_URL or CIVIC_ALLOWED_PROXIES.
 
             Example: lookup_company_ahu("PT Contoh Indonesia Tbk")
             """
             try:
-                resp = await fetch(name_or_id, proxy_url=proxy_url)
+                resp = await fetch(name_or_id, proxy_url=trusted_proxy_url(proxy_url))
                 return resp.model_dump(mode="json")
             except Exception as exc:
                 return self.serialize_error(exc)
@@ -43,7 +45,7 @@ class AhuMCPServer(CivicStackMCPBase):
             Example: get_company_directors("PT Contoh Indonesia Tbk")
             """
             try:
-                resp = await fetch(company_id, proxy_url=proxy_url)
+                resp = await fetch(company_id, proxy_url=trusted_proxy_url(proxy_url))
                 if resp.result:
                     return {
                         "company_name": resp.result.get("company_name"),
@@ -71,7 +73,7 @@ class AhuMCPServer(CivicStackMCPBase):
             Example: verify_company_status("PT Contoh Indonesia Tbk")
             """
             try:
-                resp = await fetch(company_id, proxy_url=proxy_url)
+                resp = await fetch(company_id, proxy_url=trusted_proxy_url(proxy_url))
                 return {
                     "company_name": company_id,
                     "status": resp.status,
@@ -99,7 +101,7 @@ class AhuMCPServer(CivicStackMCPBase):
             Example: search_companies_ahu("Contoh Indonesia")
             """
             try:
-                results = await search(keyword, proxy_url=proxy_url)
+                results = await search(keyword, proxy_url=trusted_proxy_url(proxy_url))
                 return [r.model_dump(mode="json") for r in results]
             except Exception as exc:
                 return [self.serialize_error(exc)]

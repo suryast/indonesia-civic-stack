@@ -56,6 +56,56 @@ def _resolve_proxy() -> tuple[str | None, str]:
     return url, "connect"
 
 
+class UntrustedProxyError(ValueError):
+    """Raised when an API or MCP caller supplies a proxy the operator has not configured."""
+
+
+def trusted_proxy_url(proxy_url: str | None) -> str | None:
+    """
+    Validate a proxy URL supplied by a REST or MCP caller.
+
+    Whoever runs the proxy controls the portal responses the server receives, so a
+    caller-chosen proxy could fabricate verification results. Only proxies the
+    operator configured are accepted: ``PROXY_URL`` and the comma-separated full
+    URLs in ``CIVIC_ALLOWED_PROXIES``. Library callers passing ``proxy_url``
+    directly to ``fetch()``/``search()`` are trusted and do not go through this.
+
+    Returns:
+        The proxy URL, or None when none was supplied (``civic_client()`` then
+        falls back to ``PROXY_URL``).
+
+    Raises:
+        UntrustedProxyError: If proxy_url is not operator-configured.
+    """
+    if not proxy_url or not proxy_url.strip():
+        return None
+
+    configured = [
+        os.environ.get("PROXY_URL", ""),
+        *os.environ.get("CIVIC_ALLOWED_PROXIES", "").split(","),
+    ]
+    allowed = {url.strip().rstrip("/") for url in configured if url.strip()}
+    if proxy_url.strip().rstrip("/") not in allowed:
+        raise UntrustedProxyError(
+            "proxy_url is not an operator-configured proxy. Configure proxies server-side "
+            "via PROXY_URL or CIVIC_ALLOWED_PROXIES."
+        )
+    return proxy_url.strip()
+
+
+def browser_proxy_url(proxy_url: str | None = None) -> str | None:
+    """
+    Resolve the proxy server for a Playwright/Camoufox browser.
+
+    Uses the explicit proxy_url, else ``PROXY_URL`` when it resolves to CONNECT
+    mode. A Worker URL-rewriting proxy cannot act as a browser proxy server.
+    """
+    if proxy_url:
+        return proxy_url
+    env_proxy, mode = _resolve_proxy()
+    return env_proxy if mode == "connect" else None
+
+
 # Retryable HTTP status codes
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 

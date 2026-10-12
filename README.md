@@ -225,9 +225,16 @@ GET /simbg/search?q=Jakarta
 `civic_client()` reads `PROXY_URL`, with environment-based `PROXY_MODE=connect`
 or `rewrite` selection. A `*.workers.dev` URL auto-selects rewriting. Browser
 proxy handling is separate: a Worker rewrite URL is not a standard Chromium
-proxy, JDIH uses its explicit proxy argument, and LHKPN search does not forward
-its `proxy_url` argument to its browser. Do not assume setting an environment
-variable proxies every operation. See [usage](references/usage.md).
+proxy, AHU and OSS-NIB fall back to `PROXY_URL` only in CONNECT mode, JDIH uses
+its explicit proxy argument, and LHKPN search does not forward its `proxy_url`
+argument to its browser. Do not assume setting an environment variable proxies
+every operation. See [usage](references/usage.md).
+
+Whoever runs a proxy controls the portal responses the server receives. The
+REST routers and the standalone AHU/OSS-NIB MCP servers therefore accept a
+caller-supplied `proxy_url` only when it exactly matches `PROXY_URL` or an entry
+in `CIVIC_ALLOWED_PROXIES` (comma-separated full proxy URLs); anything else is
+rejected (HTTP 400 or an `ERROR` envelope). Configure proxies server-side.
 
 Access can vary by deployment, endpoint, and time. Historical regional tests do
 not establish a current geo-block or WAF cause. Stop after bounded attempts;
@@ -235,9 +242,9 @@ do not bypass authenticated tiers or repeatedly retry access controls.
 
 **The current unified REST app does not implement API-key authentication or
 per-client rate-limit middleware.** Setting `CIVIC_API_KEY` or `CIVIC_RATE_LIMIT`
-alone does not enable either. `CIVIC_ALLOWED_PROXIES` and an SSRF allowlist are
-not implemented by the shared HTTP layer. Deploy behind your own authentication,
-quotas, and network controls; do not accept untrusted proxy URLs. Bind loopback
+alone does not enable either. `CIVIC_ALLOWED_PROXIES` only gates caller-supplied
+proxies; it is not an SSRF allowlist for SDK calls. Deploy behind your own
+authentication, quotas, and network controls. Bind loopback
 for local use. Module acquisition rate limiters are not public-API abuse controls.
 
 ## Agent Skills installation
