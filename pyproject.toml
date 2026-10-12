@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "indonesia-civic-stack"
-version = "1.2.0"
+version = "1.2.1"
 description = "Python SDK + 45 MCP tools for 14 Indonesian government data portals"
 readme = "README.md"
 license = "MIT"

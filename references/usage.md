@@ -1,4 +1,4 @@
-# Usage and implementation limits — 1.2.0
+# Usage and implementation limits — 1.2.1
 
 This guide describes code interfaces, not fresh portal availability. Counts derive
 from `civic_stack/*/scraper.py`, decorators in `civic_stack/server.py`, and mounted

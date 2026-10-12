@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/github/license/suryast/indonesia-civic-stack?style=flat-square)](LICENSE)
 
 Python SDK, MCP tools, and REST wrappers for Indonesian public-sector data.
-Release **1.2.0** includes **14 scraper modules**, **45 unified MCP tools**, and
+Release **1.2.1** includes **14 scraper modules**, **45 unified MCP tools**, and
 **11 REST module routers**. These counts describe code, not live availability.
 
 Indonesian public-data portals expose different APIs, HTML structures, browser
@@ -250,7 +250,7 @@ for local use. Module acquisition rate limiters are not public-API abuse control
 ## Agent Skills installation
 
 [SKILL.md](SKILL.md) is the portable skill entry point. Its metadata version is
-`"1.2.0"`; it uses trigger phrases in `description`, not unsupported frontmatter
+`"1.2.1"`; it uses trigger phrases in `description`, not unsupported frontmatter
 keys. Installation must retain the **complete repository**, especially
 `references/usage.md` and the other bundled references, package code, manifest,
 and licenses. The installed directory must be named `indonesia-civic-stack`.

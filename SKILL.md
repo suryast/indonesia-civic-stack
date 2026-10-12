@@ -15,7 +15,7 @@ compatibility: >-
   those interfaces; browser paths also require installed browser binaries.
   BPS requires BPS_API_KEY. Proxy needs vary by endpoint and deployment.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   package: "indonesia-civic-stack"
 ---
 
